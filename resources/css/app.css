@@ -1,0 +1,349 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    background:#0a0a0f;
+    color:white;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+.main-container{
+    width:100%;
+    min-height:100vh;
+
+    display:flex;
+
+    padding:80px;
+
+    gap:100px;
+}
+
+.left-panel{
+    width:40%;
+
+    height:calc(100vh - 160px);
+
+    position:sticky;
+    top:80px;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+}
+
+.right-panel{
+    width:60%;
+}
+
+.name{
+    font-size:58px;
+    line-height:1;
+}
+
+.title{
+    margin-top:20px;
+
+    color:rgba(255,255,255,0.8);
+
+    font-size:22px;
+}
+
+.description{
+    margin-top:25px;
+
+    width:70%;
+
+    line-height:1.8;
+
+    color:rgba(255,255,255,0.6);
+}
+
+.navigation{
+    margin-top:80px;
+
+    display:flex;
+    flex-direction:column;
+
+    gap:25px;
+}
+
+.navigation a{
+    color:rgba(255,255,255,0.5);
+
+    text-decoration:none;
+
+    transition:0.3s;
+}
+
+.navigation a:hover{
+    color:white;
+}
+
+.socials{
+    display:flex;
+
+    gap:20px;
+}
+
+.socials a{
+    color:rgba(255,255,255,0.5);
+
+    text-decoration:none;
+
+    transition:0.3s;
+}
+
+.socials a:hover{
+    color:white;
+}
+
+.section{
+    margin-bottom:150px;
+}
+
+.section p{
+    line-height:1.9;
+
+    color:rgba(255,255,255,0.7);
+}
+
+.card{
+    padding:30px;
+
+    border-radius:20px;
+
+    display:flex;
+
+    gap:30px;
+
+    transition:0.3s;
+}
+
+.card:hover{
+    background:rgba(255,255,255,0.05);
+
+    backdrop-filter:blur(10px);
+}
+
+.card-year{
+    width:140px;
+
+    color:rgba(255,255,255,0.5);
+
+    font-size:14px;
+}
+
+.card-content h3{
+    margin-bottom:15px;
+}
+
+.card-content p{
+    margin-bottom:20px;
+}
+
+.tags{
+    display:flex;
+    flex-wrap:wrap;
+
+    gap:10px;
+}
+
+.tags span{
+    padding:8px 18px;
+
+    border-radius:999px;
+
+    background:#5b3df5;
+
+    color:#d9ccff;
+
+    font-size:14px;
+}
+
+.project-image{
+    width:120px;
+    height:70px;
+
+    background:#333;
+
+    border-radius:10px;
+}
+
+.footer{
+    margin-top:120px;
+
+    color:rgba(255,255,255,0.5);
+
+    width:70%;
+
+    line-height:1.8;
+}
+
+/* SPOTLIGHT */
+
+.spotlight{
+    position:fixed;
+
+    width:700px;
+    height:700px;
+
+    background:radial-gradient(
+        circle,
+        rgba(108,92,231,0.22) 0%,
+        rgba(108,92,231,0.10) 25%,
+        rgba(108,92,231,0.04) 45%,
+        transparent 70%
+    );
+
+    border-radius:50%;
+
+    pointer-events:none;
+
+    transform:translate(-50%, -50%);
+
+    z-index:0;
+
+    filter:blur(40px);
+}
+
+
+
+/* MAIN CONTENT ABOVE SPOTLIGHT */
+
+.main-container{
+    position:relative;
+    z-index:2;
+}
+
+
+
+/* CUSTOM CURSOR */
+
+body{
+    cursor:none;
+}
+
+.custom-cursor{
+    width:28px;
+    height:28px;
+
+    position:fixed;
+
+    top:0;
+    left:0;
+
+    pointer-events:none;
+
+    z-index:9999;
+
+    transform:translate(-50%, -50%);
+
+    transition:
+        transform 0.08s linear;
+
+    clip-path:polygon(0 0, 100% 50%, 0 100%, 25% 50%);
+
+    border:2px solid white;
+
+    background:transparent;
+}
+
+
+
+/* CARD HOVER IMPROVEMENT */
+
+.card{
+    position:relative;
+
+    overflow:hidden;
+}
+
+.card::before{
+    content:"";
+
+    position:absolute;
+
+    inset:0;
+
+    background:rgba(255,255,255,0.03);
+
+    opacity:0;
+
+    transition:0.3s;
+
+    border-radius:20px;
+
+    backdrop-filter:blur(10px);
+}
+
+.card:hover::before{
+    opacity:1;
+}
+
+
+
+/* PROJECT TITLE */
+
+.project-title{
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+}
+
+
+
+/* ARROW ANIMATION */
+
+.arrow{
+    transition:0.3s;
+}
+
+.card:hover .arrow{
+    transform:
+        translate(4px,-4px);
+
+    color:#b9a7ff;
+}
+
+
+
+/* LINKS */
+
+.navigation a,
+.socials a,
+.project-title{
+    transition:0.3s;
+}
+
+
+
+/* HOVER COLORS */
+
+.navigation a:hover,
+.socials a:hover,
+.project-title:hover{
+    color:#c7b8ff;
+}
+
+
+
+/* TAGS */
+
+.tags span{
+    transition:0.3s;
+}
+
+.tags span:hover{
+    background:#775cff;
+
+    transform:translateY(-2px);
+}
