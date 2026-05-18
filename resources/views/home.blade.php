@@ -123,9 +123,11 @@
 
                 <div class="card">
 
-                    <div class="project-image">
-
-                    </div>
+                   <img
+                    src="{{ asset('images/projects/wildlife.jpg') }}"
+                    alt="Wildlife Project"
+                    class="project-image"
+                    >
 
                     <div class="card-content">
 
@@ -135,7 +137,7 @@
                                 Interactive Wildlife Park
 
                                 <span class="arrow">
-                                  ↗
+                                   ↗
                                 </span>
 
                         </h3>
