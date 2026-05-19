@@ -7,13 +7,22 @@
     <title>Pradipta Portfolio</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
 </head>
 
 <body>
 
     <div class="spotlight"></div>
 
-    <div class="custom-cursor"></div>
+    <div class="custom-cursor">
+    <img src="/images/cursor/cursor.png" alt="">
+    </div>
 
     <div class="main-container">
 
@@ -64,7 +73,7 @@
         <!-- RIGHT SIDE -->
         <div class="right-panel">
 
-            <section id="about" class="section">
+            <section id="about" class="section reveal">
 
                 <p>
                     I'm a Multimedia Broadcasting student at PENS with a strong
@@ -83,7 +92,7 @@
 
 
 
-            <section id="experience" class="section">
+            <section id="experience" class="section reveal">
 
                 <div class="card">
 
@@ -119,12 +128,12 @@
 
 
 
-            <section id="projects" class="section">
+            <section id="projects" class="section reveal">
 
                 <div class="card">
 
-                   <img
-                    src="{{ asset('images/projects/wildlife.jpg') }}"
+                   <img loading="lazy"
+                    src="{{ asset('images/projects/wildlife.png') }}"
                     alt="Wildlife Project"
                     class="project-image"
                     >
