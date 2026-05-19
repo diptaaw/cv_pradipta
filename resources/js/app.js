@@ -1,29 +1,42 @@
-const spotlight = document.querySelector(".spotlight");
+const spotlight =
+    document.querySelector(".spotlight");
+
+let mouseX = 0;
+let mouseY = 0;
+
+let currentX = 0;
+let currentY = 0;
 
 const cursor = document.querySelector(".custom-cursor");
 
+/* MOUSE MOVE */
+
 document.addEventListener("mousemove", (e) => {
 
-    cursor.style.left = `${e.clientX}px`;
+    mouseX = e.clientX;
+    mouseY = e.clientY;
 
+    cursor.style.left = `${e.clientX}px`;
     cursor.style.top = `${e.clientY}px`;
 
 });
 
 /* REVEAL ON SCROLL */
 
-const reveals = document.querySelectorAll(".reveal");
+const reveals =
+    document.querySelectorAll(".reveal");
 
-window.addEventListener("scroll", () => {
+function revealSections() {
 
     reveals.forEach((reveal) => {
 
-        const windowHeight = window.innerHeight;
+        const windowHeight =
+            window.innerHeight;
 
         const revealTop =
             reveal.getBoundingClientRect().top;
 
-        if(revealTop < windowHeight - 100){
+        if (revealTop < windowHeight - 100) {
 
             reveal.classList.add("active");
 
@@ -31,11 +44,19 @@ window.addEventListener("scroll", () => {
 
     });
 
-});
+}
+
+window.addEventListener(
+    "scroll",
+    revealSections
+);
+
+revealSections();
 
 /* ACTIVE NAVIGATION */
 
-const sections = document.querySelectorAll("section");
+const sections =
+    document.querySelectorAll("section");
 
 const navLinks =
     document.querySelectorAll(".navigation a");
@@ -49,9 +70,10 @@ window.addEventListener("scroll", () => {
         const sectionTop =
             section.offsetTop;
 
-        if(scrollY >= sectionTop - 200){
+        if (scrollY >= sectionTop - 200) {
 
-            current = section.getAttribute("id");
+            current =
+                section.getAttribute("id");
 
         }
 
@@ -61,20 +83,25 @@ window.addEventListener("scroll", () => {
 
         link.classList.remove("active");
 
-        if(
+        if (
             link.getAttribute("href")
             === `#${current}`
-        ){
+        ) {
+
             link.classList.add("active");
+
         }
 
     });
 
 });
 
-const hoverItems = document.querySelectorAll(
-    "a, .card, .tags span"
-);
+/* CURSOR HOVER EFFECT */
+
+const hoverItems =
+    document.querySelectorAll(
+        "a, .card, .tags span"
+    );
 
 hoverItems.forEach((item) => {
 
@@ -93,3 +120,27 @@ hoverItems.forEach((item) => {
     });
 
 });
+
+/* SPOTLIGHT ANIMATION */
+
+function animateSpotlight() {
+
+    currentX +=
+        (mouseX - currentX) * 0.08;
+
+    currentY +=
+        (mouseY - currentY) * 0.08;
+
+    spotlight.style.left =
+        `${currentX}px`;
+
+    spotlight.style.top =
+        `${currentY}px`;
+
+    requestAnimationFrame(
+        animateSpotlight
+    );
+
+}
+
+animateSpotlight();

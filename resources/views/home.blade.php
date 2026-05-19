@@ -18,10 +18,62 @@
 
 <body>
 
+<div class="top-navbar">
+
+    <img
+        src="{{ asset('images/ui/glass-navbar.svg') }}"
+        class="navbar-svg"
+        alt=""
+    >
+
+    <div class="navbar-content">
+
+        <div class="navbar-left">
+
+            <div class="profile-chip">
+
+                <img
+                    src="{{ asset('images/ui/avatar.png') }}"
+                    alt="avatar"
+                    class="profile-avatar"
+                >
+
+                <span class="profile-name">
+                    diptaaw
+                </span>
+
+            </div>
+
+        </div>
+
+        <div class="navbar-right">
+
+            <a href="#" class="nav-icon">
+                WA
+            </a>
+
+            <a href="#" class="nav-icon">
+                IG
+            </a>
+
+            <a href="#" class="nav-icon">
+                GH
+            </a>
+
+            <button class="theme-button">
+                ☾
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
     <div class="spotlight"></div>
 
     <div class="custom-cursor">
-    <img src="/images/cursor/cursor.png" alt="">
+        <img src="/images/cursor/cursor.png" alt="">
     </div>
 
     <div class="main-container">
@@ -76,16 +128,19 @@
             <section id="about" class="section reveal">
 
                 <p>
-                    I'm a Multimedia Broadcasting student at PENS with a strong
-                    interest in visual storytelling, creative production, and
-                    digital media.
+                    I'm a Multimedia Broadcasting student at <b> PENS (EEPIS) </b> with a strong interest in visual storytelling, creative production, and digital media.         I enjoy transforming ideas into engaging visual experiences through photography, videography, live streaming, and design.
                 </p>
 
-                <br>
+                <p>
+                    Over the past few years, I've worked on various creative and organizational projects, from commercial photography and content production to multimedia events and student organizations. These experiences helped me develop not only technical skills, but also adaptability, communication, and collaborative problem solving in fast-paced production environments.
+                </p>
 
                 <p>
-                    I enjoy transforming ideas into engaging visual experiences
-                    through photography, videography, live streaming, and design.
+                    I'm especially interested in the creative process behind media production: how visuals, lighting, composition, and storytelling can shape emotions and audience experience.
+                </p>
+
+                <p>
+                    Currently, I’m continuing to explore photography, UI/UX, branding, and multimedia technology while building projects that combine creativity with technical execution.
                 </p>
 
             </section>
