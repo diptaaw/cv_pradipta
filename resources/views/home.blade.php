@@ -20,30 +20,20 @@
 
 <div class="top-navbar">
 
-    <img
-        src="{{ asset('images/ui/glass-navbar.svg') }}"
-        class="navbar-svg"
-        alt=""
-    >
-
     <div class="navbar-content">
 
         <div class="navbar-left">
 
-            <div class="profile-chip">
+            <a href="#about" class="profile-identity">
+            <img
+            src="{{ asset('images/ui/avatar.png') }}"
+            class="profile-avatar"
+            >
 
-                <img
-                    src="{{ asset('images/ui/avatar.png') }}"
-                    alt="avatar"
-                    class="profile-avatar"
-                >
-
-                <span class="profile-name">
-                    diptaaw
-                </span>
-
-            </div>
-
+            <span class="profile-name">
+                diptaaw
+            </span>
+            </a>
         </div>
 
         <div class="navbar-right">
