@@ -88,13 +88,19 @@
 
                 <nav class="navigation">
 
-                    <a href="#about">ABOUT</a>
+                <a href="#about" class="active">
+                    <span>ABOUT</span>
+                </a>
 
-                    <a href="#experience">EXPERIENCE</a>
+                <a href="#experience">
+                    <span>EXPERIENCE</span>
+                </a>
 
-                    <a href="#projects">PROJECTS</a>
+                <a href="#projects">
+                    <span>PROJECTS</span>
+                </a>
 
-                </nav>
+</nav>
 
             </div>
 
@@ -169,9 +175,12 @@
 
                 </div>
 
+                <a href="/resume" class="section-link">
+            View Full Résumé
+             <span>↗</span>
+            </a>
+
             </section>
-
-
 
             <section id="projects" class="section reveal">
 
@@ -216,14 +225,19 @@
 
                 </div>
 
+                <a href="/archive" class="section-link">
+                    View Full Project Archive
+                <span>↗</span>
+                </a>
+
             </section>
 
 
 
             <footer class="footer">
 
-                Designed and developed by yours truly with Figma
-                and Visual Studio Code. Created as a digital space
+                Designed and developed by yours truly with <b> Figma </b>
+                and <b> Visual Studio Code. </b>  Created as a digital space
                 to showcase multimedia production, visual storytelling,
                 and creative technology projects.
 

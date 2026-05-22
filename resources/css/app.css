@@ -98,10 +98,13 @@ body{
 
 .nav-icon,
 .theme-button{
-    width:42px;
-    height:42px;
+    width:30px;
+    height:30px;
 
-    border-radius:50%;
+    font-size:0.8rem;
+    font-weight:600;
+
+    border-radius:60%;
 
     display:flex;
     align-items:center;
@@ -109,9 +112,6 @@ body{
 
     background:
         rgba(255,255,255,0.04);
-
-    border:
-        1px solid rgba(255,255,255,0.04);
 
     color:white;
 
@@ -193,7 +193,7 @@ body{
 
 .navigation{
     margin-top:56px;
-    font-size:0.9rem;
+
     display:flex;
     flex-direction:column;
 
@@ -205,34 +205,64 @@ body{
 
     width:fit-content;
 
+    padding-left:40px;
+
     text-decoration:none;
 
-    font-size:0.9rem;
-    letter-spacing:0.05rem;
+    font-size:0.8rem;
+    font-weight:500;
+
+    letter-spacing:0.04em;
 
     color:
-        rgba(255,255,255,0.38);
+        rgba(255,255,255,0.35);
 
-    transition:0.3s;
+    transition:
+        color 0.35s ease;
 }
 
-.navigation a:hover,
+.navigation a::before{
+    content:"";
+
+    position:absolute;
+
+    left:0;
+    top:50%;
+
+    width:26px;
+    height:1.5px;
+
+    background:
+        rgba(255,255,255,0.25);
+
+    transform:
+        translateY(-50%);
+
+    transition:
+        width 0.35s ease,
+        background 0.35s ease;
+}
+
+.navigation a span{
+    display:inline-block;
+
+    transition:
+        transform 0.35s ease;
+}
+
 .navigation a.active{
     color:white;
 }
 
 .navigation a.active::before{
-    content:"";
-
-    position:absolute;
-
-    left:-32px;
-    top:50%;
-
-    width:22px;
-    height:1px;
+    width:42px;
 
     background:white;
+}
+
+.navigation a.active span{
+    transform:
+        translateX(12px);
 }
 
 .socials{
@@ -269,6 +299,46 @@ body{
 
     color:
         rgba(255,255,255,0.66);
+}
+
+.section-link{
+    display:inline-flex;
+    align-items:center;
+
+    gap:10px;
+
+    margin-top:32px;
+
+    color:white;
+    text-decoration:none;
+
+    font-size:0.9rem;
+    font-weight:600;
+
+    opacity:0.72;
+
+    transition:
+        color 0.3s ease,
+        opacity 0.3s ease,
+        transform 0.3s ease;
+}
+
+.section-link span{
+    transition:0.3s ease;
+}
+
+.section-link:hover{
+    opacity:1;
+
+    color:#8b6dff;
+
+    transform:
+        translateX(6px);
+}
+
+.section-link:hover span{
+    transform:
+        translate(4px,-4px);
 }
 
 .card{
@@ -332,6 +402,30 @@ body{
     align-items:center;
 
     gap:10px;
+
+    color:white;
+
+    transition:
+        color 0.3s ease,
+        transform 0.3s ease;
+}
+
+.project-title .arrow{
+    transition:0.3s ease;
+}
+
+.project-title:hover{
+    color:#8b6dff;
+
+    transform:
+        translateX(6px);
+}
+
+.project-title:hover .arrow{
+    transform:
+        translate(4px,-4px);
+
+    color:#8b6dff;
 }
 
 .tags{
@@ -352,12 +446,12 @@ body{
 
     color:#d7ccff;
 
-    font-size:0.85rem;
+    font-size:0.8rem;
 }
 
 .footer{
     margin-top:100px;
-
+    font-size:0.8rem;
     max-width:620px;
 
     line-height:1.9;
@@ -369,19 +463,19 @@ body{
 .spotlight{
     position:fixed;
 
-    width:500px;
-    height:500px;
+    width:600px;
+    height:600px;
 
     background:
         radial-gradient(
             circle,
-            rgba(123,97,255,0.18) 0%,
-            transparent 70%
+            rgba(133, 110, 248, 0.18) 100%,
+            transparent 100%
         );
 
-    filter:blur(120px);
+    filter:blur(150px);
 
-    border-radius:50%;
+    border-radius:20%;
 
     pointer-events:none;
 
@@ -510,6 +604,8 @@ body{
     position:relative;
 
     overflow:hidden;
+
+    isolation:isolate;
 }
 
 .card::before{
@@ -529,10 +625,18 @@ body{
     opacity:0;
 
     transition:0.3s;
+
+    z-index:0;
 }
 
 .card:hover::before{
     opacity:1;
+}
+
+.card > *{
+    position:relative;
+
+    z-index:2;
 }
 
 .arrow{
