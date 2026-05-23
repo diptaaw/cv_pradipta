@@ -18,6 +18,10 @@
 
 <body>
 
+<div class="bg-orb orb-1"></div>
+<div class="bg-orb orb-2"></div>
+<div class="bg-orb orb-3"></div>
+
 <div class="top-navbar">
 
     <div class="navbar-content">
@@ -38,23 +42,23 @@
 
         <div class="navbar-right">
 
-            <a href="#" class="nav-icon">
-                WA
-            </a>
+        <a href="#" class="nav-icon">
+            <img src="/images/icons/email.svg" alt="">
+        </a>
 
-            <a href="#" class="nav-icon">
-                IG
-            </a>
+        <a href="#" class="nav-icon">
+            <img src="/images/icons/instagram.svg" alt="">
+        </a>
 
-            <a href="#" class="nav-icon">
-                GH
-            </a>
+        <a href="#" class="nav-icon">
+            <img src="/images/icons/github.svg" alt="">
+        </a>
 
-            <button class="theme-button">
-                ☾
-            </button>
+        <button class="theme-button">
+            <img src="/images/icons/moon.svg" alt="">
+        </button>
 
-        </div>
+</div>
 
     </div>
 
@@ -228,24 +232,31 @@
                 <a href="/archive" class="section-link">
                     View Full Project Archive
                 <span>↗</span>
-                </a>
+            </a>
 
             </section>
 
 
 
             <footer class="footer">
-
+                <p>
                 Designed and developed by yours truly with <b> Figma </b>
-                and <b> Visual Studio Code. </b>  Created as a digital space
+                and <b>Visual Studio Code.</b>  Created as a digital space
                 to showcase multimedia production, visual storytelling,
                 and creative technology projects.
+                </p>
+
+                <p>
+                credits by pradipta adicandra wicaksono 2026
+                </p>
 
             </footer>
 
         </div>
 
     </div>
+
+    <div class="particles"></div>
 
 </body>
 </html>
