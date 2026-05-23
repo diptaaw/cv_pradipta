@@ -276,15 +276,40 @@ function animateParticles(){
 
 animateParticles();
 
-/* NAVBAR HIDE ON SCROLL */
+/* NAVBAR HIDE AFTER CONTENT PASSES */
 
 const topNavbar =
     document.querySelector(".top-navbar");
+
+const aboutSection =
+    document.querySelector("#about");
+
+const triggerPoint =
+    aboutSection.offsetTop + 200;
+    
+const rightPanel =
+    document.querySelector(".right-panel");
 
 let lastScrollY =
     window.scrollY;
 
 window.addEventListener("scroll", () => {
+
+    const triggerPoint =
+        rightPanel.offsetTop + 120;
+
+    /* navbar belum active */
+
+    if(window.scrollY < triggerPoint){
+
+        topNavbar.classList.remove(
+            "hide-navbar"
+        );
+
+        return;
+    }
+
+    /* navbar active */
 
     if(window.scrollY > lastScrollY){
 
