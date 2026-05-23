@@ -389,7 +389,7 @@ body::after{
         rgba(54, 31, 147, 0.18);
 
     border:
-        1px solid rgba(65, 23, 144, 0.115);
+        1px solid rgba(140,120,255,0.22);
 
     box-shadow:
 
@@ -418,9 +418,9 @@ body::after{
         linear-gradient(
             90deg,
             rgba(126, 105, 245, 0),
-            rgba(101, 79, 228, 0.25),
+            rgba(126, 106, 243, 0.25),
             rgba(182, 55, 255, 0.12),
-            rgba(105, 80, 247, 0)
+            rgba(120, 98, 248, 0)
         );
 
     opacity:0;
@@ -492,6 +492,87 @@ body::after{
         blur(28px);
 
 }
+
+/* RESPONSIVE NAVBAR - COMPACT MODE DETECTION */
+
+.layout-shell.navbar-compact-mode{
+
+    /* Center the navbar chip within the shell */
+    margin-left: 0;
+
+    top:20px;
+
+}
+
+.top-navbar.navbar-compact-mode{
+
+    margin: 0 auto;
+
+    width: min(1045px, calc(100% - 48px));
+
+    max-width: min(1045px, calc(100% - 48px));
+
+    background:
+        rgba(82, 51, 117, 0.019);
+
+    backdrop-filter:
+        blur(6px);
+
+    -webkit-backdrop-filter:
+        blur(6px);
+
+    transition:
+        transform .35s cubic-bezier(.22,1,.36,1),
+        opacity .35s ease,
+        background .45s ease,
+        backdrop-filter .45s ease,
+        border-color .45s ease,
+        box-shadow .45s ease;
+
+}
+
+.top-navbar.navbar-compact-mode::before{
+
+    background:
+        rgba(12,10,35,0.82);
+
+    backdrop-filter:
+        blur(28px);
+
+    transition:
+        background .45s ease,
+        backdrop-filter .45s ease;
+
+}
+
+/* SCROLL REVEAL / HIDE ANIMATIONS */
+
+.top-navbar.navbar-compact-mode.navbar-hidden{
+
+    transform:
+        translateY(calc(-100% - 20px));
+
+    opacity:0;
+
+    pointer-events:none;
+
+}
+
+.top-navbar.navbar-compact-mode.navbar-reveal{
+
+    transform:
+        translateY(0);
+
+    opacity:1;
+
+    pointer-events:auto;
+
+}
+
+/* PREVENT OVERFLOW IN COMPACT MODE */
+
+/* Keep right-side spacing and profile text visible
+   so compact mode stays long and balanced. */
 
 .navbar-content{
 

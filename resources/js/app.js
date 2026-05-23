@@ -276,13 +276,175 @@ function animateParticles(){
 
 animateParticles();
 
-/* NAVBAR COMPACT ON COLLISION */
+/* RESPONSIVE NAVBAR - ZOOM & VIEWPORT DETECTION */
+
+const layoutShell =
+    document.querySelector(".layout-shell");
 
 const topNavbar =
     document.querySelector(".top-navbar");
 
 const rightPanel =
     document.querySelector(".right-panel");
+
+let isInCompactMode = false;
+let lastScrollY = 0;
+
+// Detect if navbar should enter compact/adaptive mode
+function shouldEnterCompactMode() {
+
+    const zoom =
+        window.devicePixelRatio || 1;
+
+    // compact mode only when zoom reaches 125% or more
+    const zoomInCompact =
+        zoom >= 1.25;
+
+    return zoomInCompact;
+
+}
+
+// Apply or remove compact-mode styling
+function updateCompactModeState() {
+
+    const needsCompact =
+        shouldEnterCompactMode();
+
+    if (needsCompact && !isInCompactMode) {
+
+        topNavbar.classList.add(
+            "navbar-compact-mode"
+        );
+
+        layoutShell.classList.add(
+            "navbar-compact-mode"
+        );
+
+        // Start in reveal state
+        topNavbar.classList.remove(
+            "navbar-hidden"
+        );
+
+        topNavbar.classList.add(
+            "navbar-reveal"
+        );
+
+        isInCompactMode = true;
+
+    } else if (!needsCompact && isInCompactMode) {
+
+        topNavbar.classList.remove(
+            "navbar-compact-mode",
+            "navbar-hidden",
+            "navbar-reveal"
+        );
+
+        layoutShell.classList.remove(
+            "navbar-compact-mode"
+        );
+
+        isInCompactMode = false;
+
+    }
+
+}
+
+// Handle scroll reveal/hide for compact mode
+function handleCompactModeScrollBehavior() {
+
+    if (!isInCompactMode) {
+        lastScrollY = window.scrollY;
+        return;
+    }
+
+    const currentScrollY = window.scrollY;
+    const scrollDelta = currentScrollY - lastScrollY;
+
+    // Only trigger hide/reveal after scrolling past threshold
+    if (Math.abs(scrollDelta) > 2) {
+
+        if (scrollDelta > 0) {
+            // Scrolling down - hide navbar
+            topNavbar.classList.remove(
+                "navbar-reveal"
+            );
+
+            topNavbar.classList.add(
+                "navbar-hidden"
+            );
+
+        } else {
+            // Scrolling up - reveal navbar
+            topNavbar.classList.remove(
+                "navbar-hidden"
+            );
+
+            topNavbar.classList.add(
+                "navbar-reveal"
+            );
+
+        }
+
+    }
+
+    lastScrollY = currentScrollY;
+
+}
+
+// Monitor resize events for compact mode detection
+window.addEventListener("resize", () => {
+
+    updateCompactModeState();
+
+}, { passive: true });
+
+// Integrate scroll behavior with existing scroll listeners
+const originalScrollHandler = window.onscroll;
+
+window.addEventListener("scroll", () => {
+
+    handleCompactModeScrollBehavior();
+
+}, { passive: true });
+
+// Use ResizeObserver for robust zoom/container detection
+if (window.ResizeObserver) {
+
+    const resizeObserver =
+        new ResizeObserver(() => {
+
+            updateCompactModeState();
+
+        });
+
+    resizeObserver.observe(
+        document.documentElement
+    );
+
+}
+
+// Fallback: Periodic zoom detection
+let previousZoom = window.devicePixelRatio;
+
+setInterval(() => {
+
+    const currentZoom =
+        window.devicePixelRatio;
+
+    if (currentZoom !== previousZoom) {
+
+        previousZoom = currentZoom;
+
+        updateCompactModeState();
+
+    }
+
+}, 400);
+
+// Initialize compact mode on page load
+updateCompactModeState();
+
+/* NAVBAR COMPACT ON COLLISION */
 
 window.addEventListener("scroll", () => {
 
@@ -295,25 +457,32 @@ window.addEventListener("scroll", () => {
     /*
         cek apakah top right panel
         sudah menyentuh bawah navbar
+        
+        Skip collision compact if already
+        in responsive compact mode
     */
 
-    if(
-        rightPanelRect.top
-        <=
-        navbarRect.bottom
-    ){
+    if (!isInCompactMode) {
 
-        topNavbar.classList.add(
-            "compact"
-        );
+        if(
+            rightPanelRect.top
+            <=
+            navbarRect.bottom
+        ){
 
-    }
+            topNavbar.classList.add(
+                "compact"
+            );
 
-    else{
+        }
 
-        topNavbar.classList.remove(
-            "compact"
-        );
+        else{
+
+            topNavbar.classList.remove(
+                "compact"
+            );
+
+        }
 
     }
 
