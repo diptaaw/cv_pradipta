@@ -378,7 +378,64 @@ body::after{
         background .45s ease,
         backdrop-filter .45s ease,
         border-color .45s ease,
-        box-shadow .45s ease;
+        box-shadow .45s ease,
+        transform .35s ease;
+
+}
+
+.top-navbar:hover{
+
+    background:
+        rgba(54, 31, 147, 0.18);
+
+    border:
+        1px solid rgba(65, 23, 144, 0.115);
+
+    box-shadow:
+
+        0 0 0 1px rgba(140,120,255,0.08),
+
+        0 10px 40px rgba(90,70,255,0.18),
+
+        0 0 80px rgba(120,90,255,0.12);
+
+    transform:
+        translateY(-1px);
+
+}
+
+.top-navbar::after{
+
+    content:"";
+
+    position:absolute;
+
+    inset:-1px;
+
+    border-radius:inherit;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(126, 105, 245, 0),
+            rgba(101, 79, 228, 0.25),
+            rgba(182, 55, 255, 0.12),
+            rgba(105, 80, 247, 0)
+        );
+
+    opacity:0;
+
+    transition:0.45s ease;
+
+    pointer-events:none;
+
+    filter:blur(18px);
+
+}
+
+.top-navbar:hover::after{
+
+    opacity:1;
 
 }
 
