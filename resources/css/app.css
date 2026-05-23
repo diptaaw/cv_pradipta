@@ -518,8 +518,7 @@ body::after{
     width:100%;
     max-width:860px;
 
-    padding:
-        0px;
+    padding-top:40px;
 
     overflow:visible;
 }
