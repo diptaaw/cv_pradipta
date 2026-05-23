@@ -276,23 +276,32 @@ function animateParticles(){
 
 animateParticles();
 
-/* NAVBAR COMPACT ON SCROLL */
+/* NAVBAR COMPACT ON COLLISION */
 
 const topNavbar =
     document.querySelector(".top-navbar");
 
-const aboutSection =
-    document.querySelector("#about");
-
-let lastScrollY =
-    window.scrollY;
+const rightPanel =
+    document.querySelector(".right-panel");
 
 window.addEventListener("scroll", () => {
 
-    const triggerPoint =
-        aboutSection.offsetTop + 0.0;
+    const navbarRect =
+        topNavbar.getBoundingClientRect();
 
-    if(window.scrollY > triggerPoint){
+    const rightPanelRect =
+        rightPanel.getBoundingClientRect();
+
+    /*
+        cek apakah top right panel
+        sudah menyentuh bawah navbar
+    */
+
+    if(
+        rightPanelRect.top
+        <=
+        navbarRect.bottom
+    ){
 
         topNavbar.classList.add(
             "compact"
@@ -307,7 +316,5 @@ window.addEventListener("scroll", () => {
         );
 
     }
-
-    lastScrollY = window.scrollY;
 
 });

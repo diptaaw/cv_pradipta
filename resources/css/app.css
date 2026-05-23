@@ -339,16 +339,16 @@ body::after{
     z-index:9999;
 
     background:
-        rgba(28, 28, 70, 0.09);
+        rgba(28, 28, 70, 0.041);
 
     border:
         1px solid rgba(255,255,255,0.06);
 
     backdrop-filter:
-        blur(12px);
+        blur(6px);
 
     -webkit-backdrop-filter:
-        blur(8px);
+        blur(6px);
 
     box-shadow:
         0 10px 40px rgba(0,0,0,0.28);
@@ -397,13 +397,13 @@ body::after{
     max-width:365px;
 
     background:
-        rgba(82, 51, 117, 0.068);
+        rgba(82, 51, 117, 0.019);
 
     backdrop-filter:
-        blur(8px);
+        blur(6px);
 
     -webkit-backdrop-filter:
-        blur(8px);
+        blur(6px);
 
 }
 

@@ -18,6 +18,8 @@
 
 <body>
 
+<body id="top">
+
 <div class="bg-orb orb-1"></div>
 <div class="bg-orb orb-2"></div>
 <div class="bg-orb orb-3"></div>
@@ -28,7 +30,7 @@
 
         <div class="navbar-left">
 
-            <a href="#about" class="profile-identity">
+            <a href="#top" class="profile-identity">
             <img
             src="{{ asset('images/ui/avatar.png') }}"
             class="profile-avatar"
