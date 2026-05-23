@@ -276,7 +276,7 @@ function animateParticles(){
 
 animateParticles();
 
-/* NAVBAR HIDE AFTER CONTENT PASSES */
+/* NAVBAR COMPACT ON SCROLL */
 
 const topNavbar =
     document.querySelector(".top-navbar");
@@ -284,43 +284,26 @@ const topNavbar =
 const aboutSection =
     document.querySelector("#about");
 
-const triggerPoint =
-    aboutSection.offsetTop + 200;
-    
-const rightPanel =
-    document.querySelector(".right-panel");
-
 let lastScrollY =
     window.scrollY;
 
 window.addEventListener("scroll", () => {
 
     const triggerPoint =
-        rightPanel.offsetTop + 120;
+        aboutSection.offsetTop + 0.0;
 
-    /* navbar belum active */
-
-    if(window.scrollY < triggerPoint){
-
-        topNavbar.classList.remove(
-            "hide-navbar"
-        );
-
-        return;
-    }
-
-    /* navbar active */
-
-    if(window.scrollY > lastScrollY){
+    if(window.scrollY > triggerPoint){
 
         topNavbar.classList.add(
-            "hide-navbar"
+            "compact"
         );
 
-    } else {
+    }
+
+    else{
 
         topNavbar.classList.remove(
-            "hide-navbar"
+            "compact"
         );
 
     }

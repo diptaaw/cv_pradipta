@@ -247,7 +247,7 @@
                 </p>
 
                 <p>
-                credits by pradipta adicandra wicaksono 2026
+                © 2026 Pradipta Adicandra Wicaksono
                 </p>
 
             </footer>
