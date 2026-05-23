@@ -34,6 +34,7 @@
             <img
             src="{{ asset('images/ui/avatar.png') }}"
             class="profile-avatar"
+            alt="Profile Avatar"
             >
 
             <span class="profile-name">
@@ -122,9 +123,6 @@
 
         </div>
 
-
-
-        <!-- RIGHT SIDE -->
         <div class="right-panel">
 
             <section id="about" class="section reveal">
@@ -146,8 +144,6 @@
                 </p>
 
             </section>
-
-
 
             <section id="experience" class="section reveal">
 
