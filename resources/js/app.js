@@ -275,3 +275,31 @@ function animateParticles(){
 }
 
 animateParticles();
+
+/* NAVBAR HIDE ON SCROLL */
+
+const topNavbar =
+    document.querySelector(".top-navbar");
+
+let lastScrollY =
+    window.scrollY;
+
+window.addEventListener("scroll", () => {
+
+    if(window.scrollY > lastScrollY){
+
+        topNavbar.classList.add(
+            "hide-navbar"
+        );
+
+    } else {
+
+        topNavbar.classList.remove(
+            "hide-navbar"
+        );
+
+    }
+
+    lastScrollY = window.scrollY;
+
+});
