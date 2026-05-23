@@ -18,6 +18,26 @@ body{
     font-family:'Inter',sans-serif;
 }
 
+.layout-shell{
+
+    position:fixed;
+
+    top:24px;
+
+    margin-left: 180px;
+
+    left:50%;
+
+    transform:translateX(-50%);
+
+    width:min(1400px, calc(100% - 48px));
+
+    z-index:9999;
+
+    pointer-events:none;
+
+}
+
 *{
     cursor:none !important;
 }
@@ -316,21 +336,20 @@ body::after{
 
 .top-navbar{
 
-    position:fixed;
+    width:1020px;
 
-    top:24px;
-    left:235px;
+    height:70px;
 
-    width:calc(100% - 96px);
+    pointer-events:auto;
+
     max-width:1045px;
-
-    height:72px;
+    height:72px;;
 
     display:flex;
     align-items:center;
     justify-content:space-between;
 
-    padding:0 28px;
+    padding: 0 28px;
 
     border-radius:999px;
 
