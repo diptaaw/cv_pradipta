@@ -122,11 +122,22 @@
 
             <div class="socials">
 
-                <a href="#">GitHub</a>
+                <!-- Admin trigger -->
+                <a href="{{ route('admin.login') }}" class="social-link admin-trigger" aria-label="Admin Portal" title="Admin">
+                    <img src="{{ asset('images/icons/admin.svg') }}" alt="">
+                </a>
 
-                <a href="#">Instagram</a>
+                <a href="#" class="social-link" aria-label="Visit GitHub">
+                    <img src="{{ asset('images/icons/github.svg') }}" alt="">
+                </a>
 
-                <a href="#">LinkedIn</a>
+                <a href="#" class="social-link" aria-label="Visit Instagram">
+                    <img src="{{ asset('images/icons/instagram.svg') }}" alt="">
+                </a>
+
+                <a href="#" class="social-link" aria-label="Visit LinkedIn">
+                    <img src="{{ asset('images/icons/linkedin.svg') }}" alt="">
+                </a>
 
             </div>
 
@@ -136,110 +147,102 @@
 
             <section id="about" class="section reveal">
 
-                <p>
-                    I'm a Multimedia Broadcasting student at <b> PENS (EEPIS) </b> with a strong interest in visual storytelling, creative production, and digital media.         I enjoy transforming ideas into engaging visual experiences through photography, videography, live streaming, and design.
-                </p>
+                @if(isset($about) && is_array($about->paragraphs) && count($about->paragraphs))
+                    @foreach($about->paragraphs as $paragraph)
+                        <p>{{ $paragraph }}</p>
+                    @endforeach
+                @else
+                    <p>
+                        I'm a Multimedia Broadcasting student at <b> PENS (EEPIS) </b> with a strong interest in visual storytelling, creative production, and digital media. I enjoy transforming ideas into engaging visual experiences through photography, videography, live streaming, and design.
+                    </p>
 
-                <p>
-                    Over the past few years, I've worked on various creative and organizational projects, from commercial photography and content production to multimedia events and student organizations. These experiences helped me develop not only technical skills, but also adaptability, communication, and collaborative problem solving in fast-paced production environments.
-                </p>
+                    <p>
+                        Over the past few years, I've worked on various creative and organizational projects, from commercial photography and content production to multimedia events and student organizations. These experiences helped me develop not only technical skills, but also adaptability, communication, and collaborative event planning in fast-paced production environments.
+                    </p>
 
-                <p>
-                    I'm especially interested in the creative process behind media production: how visuals, lighting, composition, and storytelling can shape emotions and audience experience.
-                </p>
-
-                <p>
-                    Currently, I’m continuing to explore photography, UI/UX, branding, and multimedia technology while building projects that combine creativity with technical execution.
-                </p>
+                    <p>
+                        I'm especially interested in the creative process behind media production: how visuals, lighting, composition, and storytelling can shape emotions and audience experience.
+                    </p>
+                @endif
 
             </section>
 
             <section id="experience" class="section reveal">
 
-                <div class="card">
-
-                    <div class="card-year">
-                        2025 — PRESENT
-                    </div>
-
-                    <div class="card-content">
-
-                        <h3>
-                            Staff PSDM · HIMA Multimedia Broadcasting PENS
-                        </h3>
-
-                        <p>
-                            Contributed to student development programs and
-                            organizational activities through team coordination,
-                            recruitment support, and collaborative event planning.
-                        </p>
-
-                        <div class="tags">
-
-                            <span>Leadership</span>
-
-                            <span>Team Coordination</span>
-
+                @if($experiences->isEmpty())
+                    <div class="card">
+                        <div class="card-year">2025 — PRESENT</div>
+                        <div class="card-content">
+                            <h3>Staff PSDM · HIMA Multimedia Broadcasting PENS</h3>
+                            <p>
+                                Contributed to student development programs and organizational activities through team coordination, recruitment support, and collaborative event planning.
+                            </p>
+                            <div class="tags">
+                                <span>Leadership</span>
+                                <span>Team Coordination</span>
+                            </div>
                         </div>
-
                     </div>
-
-                </div>
+                @else
+                    @foreach($experiences as $experience)
+                        <div class="card">
+                            <div class="card-year">{{ $experience->year ?? '—' }}</div>
+                            <div class="card-content">
+                                <h3>{{ $experience->title }}</h3>
+                                <p>{{ $experience->description }}</p>
+                                <div class="tags">
+                                    @foreach($experience->tags ?? [] as $tag)
+                                        <span>{{ $tag }}</span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
 
                 <a href="/resume" class="section-link">
-            View Full Résumé
-             <span>↗</span>
-            </a>
+                    View Full Résumé
+                    <span>↗</span>
+                </a>
 
             </section>
 
             <section id="projects" class="section reveal">
 
-                <div class="card">
-
-                   <img loading="lazy"
-                    src="{{ asset('images/projects/wildlife.png') }}"
-                    alt="Wildlife Project"
-                    class="project-image"
-                    >
-
-                    <div class="card-content">
-
-
-                         <h3 class="project-title">
-
-                                Interactive Wildlife Park
-
-                                <span class="arrow">
-                                   ↗
-                                </span>
-
-                        </h3>
-
-                        <p>
-                            An educational wildlife park built in Unity featuring
-                            interactive systems, dynamic weather, NPC behavior,
-                            and immersive environment exploration.
-                        </p>
-
-                        <div class="tags">
-
-                            <span>Unity</span>
-
-                            <span>C#</span>
-
-                            <span>Game Environment</span>
-
+                @if($projects->isEmpty())
+                    <div class="card">
+                        <img loading="lazy" src="{{ asset('images/projects/wildlife.png') }}" alt="Wildlife Project" class="project-image">
+                        <div class="card-content">
+                            <h3 class="project-title">Interactive Wildlife Park <span class="arrow">↗</span></h3>
+                            <p>An educational wildlife park built in Unity featuring interactive systems, dynamic weather, NPC behavior, and immersive environment exploration.</p>
+                            <div class="tags">
+                                <span>Unity</span>
+                                <span>C#</span>
+                                <span>Game Environment</span>
+                            </div>
                         </div>
-
                     </div>
-
-                </div>
+                @else
+                    @foreach($projects as $project)
+                        <div class="card">
+                            <img loading="lazy" src="{{ $project->thumbnail ? asset($project->thumbnail) : asset('images/projects/wildlife.png') }}" alt="{{ $project->title }}" class="project-image">
+                            <div class="card-content">
+                                <h3 class="project-title">{{ $project->title }} <span class="arrow">↗</span></h3>
+                                <p>{{ $project->description }}</p>
+                                <div class="tags">
+                                    @foreach($project->technologies ?? [] as $tech)
+                                        <span>{{ $tech }}</span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
 
                 <a href="/archive" class="section-link">
                     View Full Project Archive
-                <span>↗</span>
-            </a>
+                    <span>↗</span>
+                </a>
 
             </section>
 

@@ -967,27 +967,60 @@ body::after{
         translateX(12px);
 }
 
+/* Minimal, elegant social links */
 .socials{
     margin-top:64px;
 
     display:flex;
-
-    gap:18px;
+    align-items:center;
+    gap:24px;
 }
 
-.socials a{
+/* Base social link styling */
+.socials .social-link{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
     text-decoration:none;
-
-    color:
-        rgba(255,255,255,0.4);
-
-    font-size:0.8rem;
-
-    transition:0.3s;
+    
+    /* No container, no background, no border */
+    background:none;
+    border:none;
+    
+    /* Floating effect */
+    opacity:0.52;
+    
+    /* Smooth transitions */
+    transition:opacity 0.25s ease, transform 0.25s ease;
+    
+    /* Accessibility and interaction */
+    cursor:pointer;
+    position:relative;
 }
 
-.socials a:hover{
-    color:white;
+/* SVG icon styling */
+.socials .social-link img{
+    width:20px;
+    height:20px;
+    object-fit:contain;
+    display:block;
+}
+
+/* Hover state: softly appearing from darkness */
+.socials .social-link:hover{
+    opacity:1;
+    transform:scale(1.15) translateY(-2px);
+}
+
+/* Admin trigger styling - subtle and minimal */
+.socials .admin-trigger{
+    opacity:0.45;
+}
+
+.socials .admin-trigger:hover{
+    opacity:1;
+    transform:scale(1.15) translateY(-2px);
 }
 
 .section{
@@ -1020,27 +1053,26 @@ body::after{
     opacity:0.72;
 
     transition:
-        color 0.3s ease,
-        opacity 0.3s ease,
-        transform 0.3s ease;
+        color 0.25s ease,
+        opacity 0.25s ease;
 }
 
 .section-link span{
-    transition:0.3s ease;
+    display:inline-flex;
+    align-items:center;
+    transition:0.25s ease;
 }
 
 .section-link:hover{
     opacity:1;
 
     color:#8b6dff;
-
-    transform:
-        translateX(6px);
 }
 
 .section-link:hover span{
     transform:
-        translate(4px,-4px);
+        translateX(4px)
+        translateY(-4px);
 }
 
 .card{
@@ -1108,24 +1140,36 @@ body::after{
     color:white;
 
     transition:
-        color 0.3s ease,
-        transform 0.3s ease;
+        color 0.25s ease;
 }
 
 .project-title .arrow{
-    transition:0.3s ease;
+    display:inline-flex;
+    align-items:center;
+    transition:0.25s ease;
 }
 
 .project-title:hover{
     color:#8b6dff;
-
-    transform:
-        translateX(6px);
 }
 
 .project-title:hover .arrow{
     transform:
-        translate(4px,-4px);
+        translateX(4px)
+        translateY(-4px);
+
+    color:#8b6dff;
+}
+
+/* Card hover activates title effects */
+.card:hover .project-title{
+    color:#8b6dff;
+}
+
+.card:hover .project-title .arrow{
+    transform:
+        translateX(4px)
+        translateY(-4px);
 
     color:#8b6dff;
 }
@@ -1455,6 +1499,22 @@ body .noise{
 .custom-cursor{
     transition:
         transform 0.08s ease-out;
+}
+
+.admin-page,
+.admin-page *{
+    cursor:auto !important;
+}
+
+.admin-page .layout-shell{
+    pointer-events:auto !important;
+    position:relative !important;
+    top:auto !important;
+    left:auto !important;
+    transform:none !important;
+    margin:0 auto !important;
+    width:min(1200px, calc(100% - 48px)) !important;
+    max-width:1200px !important;
 }
 
 .particles{
