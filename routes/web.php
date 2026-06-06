@@ -11,6 +11,9 @@ use App\Http\Middleware\EnsureAdmin;
 use App\Models\AboutSection;
 use App\Models\Experience;
 use App\Models\Project;
+use App\Models\Resume;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 Route::get('/', function () {
 
@@ -27,8 +30,9 @@ Route::get('/', function () {
 
     $projects = Schema::hasTable('projects')
         ? Project::where('is_published', true)
+            ->where('featured', true)
             ->orderBy('position')
-            ->take(4)
+            ->take(5)
             ->get()
         : collect([]);
 
@@ -41,6 +45,41 @@ Route::get('/', function () {
 Route::get('/projects', function () {
 
     return view('projects');
+
+});
+
+Route::get('/archive', function () {
+
+    $projects = Schema::hasTable('projects')
+        ? Project::where('is_published', true)
+            ->orderBy('position')
+            ->latest('updated_at')
+            ->get()
+        : collect([]);
+
+    return view('archive', compact('projects'));
+
+});
+
+Route::get('/resume', function () {
+
+    $resume = Schema::hasTable('resumes')
+        ? Resume::where('is_published', true)
+            ->latest('updated_at')
+            ->first()
+        : null;
+
+    $resumeUrl = null;
+
+    if ($resume && $resume->file_path) {
+        $path = $resume->file_path;
+
+        $resumeUrl = Str::startsWith($path, ['http://', 'https://', '/'])
+            ? $path
+            : Storage::url($path);
+    }
+
+    return view('resume', compact('resume', 'resumeUrl'));
 
 });
 
@@ -59,5 +98,3 @@ Route::middleware([EnsureAdmin::class])->prefix('admin')->name('admin.')->group(
     Route::get('about', [AboutController::class, 'edit'])->name('about.edit');
     Route::put('about', [AboutController::class, 'update'])->name('about.update');
 });
-
-

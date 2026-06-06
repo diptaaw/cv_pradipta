@@ -16,67 +16,15 @@
 
 </head>
 
-<body>
-
 <body id="top">
 
 <div class="bg-orb orb-1"></div>
 <div class="bg-orb orb-2"></div>
 <div class="bg-orb orb-3"></div>
 
-<div class="layout-shell">
-
-    <div class="top-navbar">
-
-        <div class="navbar-content">
-
-            <div class="navbar-left">
-
-                <a href="#top" class="profile-identity">
-
-                    <img
-                    src="{{ asset('images/ui/avatar.png') }}"
-                    class="profile-avatar"
-                    alt="Profile Avatar"
-                    >
-
-                    <span class="profile-name">
-                        diptaaw
-                    </span>
-
-                </a>
-
-            </div>
-
-            <div class="navbar-right">
-
-                <a href="#" class="nav-icon">
-                    <img src="/images/icons/email.svg" alt="">
-                </a>
-
-                <a href="#" class="nav-icon">
-                    <img src="/images/icons/instagram.svg" alt="">
-                </a>
-
-                <a href="#" class="nav-icon">
-                    <img src="/images/icons/github.svg" alt="">
-                </a>
-
-                <button class="theme-button">
-                    <img src="/images/icons/moon.svg" alt="">
-                </button>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
+@include('partials.navbar', ['activePage' => 'home'])
 
 <div class="spotlight"></div>
-
-    <div class="spotlight"></div>
 
     <div class="custom-cursor">
         <img src="/images/cursor/cursor.png" alt="">

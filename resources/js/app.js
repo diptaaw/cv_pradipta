@@ -9,6 +9,42 @@ let currentY = 0;
 
 const cursor = document.querySelector(".custom-cursor");
 
+const themeToggle =
+    document.querySelector("[data-theme-toggle]");
+
+const savedTheme =
+    localStorage.getItem("portfolio-theme");
+
+if (savedTheme === "light") {
+    document.body.dataset.theme = "light";
+}
+
+if (themeToggle) {
+    themeToggle.setAttribute(
+        "aria-pressed",
+        document.body.dataset.theme === "light"
+            ? "true"
+            : "false"
+    );
+
+    themeToggle.addEventListener("click", () => {
+
+        const isLight =
+            document.body.dataset.theme === "light";
+
+        if (isLight) {
+            document.body.removeAttribute("data-theme");
+            localStorage.setItem("portfolio-theme", "dark");
+            themeToggle.setAttribute("aria-pressed", "false");
+        } else {
+            document.body.dataset.theme = "light";
+            localStorage.setItem("portfolio-theme", "light");
+            themeToggle.setAttribute("aria-pressed", "true");
+        }
+
+    });
+}
+
 /* MOUSE MOVE */
 
 document.addEventListener("mousemove", (e) => {
@@ -16,8 +52,10 @@ document.addEventListener("mousemove", (e) => {
     mouseX = e.clientX;
     mouseY = e.clientY;
 
-    cursor.style.left = `${e.clientX}px`;
-    cursor.style.top = `${e.clientY}px`;
+    if (cursor) {
+        cursor.style.left = `${e.clientX}px`;
+        cursor.style.top = `${e.clientY}px`;
+    }
 
 });
 
@@ -100,22 +138,26 @@ window.addEventListener("scroll", () => {
 
 const hoverItems =
     document.querySelectorAll(
-        "a, .card, .tags span"
+        "a, button, .card, .tags span"
     );
 
 hoverItems.forEach((item) => {
 
     item.addEventListener("mouseenter", () => {
 
-        cursor.style.transform =
-            "translate(-50%, -50%) scale(1.5)";
+        if (cursor) {
+            cursor.style.transform =
+                "translate(-50%, -50%) scale(1.5)";
+        }
 
     });
 
     item.addEventListener("mouseleave", () => {
 
-        cursor.style.transform =
-            "translate(-50%, -50%) scale(1)";
+        if (cursor) {
+            cursor.style.transform =
+                "translate(-50%, -50%) scale(1)";
+        }
 
     });
 
@@ -131,11 +173,13 @@ function animateSpotlight() {
     currentY +=
         (mouseY - currentY) * 0.08;
 
-    spotlight.style.left =
-        `${currentX}px`;
+    if (spotlight) {
+        spotlight.style.left =
+            `${currentX}px`;
 
-    spotlight.style.top =
-        `${currentY}px`;
+        spotlight.style.top =
+            `${currentY}px`;
+    }
 
     requestAnimationFrame(
         animateSpotlight
@@ -159,9 +203,11 @@ for(let i = 0; i < PARTICLE_COUNT; i++){
 
     particle.classList.add("particle");
 
-    particlesContainer.appendChild(
-        particle
-    );
+    if (particlesContainer) {
+        particlesContainer.appendChild(
+            particle
+        );
+    }
 
     const obj = {
 
@@ -293,19 +339,16 @@ let lastScrollY = 0;
 // Detect if navbar should enter compact/adaptive mode
 function shouldEnterCompactMode() {
 
-    const zoom =
-        window.devicePixelRatio || 1;
-
-    // compact mode only when zoom reaches 125% or more
-    const zoomInCompact =
-        zoom >= 1.25;
-
-    return zoomInCompact;
+    return false;
 
 }
 
 // Apply or remove compact-mode styling
 function updateCompactModeState() {
+
+    if (!topNavbar || !layoutShell) {
+        return;
+    }
 
     const needsCompact =
         shouldEnterCompactMode();
@@ -447,6 +490,10 @@ updateCompactModeState();
 /* NAVBAR COMPACT ON COLLISION */
 
 window.addEventListener("scroll", () => {
+
+    if (!topNavbar || !rightPanel) {
+        return;
+    }
 
     const navbarRect =
         topNavbar.getBoundingClientRect();
