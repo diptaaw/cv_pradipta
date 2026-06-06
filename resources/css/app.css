@@ -39,7 +39,7 @@ body{
 }
 
 *{
-    cursor:none !important;
+    cursor:auto !important;
 }
 
 body{
@@ -1325,6 +1325,7 @@ body .noise{
 
 .custom-cursor{
     position:fixed;
+    display: none !important;
 
     top:0;
     left:0;
@@ -1338,13 +1339,6 @@ body .noise{
     pointer-events:none;
 
     z-index:999999;
-}
-
-.custom-cursor img{
-    width:100%;
-    height:100%;
-
-    object-fit:contain;
 }
 
 .reveal{
