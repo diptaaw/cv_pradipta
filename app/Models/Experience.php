@@ -13,16 +13,28 @@ class Experience extends Model
         'title',
         'organization',
         'year',
+        'start_date',
+        'end_date',
         'description',
-        'tags',
         'position',
         'featured',
         'is_published',
     ];
 
     protected $casts = [
-        'tags' => 'array',
         'featured' => 'boolean',
         'is_published' => 'boolean',
+        'start_date' => 'date',
+        'end_date' => 'date',
     ];
+
+    public function tags()
+    {
+        return $this->belongsToMany(Tag::class, 'experience_tags');
+    }
+
+    public function getTagsAttribute()
+    {
+        return $this->tags->pluck('name')->toArray();
+    }
 }

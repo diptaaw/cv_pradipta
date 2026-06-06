@@ -24,6 +24,9 @@ class User extends Authenticatable
         'password',
         'is_admin',
         'avatar',
+        'role_id',
+        'is_active',
+        'last_login_at',
     ];
 
     /**
@@ -47,11 +50,30 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'is_active' => 'boolean',
+            'last_login_at' => 'datetime',
         ];
+    }
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
     }
 
     public function isAdmin(): bool
     {
-        return $this->is_admin === true;
+        if (!$this->is_active) {
+            return false;
+        }
+        return $this->is_admin === true || $this->role_id !== null;
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        if (!$this->is_active) {
+            return false;
+        }
+        // If it has is_admin = true (original seeder) or its role slug is 'super-admin', it is super admin
+        return $this->is_admin === true || ($this->role && $this->role->slug === 'super-admin');
     }
 }

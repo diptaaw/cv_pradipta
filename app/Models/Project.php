@@ -12,8 +12,12 @@ class Project extends Model
     protected $fillable = [
         'title',
         'thumbnail',
+        'gallery_images',
+        'year',
+        'start_date',
+        'end_date',
+        'category',
         'description',
-        'technologies',
         'project_link',
         'github_link',
         'featured',
@@ -23,9 +27,21 @@ class Project extends Model
     ];
 
     protected $casts = [
-        'technologies' => 'array',
+        'gallery_images' => 'array',
         'featured' => 'boolean',
         'archived' => 'boolean',
         'is_published' => 'boolean',
+        'start_date' => 'date',
+        'end_date' => 'date',
     ];
+
+    public function tags()
+    {
+        return $this->belongsToMany(Tag::class, 'project_tags');
+    }
+
+    public function getTechnologiesAttribute()
+    {
+        return $this->tags->pluck('name')->toArray();
+    }
 }

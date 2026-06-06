@@ -220,10 +220,17 @@
                 <a href="{{ route('admin.dashboard') }}">Dashboard</a>
                 <a href="{{ route('admin.experiences.index') }}">Experiences</a>
                 <a href="{{ route('admin.projects.index') }}">Projects</a>
+                <a href="{{ route('admin.tags.index') }}">Tags</a>
+                <a href="{{ route('admin.media.index') }}">Media Library</a>
+                <a href="{{ route('admin.resumes.index') }}">Resume PDF</a>
+                @if(auth()->user() && auth()->user()->isSuperAdmin())
+                    <a href="{{ route('admin.admins.index') }}">Admins</a>
+                @endif
                 <a href="{{ route('admin.about.edit') }}">About</a>
+                <a href="/" target="_blank" style="background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.1);">View Site</a>
                 <form method="POST" action="{{ route('admin.logout') }}" style="display:inline;">
                     @csrf
-                    <button type="submit">Logout</button>
+                    <button type="submit" style="background:rgba(255,59,48,0.15); border-color:rgba(255,59,48,0.2); color:#ff453a;">Logout</button>
                 </form>
             </div>
         </div>
