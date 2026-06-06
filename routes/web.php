@@ -6,7 +6,7 @@ use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ExperienceController;
 use App\Http\Controllers\Admin\ProjectController;
-use App\Http\Controllers\Admin\AboutController;
+use App\Http\Controllers\Admin\HomeController;
 use App\Http\Middleware\EnsureAdmin;
 use App\Models\AboutSection;
 use App\Models\Experience;
@@ -164,11 +164,26 @@ Route::middleware([EnsureAdmin::class])->prefix('admin')->name('admin.')->group(
     Route::resource('experiences', ExperienceController::class)->except(['show']);
     Route::resource('projects', ProjectController::class)->except(['show']);
     Route::resource('tags', \App\Http\Controllers\Admin\TagController::class)->except(['show']);
-    Route::resource('media', \App\Http\Controllers\Admin\MediaController::class)->only(['index', 'store', 'destroy']);
     Route::resource('resumes', \App\Http\Controllers\Admin\ResumeFileController::class)->except(['show']);
     Route::post('resumes/{resume}/publish', [\App\Http\Controllers\Admin\ResumeFileController::class, 'publish'])->name('resumes.publish');
     Route::post('resumes/{resume}/unpublish', [\App\Http\Controllers\Admin\ResumeFileController::class, 'unpublish'])->name('resumes.unpublish');
     Route::resource('admins', \App\Http\Controllers\Admin\AdminUserController::class)->except(['show']);
-    Route::get('about', [AboutController::class, 'edit'])->name('about.edit');
-    Route::put('about', [AboutController::class, 'update'])->name('about.update');
+    Route::get('about', [HomeController::class, 'edit'])->name('about.edit');
+    Route::put('about', [HomeController::class, 'update'])->name('about.update');
+    Route::get('analytics', function() {
+        return view('admin.analytics.index');
+    })->name('analytics.index');
+    Route::get('settings', function() {
+        return view('admin.settings.index');
+    })->name('settings.index');
+    Route::post('settings', function(\Illuminate\Http\Request $request) {
+        $request->validate([
+            'site_title' => 'required|string|max:255',
+            'meta_description' => 'required|string|max:500',
+        ]);
+        \App\Models\SiteSetting::updateOrCreate(['key' => 'site_title'], ['value' => $request->input('site_title')]);
+        \App\Models\SiteSetting::updateOrCreate(['key' => 'meta_description'], ['value' => $request->input('meta_description')]);
+        \App\Models\ActivityLog::log('Settings updated', 'Updated SEO Title and Meta Description.');
+        return redirect()->route('admin.settings.index')->with('success', 'Settings updated successfully.');
+    })->name('settings.update');
 });

@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Pradipta Portfolio</title>
+    <title>{{ \App\Models\SiteSetting::get('site_title', 'Pradipta Portfolio') }}</title>
+    <meta name="description" content="{{ \App\Models\SiteSetting::get('meta_description', 'Multimedia & Broadcasting student exploring visual storytelling, creative technology, and digital media production.') }}">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -38,16 +39,15 @@
             <div>
 
                 <h1 class="name">
-                    Pradipta Adicandra Wicaksono
+                    {{ $about->headline ?? 'Pradipta Adicandra Wicaksono' }}
                 </h1>
 
                 <h2 class="title">
-                    Multimedia & Broadcasting Engineer
+                    {{ $about->subheadline ?? 'Multimedia & Broadcasting Engineer' }}
                 </h2>
 
                 <p class="description">
-                    Exploring the intersection of visuals,
-                    storytelling, and digital experiences.
+                    {{ $about->short_intro ?? 'Exploring the intersection of visuals, storytelling, and digital experiences.' }}
                 </p>
 
                 <nav class="navigation">
@@ -75,17 +75,36 @@
                     <img src="{{ asset('images/icons/admin.svg') }}" alt="">
                 </a>
 
-                <a href="#" class="social-link" aria-label="Visit GitHub">
-                    <img src="{{ asset('images/icons/github.svg') }}" alt="">
-                </a>
+                @php
+                    $github = \App\Models\SiteSetting::get('social_github');
+                    $instagram = \App\Models\SiteSetting::get('social_instagram');
+                    $linkedin = \App\Models\SiteSetting::get('social_linkedin');
+                    $email = \App\Models\SiteSetting::get('social_email');
+                @endphp
 
-                <a href="#" class="social-link" aria-label="Visit Instagram">
-                    <img src="{{ asset('images/icons/instagram.svg') }}" alt="">
-                </a>
+                @if($github)
+                    <a href="{{ $github }}" target="_blank" class="social-link" aria-label="Visit GitHub">
+                        <img src="{{ asset('images/icons/github.svg') }}" alt="">
+                    </a>
+                @endif
 
-                <a href="#" class="social-link" aria-label="Visit LinkedIn">
-                    <img src="{{ asset('images/icons/linkedin.svg') }}" alt="">
-                </a>
+                @if($instagram)
+                    <a href="{{ $instagram }}" target="_blank" class="social-link" aria-label="Visit Instagram">
+                        <img src="{{ asset('images/icons/instagram.svg') }}" alt="">
+                    </a>
+                @endif
+
+                @if($linkedin)
+                    <a href="{{ $linkedin }}" target="_blank" class="social-link" aria-label="Visit LinkedIn">
+                        <img src="{{ asset('images/icons/linkedin.svg') }}" alt="">
+                    </a>
+                @endif
+
+                @if($email)
+                    <a href="{{ str_starts_with($email, 'mailto:') ? $email : 'mailto:' . $email }}" class="social-link" aria-label="Send Email">
+                        <img src="{{ asset('images/icons/email.svg') }}" alt="">
+                    </a>
+                @endif
 
             </div>
 
@@ -140,7 +159,7 @@
                                 <p>{{ $experience->description }}</p>
                                 <div class="tags">
                                     @foreach($experience->tags ?? [] as $tag)
-                                        <span>{{ $tag }}</span>
+                                        <span>{{ $tag->name }}</span>
                                     @endforeach
                                 </div>
                             </div>
@@ -198,16 +217,12 @@
 
             <footer class="footer">
                 <p>
-                Designed and developed by yours truly with <b> Figma </b>
-                and <b>Visual Studio Code.</b>  Created as a digital space
-                to showcase multimedia production, visual storytelling,
-                and creative technology projects.
+                {!! nl2br(e(\App\Models\SiteSetting::get('footer_designed_text', 'Designed and developed by yours truly with Figma and Visual Studio Code. Created as a digital space to showcase multimedia production, visual storytelling, and creative technology projects.'))) !!}
                 </p>
 
                 <p>
-                © 2026 Pradipta Adicandra Wicaksono
+                {!! nl2br(e(\App\Models\SiteSetting::get('footer_copyright_text', '© 2026 Pradipta Adicandra Wicaksono'))) !!}
                 </p>
-
             </footer>
 
         </div>

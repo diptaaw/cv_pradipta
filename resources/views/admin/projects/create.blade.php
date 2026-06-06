@@ -1,125 +1,226 @@
 @extends('admin.layout')
 
-@section('title', 'Tambah Project Baru')
-@section('page-title', 'Tambah Project Baru')
-@section('page-subtitle', 'Tambahkan detail proyek baru, pilih tag, dan sertakan gambar thumbnail serta galeri.')
+@section('title', 'Create Project')
+@section('page-title', 'New Project')
+
+@section('breadcrumb')
+    <a href="{{ route('admin.projects.index') }}">Projects</a>
+    <span>&rarr;</span> <span class="active">New Project</span>
+@endsection
 
 @section('content')
     @if($errors->any())
-        <div class="flash-message" style="background: rgba(255,59,48,0.16); border-color: rgba(255,59,48,0.22);">{{ $errors->first() }}</div>
+        <div class="flash-message" style="margin-bottom: 24px; padding: 12px 16px; background: rgba(255,59,48,0.15); border: 1px solid rgba(255,59,48,0.25); color: #ff453a; border-radius: 10px; font-weight: 600;">
+            {{ $errors->first() }}
+        </div>
     @endif
 
-    <form class="admin-form" method="POST" action="{{ route('admin.projects.store') }}" style="max-width: 1000px;">
+    <form method="POST" action="{{ route('admin.projects.store') }}" enctype="multipart/form-data">
         @csrf
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 20px;">
-            <div>
-                <label>Judul Proyek</label>
-                <input type="text" name="title" value="{{ old('title') }}" required>
+        <div class="cms-form-grid" style="grid-template-columns: 1.2fr 1fr; gap: 24px;">
+            <!-- Left Column: Core Fields -->
+            <div class="admin-card cms-card-section">
+                <h2 style="font-size: 1.15rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                    🚀 Project Details
+                </h2>
 
-                <label>Kategori</label>
-                <input type="text" name="category" value="{{ old('category') }}" placeholder="Contoh: Game Development, Photography">
+                <div class="cms-form-group">
+                    <label for="title">Project Title</label>
+                    <input class="cms-input" id="title" type="text" name="title" value="{{ old('title') }}" required placeholder="e.g. Interactive Wildlife Park">
+                </div>
 
-                <label>Tahun Tampilan</label>
-                <input type="text" name="year" value="{{ old('year') }}" placeholder="Contoh: 2026, 2025-2026">
+                <div class="cms-form-group">
+                    <label for="category">Category</label>
+                    <input class="cms-input" id="category" type="text" name="category" value="{{ old('category') }}" placeholder="e.g. Game Development, Photography">
+                </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div>
-                        <label>Tanggal Mulai</label>
-                        <input type="date" name="start_date" value="{{ old('start_date') }}">
+                <div class="cms-form-group">
+                    <label for="year">Display Year / Period</label>
+                    <input class="cms-input" id="year" type="text" name="year" value="{{ old('year') }}" placeholder="e.g. 2026 or 2025 - 2026">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="cms-form-group">
+                        <label for="start_date">Start Date</label>
+                        <input class="cms-input" id="start_date" type="date" name="start_date" value="{{ old('start_date') }}">
                     </div>
-                    <div>
-                        <label>Tanggal Selesai</label>
-                        <input type="date" name="end_date" value="{{ old('end_date') }}">
+                    <div class="cms-form-group">
+                        <label for="end_date">End Date</label>
+                        <input class="cms-input" id="end_date" type="date" name="end_date" value="{{ old('end_date') }}">
                     </div>
                 </div>
 
-                <label>Project Link (Live/Demo)</label>
-                <input type="url" name="project_link" value="{{ old('project_link') }}" placeholder="https://example.com">
-
-                <label>GitHub Link</label>
-                <input type="url" name="github_link" value="{{ old('github_link') }}" placeholder="https://github.com/username/project">
-
-                <label>Posisi Tampilan (Urutan)</label>
-                <input type="number" name="position" value="{{ old('position', 0) }}">
-            </div>
-
-            <div>
-                <label>Deskripsi Proyek</label>
-                <textarea name="description" style="min-height: 140px;">{{ old('description') }}</textarea>
-
-                <label>Tags Terpusat (Pilih yang sudah ada)</label>
-                <div style="max-height: 150px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 10px; background: rgba(0,0,0,0.2); margin-bottom: 12px;">
-                    @forelse($tags as $tag)
-                        <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; cursor: pointer; color: rgba(255,255,255,0.9);">
-                            <input type="checkbox" name="tags[]" value="{{ $tag->id }}" style="width: auto; margin-bottom: 0;">
-                            {{ $tag->name }}
-                        </label>
-                    @empty
-                        <p style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin: 0;">Belum ada tag. Tulis di bawah untuk membuat baru.</p>
-                    @endforelse
+                <div class="cms-form-group">
+                    <label for="project_link">Live Project / Demo URL</label>
+                    <input class="cms-input" id="project_link" type="url" name="project_link" value="{{ old('project_link') }}" placeholder="https://example.com">
                 </div>
 
-                <label>Buat Tag Baru (Pisahkan dengan koma jika lebih dari satu)</label>
-                <input type="text" name="new_tags" value="{{ old('new_tags') }}" placeholder="C#, Unity, WebGL">
+                <div class="cms-form-group">
+                    <label for="github_link">GitHub Repository URL</label>
+                    <input class="cms-input" id="github_link" type="url" name="github_link" value="{{ old('github_link') }}" placeholder="https://github.com/username/repo">
+                </div>
 
-                <div style="display: flex; gap: 20px; margin-top: 24px; margin-bottom: 24px; flex-wrap: wrap;">
-                    <label style="display: inline-flex; align-items: center; gap: 8px; margin-bottom: 0; cursor: pointer;">
-                        <input type="checkbox" name="featured" value="1" {{ old('featured') ? 'checked' : '' }} style="width: auto; margin-bottom: 0;">
-                        Tampilkan sebagai unggulan (Maks 5)
-                    </label>
+                <div class="cms-form-group">
+                    <label for="position">Display Order Position</label>
+                    <input class="cms-input" id="position" type="number" name="position" value="{{ old('position', 0) }}" required>
+                </div>
 
-                    <label style="display: inline-flex; align-items: center; gap: 8px; margin-bottom: 0; cursor: pointer;">
-                        <input type="checkbox" name="archived" value="1" {{ old('archived') ? 'checked' : '' }} style="width: auto; margin-bottom: 0;">
-                        Arsipkan project
-                    </label>
-
-                    <label style="display: inline-flex; align-items: center; gap: 8px; margin-bottom: 0; cursor: pointer;">
-                        <input type="checkbox" name="is_published" value="1" checked style="width: auto; margin-bottom: 0;">
-                        Publikasikan sekarang
-                    </label>
+                <div class="cms-form-group">
+                    <label for="description">Project Description</label>
+                    <textarea class="cms-textarea" id="description" name="description" placeholder="Write project description here..." style="min-height: 120px;">{{ old('description') }}</textarea>
                 </div>
             </div>
-        </div>
 
-        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 24px 0;">
+            <!-- Right Column: Media, Tags, Publishing & Preview -->
+            <div class="admin-card cms-card-section" style="justify-content: space-between;">
+                <div>
+                    <h2 style="font-size: 1.15rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                        🖼️ Media & Tags
+                    </h2>
 
-        <!-- Thumbnail & Gallery Selection from Media Library -->
-        <h2 style="font-size: 1.25rem; margin-bottom: 12px;">Pustaka Media (Pilih Gambar)</h2>
-        <p style="color: rgba(255,255,255,0.6); margin-bottom: 16px; font-size: 0.88rem;">
-            Pilih satu gambar untuk <strong>Thumbnail</strong>, dan beberapa gambar untuk <strong>Galeri Proyek</strong> (opsional). Anda dapat mengunggah gambar baru lewat menu Media di atas sebelum mengedit proyek ini.
-        </p>
-
-        @if($mediaList->isEmpty())
-            <div class="admin-card" style="margin-bottom: 20px;">
-                <p style="color: rgba(255,255,255,0.6);">Belum ada media terunggah. Silakan unggah gambar lewat <a href="{{ route('admin.media.index') }}" target="_blank" style="color: #7b61ff; font-weight: 600;">Media Library</a> terlebih dahulu.</p>
-            </div>
-        @else
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; max-height: 350px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); padding: 16px; border-radius: 14px; background: rgba(0,0,0,0.15); margin-bottom: 24px;">
-                @foreach($mediaList as $media)
-                    @php $path = 'storage/' . $media->file_path; @endphp
-                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 10px; border-radius: 10px; display: flex; flex-direction: column; justify-content: space-between; align-items: center;">
-                        <img src="{{ asset($path) }}" alt="{{ $media->filename }}" style="width: 100%; height: 80px; object-fit: contain; border-radius: 6px; margin-bottom: 8px; background: rgba(0,0,0,0.2);">
-                        <small style="display: block; font-size: 0.75rem; text-align: center; color: rgba(255,255,255,0.5); word-break: break-all; height: 32px; overflow: hidden; margin-bottom: 8px;">{{ $media->filename }}</small>
-                        
-                        <div style="display: flex; flex-direction: column; gap: 4px; width: 100%;">
-                            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.78rem; margin-bottom: 0; color: rgba(255,255,255,0.8); cursor: pointer;">
-                                <input type="radio" name="thumbnail" value="{{ $path }}" style="width: auto; margin-bottom: 0;">
-                                Thumbnail
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.78rem; margin-bottom: 0; color: rgba(255,255,255,0.8); cursor: pointer;">
-                                <input type="checkbox" name="gallery_images[]" value="{{ $path }}" style="width: auto; margin-bottom: 0;">
-                                Galeri
-                            </label>
+                    <!-- Thumbnail -->
+                    <div class="cms-form-group">
+                        <label>Thumbnail Photo</label>
+                        <div style="display: flex; align-items: center; gap: 16px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 12px;">
+                            <img id="thumb-preview" src="{{ asset('images/projects/wildlife.png') }}" alt="Thumbnail Preview" style="width: 80px; height: 50px; border-radius: 6px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2);">
+                            <div>
+                                <input type="file" name="thumbnail_file" id="thumbnail_file" style="display: none;" accept="image/*" onchange="previewThumb(this)">
+                                <button type="button" class="action-btn" onclick="document.getElementById('thumbnail_file').click()" style="margin-bottom: 4px;">Choose Thumbnail</button>
+                                <div style="font-size: 0.7rem; color: rgba(255,255,255,0.4)">Max 5MB. PNG, JPG or WEBP.</div>
+                            </div>
                         </div>
                     </div>
-                @endforeach
-            </div>
-        @endif
 
-        <div class="form-actions">
-            <button type="submit">Tambah Project</button>
-            <a href="{{ route('admin.projects.index') }}">Batal</a>
+                    <!-- Gallery Upload -->
+                    <div class="cms-form-group" style="margin-top: 12px;">
+                        <label>Upload Gallery Images</label>
+                        <input class="cms-input" type="file" name="gallery_files[]" accept="image/*" multiple style="padding: 10px !important;">
+                        <div style="font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-top: 2px;">Hold Ctrl to choose multiple images. Max 5MB per file.</div>
+                    </div>
+
+                    <!-- Tags -->
+                    <div class="cms-form-group" style="margin-top: 12px;">
+                        <label>Centralized Tags</label>
+                        <div style="max-height: 120px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.08); padding: 12px; border-radius: 12px; background: rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 8px;">
+                            @forelse($tags as $tag)
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
+                                    <input type="checkbox" name="tags[]" value="{{ $tag->id }}" style="width: 16px; height: 16px; accent-color: #7b61ff; cursor: pointer;">
+                                    <span style="font-size: 0.85rem; color: rgba(255,255,255,0.85)">{{ $tag->name }}</span>
+                                </label>
+                            @empty
+                                <span style="color: rgba(255,255,255,0.4); font-size: 0.82rem;">No tags available. Write new ones below.</span>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    <div class="cms-form-group" style="margin-top: 12px;">
+                        <label for="new_tags">Create New Tags (comma-separated)</label>
+                        <input class="cms-input" id="new_tags" type="text" name="new_tags" value="{{ old('new_tags') }}" placeholder="e.g. C#, Unity, WebGL">
+                    </div>
+
+                    <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 12px 0;">
+
+                    <!-- Toggles -->
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
+                            <input type="checkbox" name="featured" value="1" {{ old('featured') ? 'checked' : '' }} style="width: 16px; height: 16px; accent-color: #7b61ff; cursor: pointer;">
+                            <span style="font-size: 0.85rem; font-weight: 600; color: white;">Featured (Show on Homepage)</span>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
+                            <input type="checkbox" name="archived" value="1" {{ old('archived') ? 'checked' : '' }} style="width: 16px; height: 16px; accent-color: #7b61ff; cursor: pointer;">
+                            <span style="font-size: 0.85rem; font-weight: 600; color: white;">Archive this project</span>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
+                            <input type="checkbox" name="is_published" value="1" checked style="width: 16px; height: 16px; accent-color: #7b61ff; cursor: pointer;">
+                            <span style="font-size: 0.85rem; font-weight: 600; color: white;">Publish immediately</span>
+                        </label>
+                    </div>
+
+                    <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 12px 0;">
+
+                    <!-- Dynamic Card Preview -->
+                    <div class="cms-form-group">
+                        <label>Live Preview (Homepage Style)</label>
+                        <div style="background: #05050a; padding: 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.06); position: relative; overflow: hidden; isolation: isolate; margin-top: 6px;">
+                            <div class="card" style="padding: 0; background: transparent; display: flex; gap: 16px; align-items: flex-start;">
+                                <img id="preview-thumb-img" src="{{ asset('images/projects/wildlife.png') }}" alt="Project Image" class="project-image" style="width: 100px; height: 65px; border-radius: 8px; object-fit: cover;">
+                                <div class="card-content" style="flex: 1;">
+                                    <h3 id="preview-title" class="project-title" style="font-size: 0.95rem; font-weight: 700; color: white; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;"></h3>
+                                    <p id="preview-desc" style="font-size: 0.8rem; color: rgba(255,255,255,0.62); line-height: 1.5; margin-bottom: 10px;"></p>
+                                    <div class="tags" id="preview-tags"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 20px;">
+                    <button type="submit" class="btn-primary-cms" style="flex: 1;">
+                        Create Project
+                    </button>
+                    <a href="{{ route('admin.projects.index') }}" class="btn-secondary-cms" style="text-decoration: none;">
+                        Cancel
+                    </a>
+                </div>
+            </div>
         </div>
     </form>
+
+    <script>
+        function updatePreview() {
+            const titleVal = document.getElementById('title').value || 'Project Title';
+            const descVal = document.getElementById('description').value || 'Project description...';
+            
+            document.getElementById('preview-title').innerHTML = titleVal + ' <span class="arrow" style="font-size:0.8rem;">↗</span>';
+            document.getElementById('preview-desc').innerText = descVal;
+            
+            const tagsContainer = document.getElementById('preview-tags');
+            tagsContainer.innerHTML = '';
+            
+            // Centralized checked tags
+            const checkedTags = document.querySelectorAll('input[name="tags[]"]:checked');
+            checkedTags.forEach(chk => {
+                const labelText = chk.nextElementSibling.innerText;
+                const span = document.createElement('span');
+                span.innerText = labelText;
+                tagsContainer.appendChild(span);
+            });
+            
+            // New tags typed
+            const newTags = document.getElementById('new_tags').value;
+            if (newTags) {
+                newTags.split(',').map(t => t.trim()).filter(t => t.length > 0).forEach(t => {
+                    const span = document.createElement('span');
+                    span.innerText = t;
+                    tagsContainer.appendChild(span);
+                });
+            }
+        }
+
+        function previewThumb(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('thumb-preview').src = e.target.result;
+                    document.getElementById('preview-thumb-img').src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            ['title', 'description', 'new_tags'].forEach(id => {
+                document.getElementById(id).addEventListener('input', updatePreview);
+            });
+
+            document.querySelectorAll('input[name="tags[]"]').forEach(chk => {
+                chk.addEventListener('change', updatePreview);
+            });
+
+            updatePreview();
+        });
+    </script>
 @endsection

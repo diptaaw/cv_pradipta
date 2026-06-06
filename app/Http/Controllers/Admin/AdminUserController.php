@@ -8,23 +8,22 @@ use App\Models\Role;
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class AdminUserController extends Controller
 {
-    public function __construct()
+    protected function authorizeSuperAdmin()
     {
-        // Enforce Super Admin authorization check for all methods
-        $this->middleware(function ($request, $next) {
-            if (!auth()->user() || !auth()->user()->isSuperAdmin()) {
-                abort(403, 'Akses ditolak. Hanya Super Admin yang dapat mengelola administrator.');
-            }
-            return $next($request);
-        });
+        if (!auth()->user() || !auth()->user()->isSuperAdmin()) {
+            abort(403, 'Akses ditolak. Hanya Super Admin yang dapat mengelola administrator.');
+        }
     }
 
     public function index()
     {
+        $this->authorizeSuperAdmin();
+
         $admins = User::with('role')->get();
 
         return view('admin.admins.index', compact('admins'));
@@ -32,6 +31,8 @@ class AdminUserController extends Controller
 
     public function create()
     {
+        $this->authorizeSuperAdmin();
+
         $roles = Role::all();
 
         return view('admin.admins.create', compact('roles'));
@@ -39,13 +40,23 @@ class AdminUserController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorizeSuperAdmin();
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6|confirmed',
             'role_id' => 'required|exists:roles,id',
             'is_active' => 'nullable|boolean',
+            'avatar' => 'nullable|image|max:2048', // Max 2MB
         ]);
+
+        $avatarPath = null;
+        if ($request->hasFile('avatar')) {
+            $file = $request->file('avatar');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $avatarPath = $file->storeAs('uploads/avatars', $filename, 'public');
+        }
 
         $admin = User::create([
             'name' => $request->input('name'),
@@ -53,6 +64,7 @@ class AdminUserController extends Controller
             'password' => Hash::make($request->input('password')),
             'role_id' => $request->input('role_id'),
             'is_active' => $request->boolean('is_active', true),
+            'avatar' => $avatarPath,
         ]);
 
         ActivityLog::log('Admin added', 'Added new admin: ' . $admin->email);
@@ -62,6 +74,8 @@ class AdminUserController extends Controller
 
     public function edit(User $admin)
     {
+        $this->authorizeSuperAdmin();
+
         $roles = Role::all();
 
         return view('admin.admins.edit', compact('admin', 'roles'));
@@ -69,12 +83,15 @@ class AdminUserController extends Controller
 
     public function update(Request $request, User $admin)
     {
+        $this->authorizeSuperAdmin();
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($admin->id)],
             'password' => 'nullable|string|min:6|confirmed',
             'role_id' => 'required|exists:roles,id',
             'is_active' => 'nullable|boolean',
+            'avatar' => 'nullable|image|max:2048', // Max 2MB
         ]);
 
         // Prevent self-disable or self-role change
@@ -93,6 +110,19 @@ class AdminUserController extends Controller
             $data['password'] = Hash::make($request->input('password'));
         }
 
+        // Handle Avatar File Upload
+        if ($request->hasFile('avatar')) {
+            // Delete old avatar if exists
+            if ($admin->avatar) {
+                if (Storage::disk('public')->exists($admin->avatar)) {
+                    Storage::disk('public')->delete($admin->avatar);
+                }
+            }
+            $file = $request->file('avatar');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $data['avatar'] = $file->storeAs('uploads/avatars', $filename, 'public');
+        }
+
         $admin->update($data);
 
         ActivityLog::log('Admin edited', 'Updated admin user: ' . $admin->email);
@@ -102,8 +132,17 @@ class AdminUserController extends Controller
 
     public function destroy(User $admin)
     {
+        $this->authorizeSuperAdmin();
+
         if (auth()->id() === $admin->id) {
             return redirect()->route('admin.admins.index')->withErrors(['self_delete' => 'Anda tidak bisa menghapus akun Anda sendiri.']);
+        }
+
+        // Delete avatar if exists
+        if ($admin->avatar) {
+            if (Storage::disk('public')->exists($admin->avatar)) {
+                Storage::disk('public')->delete($admin->avatar);
+            }
         }
 
         $email = $admin->email;

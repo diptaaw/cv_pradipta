@@ -33,8 +33,4 @@ class Experience extends Model
         return $this->belongsToMany(Tag::class, 'experience_tags');
     }
 
-    public function getTagsAttribute()
-    {
-        return $this->tags->pluck('name')->toArray();
-    }
 }

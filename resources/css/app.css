@@ -3250,3 +3250,1116 @@ body[data-theme="light"] .resume-download.disabled {
     border: 1px solid var(--light-border);
     box-shadow: none;
 }
+
+/* ==========================================================================
+   PREMIUM CUSTOM PORTFOLIO CMS THEME (REDESIGNED CONTROL CENTER v2)
+   ========================================================================== */
+
+/* ─── Admin Ambient Glow Orbs ─── */
+.admin-page .bg-orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(100px);
+    pointer-events: none;
+    z-index: 0;
+}
+.admin-page .bg-orb.orb-1 {
+    width: 600px;
+    height: 600px;
+    background: rgba(109, 76, 255, 0.12);
+    top: -120px;
+    left: -80px;
+}
+.admin-page .bg-orb.orb-2 {
+    width: 500px;
+    height: 500px;
+    background: rgba(182, 55, 255, 0.08);
+    bottom: -100px;
+    right: -60px;
+}
+.admin-page .bg-orb.orb-3 {
+    width: 400px;
+    height: 400px;
+    background: rgba(88, 56, 255, 0.06);
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* ─── Layout Shell ─── */
+.admin-page {
+    background: #05050a;
+    color: white;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    min-height: 100vh;
+}
+
+.admin-page::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background:
+        radial-gradient(circle at 15% 20%, rgba(109, 76, 255, 0.15), transparent 40%),
+        radial-gradient(circle at 85% 75%, rgba(88, 56, 255, 0.10), transparent 35%),
+        radial-gradient(circle at 50% 50%, rgba(70, 40, 180, 0.05), transparent 50%);
+    z-index: 0;
+    pointer-events: none;
+}
+
+.admin-wrapper {
+    display: flex;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+}
+
+/* ─── 1. Left Sidebar ─── */
+.admin-sidebar {
+    width: 260px;
+    background: rgba(10, 10, 25, 0.65);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 48px);
+    position: fixed;
+    left: 24px;
+    top: 24px;
+    z-index: 100;
+    padding: 24px 16px;
+    justify-content: space-between;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-brand img {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(123, 97, 255, 0.35);
+    box-shadow: 0 0 16px rgba(123, 97, 255, 0.25);
+}
+
+.sidebar-brand span {
+    font-weight: 800;
+    font-size: 1.1rem;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 30%, #a996ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 20px 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.sidebar-menu-item a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 14px;
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.55);
+    text-decoration: none;
+    font-size: 0.86rem;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+    position: relative;
+}
+
+.sidebar-menu-item a .nav-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-menu-item a:hover {
+    color: white;
+    background: rgba(123, 97, 255, 0.08);
+    border-color: rgba(123, 97, 255, 0.10);
+}
+
+.sidebar-menu-item a:hover .nav-icon {
+    opacity: 1;
+}
+
+.sidebar-menu-item.active a {
+    color: white;
+    background: linear-gradient(135deg, #7b61ff 0%, #9b51e0 100%);
+    border-color: rgba(123, 97, 255, 0.4);
+    box-shadow:
+        0 0 20px rgba(123, 97, 255, 0.45),
+        0 4px 12px rgba(155, 81, 224, 0.3);
+}
+
+.sidebar-menu-item.active a .nav-icon {
+    opacity: 1;
+}
+
+.sidebar-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-footer a,
+.sidebar-footer button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.84rem;
+    text-decoration: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-portfolio {
+    background: rgba(255, 255, 255, 0.03);
+    color: rgba(255, 255, 255, 0.7);
+    border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.btn-portfolio:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.btn-logout {
+    background: rgba(255, 59, 48, 0.08);
+    color: #ff6b6b;
+    border-color: rgba(255, 59, 48, 0.12) !important;
+}
+
+.btn-logout:hover {
+    background: rgba(255, 59, 48, 0.16);
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* ─── 2. Main Content ─── */
+.admin-main {
+    flex-grow: 1;
+    margin-left: 308px;
+    padding: 28px 36px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-width: 0;
+    position: relative;
+}
+
+/* ─── 3. Top Bar ─── */
+.admin-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding-bottom: 28px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.topbar-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.topbar-left h1 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin: 0;
+    background: linear-gradient(135deg, #fff 50%, #d8d2ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.admin-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.admin-breadcrumb a {
+    color: #a996ff;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.admin-breadcrumb a:hover {
+    color: white;
+}
+
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.topbar-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.topbar-search input {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 10px 14px 10px 38px;
+    color: white;
+    font-size: 0.84rem;
+    font-family: inherit;
+    width: 200px;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.topbar-search input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.topbar-search input:focus {
+    border-color: rgba(123, 97, 255, 0.35);
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 20px rgba(123, 97, 255, 0.08);
+    width: 260px;
+}
+
+.topbar-search::before {
+    content: "";
+    position: absolute;
+    left: 12px;
+    width: 16px;
+    height: 16px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E");
+    background-size: contain;
+    pointer-events: none;
+}
+
+.topbar-notification {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.topbar-notification:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.10);
+}
+
+.topbar-notification svg {
+    width: 18px;
+    height: 18px;
+    stroke: rgba(255, 255, 255, 0.5);
+}
+
+.profile-widget {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    padding: 6px 14px 6px 6px;
+    transition: all 0.3s ease;
+}
+
+.profile-widget:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.10);
+}
+
+.profile-widget img {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    object-fit: cover;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.profile-widget-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-widget-name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.profile-widget-role {
+    font-size: 0.68rem;
+    color: #a996ff;
+    font-weight: 600;
+}
+
+/* ─── 4. Unified Card System ─── */
+.admin-card {
+    background: rgba(10, 10, 25, 0.65);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.admin-card:hover {
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.admin-card h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.admin-glass-card {
+    background: rgba(14, 12, 38, 0.36);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow:
+        0 20px 50px rgba(0, 0, 0, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    position: relative;
+    overflow: hidden;
+}
+
+/* ─── 5. Admin Grid System ─── */
+.admin-grid {
+    display: grid;
+    gap: 20px;
+}
+
+/* ─── 6. Stats Cards ─── */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.stat-card {
+    background: rgba(10, 10, 25, 0.65);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 18px;
+    padding: 22px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(123, 97, 255, 0.3), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.stat-card:hover {
+    border-color: rgba(123, 97, 255, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+.stat-card:hover::before {
+    opacity: 1;
+}
+
+.stat-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.stat-card-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.stat-card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.stat-card-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.stat-card-icon.purple {
+    background: rgba(123, 97, 255, 0.12);
+    border: 1px solid rgba(123, 97, 255, 0.15);
+}
+.stat-card-icon.purple svg { stroke: #a996ff; }
+
+.stat-card-icon.blue {
+    background: rgba(59, 130, 246, 0.12);
+    border: 1px solid rgba(59, 130, 246, 0.15);
+}
+.stat-card-icon.blue svg { stroke: #60a5fa; }
+
+.stat-card-icon.green {
+    background: rgba(46, 204, 113, 0.12);
+    border: 1px solid rgba(46, 204, 113, 0.15);
+}
+.stat-card-icon.green svg { stroke: #2ecc71; }
+
+.stat-card-icon.amber {
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.15);
+}
+.stat-card-icon.amber svg { stroke: #f59e0b; }
+
+.stat-card-icon.rose {
+    background: rgba(244, 63, 94, 0.12);
+    border: 1px solid rgba(244, 63, 94, 0.15);
+}
+.stat-card-icon.rose svg { stroke: #fb7185; }
+
+.stat-card-value {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 6px 0 2px;
+    background: linear-gradient(135deg, #fff 40%, #c4b5fd 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.1;
+}
+
+.stat-card-action {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: rgba(169, 150, 255, 0.7);
+    text-decoration: none;
+    transition: color 0.2s ease;
+    margin-top: 4px;
+}
+
+.stat-card-action:hover {
+    color: white;
+}
+
+/* ─── 7. Timeline ─── */
+.timeline {
+    position: relative;
+    padding-left: 24px;
+    border-left: 1px solid rgba(255, 255, 255, 0.06);
+    margin-left: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.timeline-item {
+    position: relative;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: -29.5px;
+    top: 4px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #7b61ff;
+    border: 2px solid #0a0a19;
+    box-shadow: 0 0 10px rgba(123, 97, 255, 0.5);
+}
+
+.timeline-content {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.timeline-meta {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.35);
+    font-weight: 600;
+}
+
+.timeline-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #c4b5fd;
+}
+
+.timeline-desc {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* ─── 8. Quick Actions ─── */
+.quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+}
+
+.quick-action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 18px 12px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.78rem;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.quick-action-btn:hover {
+    background: rgba(123, 97, 255, 0.10);
+    border-color: rgba(123, 97, 255, 0.18);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(123, 97, 255, 0.08);
+}
+
+.quick-action-btn svg {
+    width: 22px;
+    height: 22px;
+    stroke: #a996ff;
+}
+
+/* ─── 9. Modern Forms ─── */
+.cms-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 28px;
+}
+
+.cms-card-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.cms-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.cms-form-group label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.cms-input,
+.cms-select,
+.cms-textarea {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.07) !important;
+    border-radius: 12px !important;
+    padding: 12px 14px !important;
+    color: white !important;
+    font-size: 0.86rem !important;
+    font-family: inherit !important;
+    outline: none !important;
+    transition: all 0.3s ease !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin-bottom: 0 !important;
+}
+
+.cms-input::placeholder,
+.cms-textarea::placeholder {
+    color: rgba(255, 255, 255, 0.25);
+}
+
+.cms-input:focus,
+.cms-select:focus,
+.cms-textarea:focus {
+    border-color: rgba(123, 97, 255, 0.4) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 0 0 20px rgba(123, 97, 255, 0.10) !important;
+}
+
+.cms-textarea {
+    min-height: 140px;
+    resize: vertical;
+}
+
+/* ─── Dynamic Paragraph List ─── */
+.paragraph-box {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 12px;
+}
+
+.paragraph-box textarea {
+    flex-grow: 1;
+    background: rgba(0, 0, 0, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 8px !important;
+    padding: 10px !important;
+    color: white !important;
+    font-size: 0.85rem !important;
+    outline: none !important;
+    min-height: 80px;
+    resize: vertical;
+}
+
+.paragraph-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.paragraph-btn {
+    border: none;
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+}
+
+.paragraph-btn:hover {
+    background: rgba(123, 97, 255, 0.2);
+}
+
+.paragraph-btn.remove {
+    background: rgba(255, 59, 48, 0.12);
+    color: #ff453a;
+}
+
+.paragraph-btn.remove:hover {
+    background: rgba(255, 59, 48, 0.25);
+}
+
+/* ─── File Upload Controls ─── */
+.media-preview-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.media-preview-item {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.08);
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.media-preview-item img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+}
+
+.media-preview-item .remove-check {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 4px;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #ff453a;
+    font-size: 0.68rem;
+    font-weight: 700;
+}
+
+/* ─── 10. Elegant Tables ─── */
+.cms-table-wrapper {
+    overflow-x: auto;
+}
+
+.cms-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.86rem;
+}
+
+.cms-table th {
+    text-align: left;
+    padding: 14px 18px;
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    white-space: nowrap;
+}
+
+.cms-table td {
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    color: rgba(255, 255, 255, 0.8);
+    vertical-align: middle;
+}
+
+.cms-table tr {
+    transition: background 0.2s ease;
+}
+
+.cms-table tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.cms-table tr:last-child td {
+    border-bottom: none;
+}
+
+.cms-avatar-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.cms-avatar-cell img {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ─── Action Buttons ─── */
+.action-buttons {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.action-btn {
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(255, 255, 255, 0.03);
+    color: rgba(255, 255, 255, 0.8);
+    padding: 7px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 700;
+    font-family: inherit;
+    transition: all 0.25s ease;
+    white-space: nowrap;
+}
+
+.action-btn:hover {
+    background: rgba(123, 97, 255, 0.12);
+    border-color: rgba(123, 97, 255, 0.20);
+    color: white;
+}
+
+.action-btn.danger {
+    background: rgba(255, 59, 48, 0.08);
+    border-color: rgba(255, 59, 48, 0.14);
+    color: #ff6b6b;
+}
+
+.action-btn.danger:hover {
+    background: rgba(255, 59, 48, 0.18);
+    color: white;
+}
+
+/* ─── Premium Buttons ─── */
+.btn-primary-cms {
+    background: linear-gradient(135deg, #7b61ff, #9b51e0);
+    color: white !important;
+    border: none !important;
+    padding: 11px 22px !important;
+    border-radius: 12px !important;
+    font-weight: 700 !important;
+    font-size: 0.84rem !important;
+    font-family: inherit !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    text-decoration: none !important;
+    box-shadow: 0 4px 16px rgba(123, 97, 255, 0.2) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary-cms::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.btn-primary-cms:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 8px 24px rgba(123, 97, 255, 0.3) !important;
+}
+
+.btn-primary-cms:hover::before {
+    opacity: 1;
+}
+
+.btn-secondary-cms {
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.75) !important;
+    border: 1px solid rgba(255, 255, 255, 0.07) !important;
+    padding: 11px 22px !important;
+    border-radius: 12px !important;
+    font-weight: 700 !important;
+    font-size: 0.84rem !important;
+    font-family: inherit !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    transition: all 0.3s ease !important;
+}
+
+.btn-secondary-cms:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: white !important;
+    transform: translateY(-1px) !important;
+}
+
+/* ─── Admin Badge ─── */
+.admin-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* ─── Admin Content spacing ─── */
+.admin-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+/* ─── Flash Messages ─── */
+.flash-message {
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.86rem;
+}
+
+/* ─── Section Header ─── */
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.section-header h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 1200px) {
+    .stats-row {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    }
+}
+
+@media (max-width: 1024px) {
+    .admin-sidebar {
+        width: 72px;
+        left: 24px;
+        top: 24px;
+        height: calc(100vh - 48px);
+        padding: 20px 10px;
+    }
+    .sidebar-brand span,
+    .sidebar-menu-item a span:not(.nav-icon-wrap),
+    .sidebar-menu-item a .nav-label,
+    .sidebar-footer span {
+        display: none;
+    }
+    .sidebar-menu-item a {
+        justify-content: center;
+        padding: 12px;
+    }
+    .admin-main {
+        margin-left: 120px;
+        padding: 24px 20px;
+    }
+    .sidebar-brand {
+        justify-content: center;
+        padding: 8px 0 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-wrapper {
+        flex-direction: column;
+    }
+    .admin-sidebar {
+        width: calc(100% - 32px);
+        height: auto;
+        position: relative;
+        left: auto;
+        top: auto;
+        margin: 16px auto 0;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        flex-direction: row;
+        padding: 12px 16px;
+    }
+    .sidebar-menu {
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 0;
+        gap: 4px;
+    }
+    .sidebar-brand span,
+    .sidebar-menu-item a .nav-label {
+        display: none;
+    }
+    .sidebar-menu-item a {
+        padding: 10px;
+        justify-content: center;
+    }
+    .sidebar-footer {
+        flex-direction: row;
+        border-top: none;
+        padding-top: 0;
+    }
+    .admin-main {
+        margin-left: 0;
+        padding: 20px 16px;
+    }
+    .cms-form-grid {
+        grid-template-columns: 1fr;
+    }
+    .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .topbar-search input {
+        width: 140px;
+    }
+    .topbar-search input:focus {
+        width: 180px;
+    }
+    .admin-topbar {
+        flex-wrap: wrap;
+    }
+}
+

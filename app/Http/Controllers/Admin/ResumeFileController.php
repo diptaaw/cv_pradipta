@@ -14,14 +14,30 @@ class ResumeFileController extends Controller
     {
         $resumes = ResumeFile::latest()->get();
 
-        return view('admin.resumes.index', compact('resumes'));
+        // Calculate file sizes dynamically
+        foreach ($resumes as $resume) {
+            try {
+                if (Storage::disk('public')->exists($resume->file_path)) {
+                    $bytes = Storage::disk('public')->size($resume->file_path);
+                    $resume->file_size = number_format($bytes / 1024, 1) . ' KB';
+                } else {
+                    $resume->file_size = 'N/A';
+                }
+            } catch (\Exception $e) {
+                $resume->file_size = 'N/A';
+            }
+        }
+
+        $activeResume = ResumeFile::where('is_published', true)->latest()->first();
+
+        return view('admin.resumes.index', compact('resumes', 'activeResume'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'file' => 'required|mimes:pdf|max:10240',
+            'file' => 'required|mimes:pdf|max:10240', // Max 10MB
         ]);
 
         if ($request->file('file')->isValid()) {
@@ -30,6 +46,11 @@ class ResumeFileController extends Controller
             $path = $file->storeAs('uploads/resumes', $filename, 'public');
 
             $publishImmediately = $request->boolean('is_published');
+
+            if ($publishImmediately) {
+                // Unpublish all others
+                ResumeFile::query()->update(['is_published' => false]);
+            }
 
             $resume = ResumeFile::create([
                 'title' => $request->input('title'),
@@ -47,6 +68,9 @@ class ResumeFileController extends Controller
 
     public function publish(ResumeFile $resume)
     {
+        // Unpublish all other resumes
+        ResumeFile::query()->update(['is_published' => false]);
+
         $resume->update([
             'is_published' => true,
         ]);

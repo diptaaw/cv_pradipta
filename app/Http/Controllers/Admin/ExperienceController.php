@@ -66,7 +66,7 @@ class ExperienceController extends BaseAdminController
     public function edit(Experience $experience)
     {
         $tags = Tag::all();
-        $experienceTagIds = $experience->tags->pluck('id')->toArray();
+        $experienceTagIds = $experience->tags ? $experience->tags->pluck('id')->toArray() : [];
 
         return view('admin.experiences.edit', compact('experience', 'tags', 'experienceTagIds'));
     }

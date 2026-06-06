@@ -10,11 +10,34 @@ use Illuminate\Validation\Rule;
 
 class TagController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $tags = Tag::withCount(['projects', 'experiences'])->get();
+        $query = Tag::withCount(['projects', 'experiences']);
 
-        return view('admin.tags.index', compact('tags'));
+        if ($request->filled('q')) {
+            $search = $request->input('q');
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        $sort = $request->input('sort', 'name');
+        $direction = $request->input('direction', 'asc');
+        if (!in_array($direction, ['asc', 'desc'])) {
+            $direction = 'asc';
+        }
+
+        if ($sort === 'projects') {
+            $query->orderBy('projects_count', $direction);
+        } elseif ($sort === 'experiences') {
+            $query->orderBy('experiences_count', $direction);
+        } elseif ($sort === 'total') {
+            $query->orderByRaw('(projects_count + experiences_count) ' . $direction);
+        } else {
+            $query->orderBy('name', $direction);
+        }
+
+        $tags = $query->get();
+
+        return view('admin.tags.index', compact('tags', 'sort', 'direction'));
     }
 
     public function create()
