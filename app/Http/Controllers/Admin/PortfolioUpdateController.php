@@ -6,12 +6,13 @@ use App\Http\Controllers\Admin\BaseAdminController;
 use Illuminate\Http\Request;
 use App\Models\PortfolioUpdate;
 use App\Models\ActivityLog;
+use App\Models\Notification;
 
 class PortfolioUpdateController extends BaseAdminController
 {
     public function index()
     {
-        $updates = PortfolioUpdate::orderBy('is_pinned', 'desc')
+        $updates = Notification::orderBy('is_pinned', 'desc')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -27,61 +28,68 @@ class PortfolioUpdateController extends BaseAdminController
     {
         $data = $request->validate([
             'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'date' => 'required|string|max:100',
+            'description' => 'nullable|string',
+            'type' => 'required|string|max:100',
+            'reference_type' => 'nullable|string|max:100',
+            'reference_id' => 'nullable|integer',
             'is_pinned' => 'nullable|boolean',
-            'is_published' => 'nullable|boolean',
+            'is_read' => 'nullable|boolean',
         ]);
 
         $data['is_pinned'] = $request->boolean('is_pinned');
-        $data['is_published'] = $request->boolean('is_published');
+        $data['is_read'] = $request->boolean('is_read');
 
-        $update = PortfolioUpdate::create($data);
+        if (empty($data['type'])) {
+            $data['type'] = 'custom';
+        }
 
-        ActivityLog::log('Portfolio Update created', 'Created update: ' . $update->title);
+        $notification = Notification::create($data);
 
-        return redirect()->route('admin.updates.index')->with('success', 'Update successfully added.');
+        ActivityLog::log('Notification created', 'Created notification via Admin: ' . $notification->title);
+
+        return redirect()->route('admin.updates.index')->with('success', 'Notification successfully added.');
     }
 
-    public function edit(PortfolioUpdate $update)
+    public function edit(Notification $update)
     {
         return view('admin.updates.edit', compact('update'));
     }
 
-    public function update(Request $request, PortfolioUpdate $update)
+    public function update(Request $request, Notification $update)
     {
         $data = $request->validate([
             'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'date' => 'required|string|max:100',
+            'description' => 'nullable|string',
+            'type' => 'required|string|max:100',
+            'reference_type' => 'nullable|string|max:100',
+            'reference_id' => 'nullable|integer',
             'is_pinned' => 'nullable|boolean',
-            'is_published' => 'nullable|boolean',
+            'is_read' => 'nullable|boolean',
         ]);
 
         $data['is_pinned'] = $request->boolean('is_pinned');
-        $data['is_published'] = $request->boolean('is_published');
+        $data['is_read'] = $request->boolean('is_read');
 
         $update->update($data);
 
-        ActivityLog::log('Portfolio Update updated', 'Updated update: ' . $update->title);
+        ActivityLog::log('Notification updated', 'Updated notification via Admin: ' . $update->title);
 
-        return redirect()->route('admin.updates.index')->with('success', 'Update successfully updated.');
+        return redirect()->route('admin.updates.index')->with('success', 'Notification successfully updated.');
     }
 
-    public function destroy(PortfolioUpdate $update)
+    public function destroy(Notification $update)
     {
-        ActivityLog::log('Portfolio Update deleted', 'Deleted update: ' . $update->title);
+        ActivityLog::log('Notification deleted', 'Deleted notification via Admin: ' . $update->title);
 
         $update->delete();
 
-        return redirect()->route('admin.updates.index')->with('success', 'Update successfully deleted.');
+        return redirect()->route('admin.updates.index')->with('success', 'Notification successfully deleted.');
     }
 
-    // Public API route for updates
+    // Public API route for updates (fallback to keep old api endpoint compatible if needed)
     public function apiIndex()
     {
-        $updates = PortfolioUpdate::where('is_published', true)
-            ->orderBy('is_pinned', 'desc')
+        $updates = Notification::orderBy('is_pinned', 'desc')
             ->orderBy('created_at', 'desc')
             ->get();
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Tag;
 use App\Models\ActivityLog;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -68,6 +69,7 @@ class TagController extends Controller
         ]);
 
         ActivityLog::log('Tag created', 'Created tag: ' . $tag->name);
+        Notification::send('tag_created', 'New tag added', 'Created tag: ' . $tag->name, 'tag', $tag->id);
 
         return redirect()->route('admin.tags.index')->with('success', 'Tag "' . $tag->name . '" berhasil ditambahkan.');
     }
@@ -101,6 +103,7 @@ class TagController extends Controller
         ]);
 
         ActivityLog::log('Tag updated', 'Updated tag from "' . $oldName . '" to "' . $tag->name . '"');
+        Notification::send('tag_updated', 'Tag updated', 'Updated tag from "' . $oldName . '" to "' . $tag->name . '"', 'tag', $tag->id);
 
         return redirect()->route('admin.tags.index')->with('success', 'Tag berhasil diperbarui.');
     }
@@ -111,6 +114,7 @@ class TagController extends Controller
         $tag->delete();
 
         ActivityLog::log('Tag deleted', 'Deleted tag: ' . $name);
+        Notification::send('tag_deleted', 'Tag removed', 'Deleted tag: ' . $name);
 
         return redirect()->route('admin.tags.index')->with('success', 'Tag "' . $name . '" berhasil dihapus.');
     }

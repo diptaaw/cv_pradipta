@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ResumeFile;
 use App\Models\ActivityLog;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -59,6 +60,7 @@ class ResumeFileController extends Controller
             ]);
 
             ActivityLog::log('Resume uploaded', 'Uploaded resume: ' . $resume->title . ($publishImmediately ? ' (published)' : ''));
+            Notification::send('resume_uploaded', 'Resume uploaded', 'Uploaded resume: ' . $resume->title, 'resume', $resume->id);
 
             return redirect()->route('admin.resumes.index')->with('success', 'Resume "' . $resume->title . '" berhasil diunggah.');
         }
@@ -76,6 +78,7 @@ class ResumeFileController extends Controller
         ]);
 
         ActivityLog::log('Resume published', 'Published resume: ' . $resume->title);
+        Notification::send('resume_published', 'Resume published', 'Published resume: ' . $resume->title, 'resume', $resume->id);
 
         return redirect()->route('admin.resumes.index')->with('success', 'Resume "' . $resume->title . '" berhasil dipublikasikan.');
     }
@@ -102,6 +105,7 @@ class ResumeFileController extends Controller
         $resume->delete();
 
         ActivityLog::log('Resume deleted', 'Deleted resume file: ' . $title);
+        Notification::send('resume_deleted', 'Resume removed', 'Deleted resume: ' . $title);
 
         return redirect()->route('admin.resumes.index')->with('success', 'Resume "' . $title . '" berhasil dihapus.');
     }

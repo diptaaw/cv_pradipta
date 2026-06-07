@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use App\Models\Notification;
 
 class AuthController extends Controller
 {
@@ -39,6 +40,8 @@ class AuthController extends Controller
             ]);
 
             $request->session()->regenerate();
+
+            Notification::send('admin_login', 'Admin logged in', $user->name . ' logged into the dashboard.');
 
             return redirect()->intended(route('admin.dashboard'));
         }

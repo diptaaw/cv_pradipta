@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Experience;
 use App\Models\Tag;
 use App\Models\ActivityLog;
+use App\Models\Notification;
 
 class ExperienceController extends BaseAdminController
 {
@@ -59,6 +60,7 @@ class ExperienceController extends BaseAdminController
         $experience->tags()->sync($tagIds);
 
         ActivityLog::log('Experience created', 'Created experience: ' . $experience->title);
+        Notification::send('experience_created', 'New experience added', 'Created experience: ' . $experience->title, 'experience', $experience->id);
 
         return redirect()->route('admin.experiences.index')->with('success', 'Pengalaman berhasil ditambahkan.');
     }
@@ -106,6 +108,7 @@ class ExperienceController extends BaseAdminController
         $experience->tags()->sync($tagIds);
 
         ActivityLog::log('Experience edited', 'Edited experience: ' . $experience->title);
+        Notification::send('experience_updated', 'Experience updated', 'Updated experience: ' . $experience->title, 'experience', $experience->id);
 
         return redirect()->route('admin.experiences.index')->with('success', 'Pengalaman berhasil diperbarui.');
     }
@@ -116,6 +119,7 @@ class ExperienceController extends BaseAdminController
         $experience->delete();
 
         ActivityLog::log('Experience deleted', 'Deleted experience: ' . $title);
+        Notification::send('experience_deleted', 'Experience removed', 'Deleted experience: ' . $title);
 
         return redirect()->route('admin.experiences.index')->with('success', 'Pengalaman berhasil dihapus.');
     }

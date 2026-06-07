@@ -8,14 +8,19 @@ let currentX = 0;
 let currentY = 0;
 
 const cursor = document.querySelector(".custom-cursor");
-/* WHAT'S NEW DROPDOWN CONTROLLER */
+/* ACTIVITY FEED / NOTIFICATION DROPDOWN CONTROLLER */
 const updatesButton = document.querySelector("[data-updates-toggle]");
 const updatesDropdown = document.querySelector("[data-updates-dropdown]");
-const updatesDot = document.querySelector("[data-updates-dot]");
+const notificationBadge = document.querySelector("[data-notification-badge]");
 const updatesContent = document.querySelector("[data-updates-content]");
+const markAllReadBtn = document.querySelector("[data-mark-all-read]");
+const loadMoreBtn = document.querySelector("[data-load-more-btn]");
 
-let cachedUpdates = [];
-let latestUpdateId = null;
+let cachedNotifications = [];
+let latestNotifId = null;
+let pollInterval = null;
+let nextPageUrl = null;
+let isLoadingMore = false;
 
 function escapeHtml(str) {
     if (!str) return '';
@@ -27,51 +32,216 @@ function escapeHtml(str) {
         .replace(/'/g, "&#039;");
 }
 
-function renderUpdates(updates) {
-    if (!updatesContent) return;
-    if (updates.length === 0) {
-        updatesContent.innerHTML = `<div class="updates-loader">No updates yet.</div>`;
-        return;
-    }
-    updatesContent.innerHTML = updates.map(update => `
-        <div class="update-item">
-            <div class="update-item-header">
-                <h4 class="update-item-title">
-                    ${update.is_pinned ? '<span class="update-pin-badge">Pinned</span>' : ''}
-                    ${escapeHtml(update.title)}
-                </h4>
-                <span class="update-item-date">${escapeHtml(update.date)}</span>
-            </div>
-            <p class="update-item-desc">${escapeHtml(update.description)}</p>
-        </div>
-    `).join('');
+/**
+ * Returns a human-readable relative time string.
+ */
+function timeAgo(dateStr) {
+    const now = new Date();
+    const date = new Date(dateStr);
+    const diffMs = now - date;
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHr = Math.floor(diffMin / 60);
+    const diffDay = Math.floor(diffHr / 24);
+
+    if (diffSec < 60) return 'Just now';
+    if (diffMin < 60) return `${diffMin}m ago`;
+    if (diffHr < 24) return `${diffHr}h ago`;
+    if (diffDay === 1) return 'Yesterday';
+    if (diffDay < 7) return `${diffDay}d ago`;
+
+    // Format as short date
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${months[date.getMonth()]} ${date.getDate()}`;
 }
 
-async function fetchUpdates() {
-    try {
-        const response = await fetch('/api/updates');
-        if (!response.ok) throw new Error('Failed to fetch updates');
-        const updates = await response.json();
-        cachedUpdates = updates;
-        
-        renderUpdates(updates);
+/**
+ * Returns a CSS class for the notification type indicator dot.
+ */
+function getTypeColor(type) {
+    if (!type) return 'type-default';
+    if (type.includes('created') || type.includes('uploaded') || type.includes('published')) return 'type-created';
+    if (type.includes('updated') || type.includes('login')) return 'type-updated';
+    if (type.includes('deleted') || type.includes('removed')) return 'type-deleted';
+    return 'type-default';
+}
 
-        if (updates.length > 0) {
-            const latest = updates[0];
-            latestUpdateId = latest.id;
-            
-            const lastViewedId = localStorage.getItem("portfolio-last-viewed-update-id");
-            if (!lastViewedId || parseInt(lastViewedId) !== latestUpdateId) {
-                if (updatesDot) {
-                    updatesDot.classList.remove("hidden");
+/**
+ * Returns a navigation URL based on the notification reference.
+ */
+function getNotifLink(notif) {
+    if (!notif.reference_type) return null;
+    switch (notif.reference_type) {
+        case 'project': return '/archive';
+        case 'experience': return '/#experience';
+        case 'resume': return '/resume';
+        default: return null;
+    }
+}
+
+/**
+ * Renders the notification list into the dropdown.
+ */
+function renderNotifications(notifications) {
+    if (!updatesContent) return;
+    if (notifications.length === 0) {
+        updatesContent.innerHTML = `<div class="updates-loader">No activity yet.</div>`;
+        return;
+    }
+
+    const lastViewedId = parseInt(localStorage.getItem("portfolio-last-viewed-notif-id") || "0");
+
+    updatesContent.innerHTML = notifications.map(notif => {
+        const link = getNotifLink(notif);
+        const isUnread = notif.id > lastViewedId && !notif.is_read;
+        const typeClass = getTypeColor(notif.type);
+        const tag = link ? 'a' : 'div';
+        const href = link ? ` href="${link}"` : '';
+
+        return `
+            <${tag}${href} class="update-item${isUnread ? ' is-unread' : ''}" data-notif-id="${notif.id}">
+                <div class="notif-type-dot ${typeClass}"></div>
+                <div class="notif-body">
+                    <div class="update-item-header">
+                        <h4 class="update-item-title">
+                            ${notif.is_pinned ? '<span class="update-pin-badge">Pinned</span>' : ''}
+                            ${escapeHtml(notif.title)}
+                        </h4>
+                        <span class="update-item-date">${timeAgo(notif.created_at)}</span>
+                    </div>
+                    ${notif.description ? `<p class="update-item-desc">${escapeHtml(notif.description)}</p>` : ''}
+                </div>
+            </${tag}>
+        `;
+    }).join('');
+}
+
+/**
+ * Updates the unread badge count.
+ */
+function updateBadgeCount() {
+    if (!notificationBadge) return;
+    const lastViewedId = parseInt(localStorage.getItem("portfolio-last-viewed-notif-id") || "0");
+    const unreadCount = cachedNotifications.filter(n => n.id > lastViewedId && !n.is_read).length;
+
+    if (unreadCount > 0) {
+        notificationBadge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+        notificationBadge.classList.remove("hidden");
+        if (updatesButton) {
+            updatesButton.classList.add("has-unread");
+        }
+        if (markAllReadBtn) markAllReadBtn.classList.remove("hidden");
+    } else {
+        notificationBadge.classList.add("hidden");
+        if (updatesButton) {
+            updatesButton.classList.remove("has-unread");
+        }
+        if (markAllReadBtn) markAllReadBtn.classList.add("hidden");
+    }
+}
+
+/**
+ * Toggles visibility of the Load More button.
+ */
+function updateLoadMoreButton() {
+    if (!loadMoreBtn) return;
+    if (nextPageUrl) {
+        loadMoreBtn.classList.remove("hidden");
+        loadMoreBtn.innerHTML = `
+            View older updates
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        `;
+    } else {
+        loadMoreBtn.classList.add("hidden");
+    }
+}
+
+/**
+ * Fetches notifications from the API.
+ */
+async function fetchNotifications() {
+    try {
+        const response = await fetch('/api/notifications');
+        if (!response.ok) throw new Error('Failed to fetch notifications');
+        const json = await response.json();
+        
+        // Handle paginated response
+        const notifications = json.data || json;
+        nextPageUrl = json.next_page_url || null;
+        cachedNotifications = notifications;
+
+        if (notifications.length > 0) {
+            latestNotifId = notifications[0].id;
+        }
+
+        renderNotifications(notifications);
+        updateBadgeCount();
+        updateLoadMoreButton();
+    } catch (err) {
+        console.error('Error loading notifications:', err);
+        if (updatesContent) {
+            updatesContent.innerHTML = `<div class="updates-loader" style="color: #ff6b6b;">Failed to load activity.</div>`;
+        }
+    }
+}
+
+/**
+ * Loads the next page of older notifications.
+ */
+async function loadMoreNotifications() {
+    if (!nextPageUrl || isLoadingMore) return;
+    isLoadingMore = true;
+    
+    if (loadMoreBtn) {
+        loadMoreBtn.innerHTML = `Loading older updates...`;
+    }
+    
+    try {
+        const response = await fetch(nextPageUrl);
+        if (!response.ok) throw new Error('Failed to fetch more notifications');
+        const json = await response.json();
+        
+        const notifications = json.data || json;
+        nextPageUrl = json.next_page_url || null;
+        
+        cachedNotifications = [...cachedNotifications, ...notifications];
+        renderNotifications(cachedNotifications);
+        updateBadgeCount();
+        updateLoadMoreButton();
+    } catch (err) {
+        console.error('Error loading more notifications:', err);
+    } finally {
+        isLoadingMore = false;
+    }
+}
+
+/**
+ * Polls for new notifications and updates badge count.
+ */
+async function pollNotifications() {
+    try {
+        // Quick unread count check
+        const countRes = await fetch('/api/notifications/unread-count');
+        if (!countRes.ok) return;
+        const { count } = await countRes.json();
+
+        // If there are new server-side unread items, re-fetch the new ones
+        if (latestNotifId) {
+            const newRes = await fetch(`/api/notifications?after_id=${latestNotifId}`);
+            if (newRes.ok) {
+                const newNotifs = await newRes.json();
+                if (newNotifs.length > 0) {
+                    // Prepend new notifications
+                    cachedNotifications = [...newNotifs, ...cachedNotifications];
+                    latestNotifId = cachedNotifications[0].id;
+                    renderNotifications(cachedNotifications);
                 }
             }
         }
+
+        updateBadgeCount();
     } catch (err) {
-        console.error('Error loading portfolio updates:', err);
-        if (updatesContent) {
-            updatesContent.innerHTML = `<div class="updates-loader" style="color: #ff6b6b;">Failed to load updates.</div>`;
-        }
+        // Silently fail polling
     }
 }
 
@@ -84,12 +254,12 @@ function openUpdatesDropdown() {
     updatesDropdown.offsetHeight;
     updatesDropdown.classList.add("active");
 
-    // Clear unread dot on open
-    if (latestUpdateId !== null) {
-        localStorage.setItem("portfolio-last-viewed-update-id", latestUpdateId.toString());
-        if (updatesDot) {
-            updatesDot.classList.add("hidden");
-        }
+    // Mark as viewed in localStorage to clear public visual badge
+    if (latestNotifId !== null) {
+        localStorage.setItem("portfolio-last-viewed-notif-id", latestNotifId.toString());
+        updateBadgeCount();
+        // Re-render to clear unread highlights
+        renderNotifications(cachedNotifications);
     }
 }
 
@@ -107,6 +277,28 @@ function closeUpdatesDropdown() {
         }
     };
     updatesDropdown.addEventListener("transitionend", onTransitionEnd);
+}
+
+async function markAllRead() {
+    try {
+        await fetch('/api/notifications/mark-read', { 
+            method: 'POST', 
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '' 
+            } 
+        });
+        
+        cachedNotifications.forEach(n => n.is_read = true);
+        
+        if (latestNotifId !== null) {
+            localStorage.setItem("portfolio-last-viewed-notif-id", latestNotifId.toString());
+        }
+        updateBadgeCount();
+        renderNotifications(cachedNotifications);
+    } catch (err) {
+        console.error('Error marking all as read:', err);
+    }
 }
 
 if (updatesButton && updatesDropdown) {
@@ -135,8 +327,73 @@ if (updatesButton && updatesDropdown) {
     });
 }
 
-// Fetch updates on page load
-fetchUpdates();
+// Load more button listener
+if (loadMoreBtn) {
+    loadMoreBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        loadMoreNotifications();
+    });
+}
+
+// Mark single notification on click
+if (updatesContent) {
+    updatesContent.addEventListener("click", async (e) => {
+        const item = e.target.closest(".update-item");
+        if (!item) return;
+
+        const notifId = item.getAttribute("data-notif-id");
+        if (!notifId) return;
+
+        const link = item.getAttribute("href");
+        if (link) {
+            e.preventDefault();
+        }
+
+        try {
+            await fetch(`/api/notifications/${notifId}/mark-read`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                }
+            });
+
+            const notif = cachedNotifications.find(n => n.id == notifId);
+            if (notif) {
+                notif.is_read = true;
+            }
+
+            const lastViewedId = parseInt(localStorage.getItem("portfolio-last-viewed-notif-id") || "0");
+            if (parseInt(notifId) > lastViewedId) {
+                localStorage.setItem("portfolio-last-viewed-notif-id", notifId);
+            }
+
+            updateBadgeCount();
+            renderNotifications(cachedNotifications);
+        } catch (err) {
+            console.error('Error marking notification read:', err);
+        } finally {
+            if (link) {
+                window.location.href = link;
+            }
+        }
+    });
+}
+
+// Mark all read button
+if (markAllReadBtn) {
+    markAllReadBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        markAllRead();
+    });
+}
+
+// Fetch notifications on page load
+fetchNotifications();
+
+// Start polling every 30 seconds
+pollInterval = setInterval(pollNotifications, 30000);
+
 
 /* MOUSE MOVE */
 

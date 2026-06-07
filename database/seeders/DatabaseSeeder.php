@@ -136,28 +136,32 @@ class DatabaseSeeder extends Seeder
             \App\Models\SiteSetting::firstOrCreate(['key' => $key], ['value' => $value]);
         }
 
-        // 8. Seed Portfolio Updates
-        if (\App\Models\PortfolioUpdate::count() === 0) {
-            \App\Models\PortfolioUpdate::create([
+        // 8. Seed Notifications
+        if (\App\Models\Notification::count() === 0) {
+            \App\Models\Notification::create([
+                'type' => 'project_created',
                 'title' => "Added Interactive Wildlife Park",
                 'description' => "New Unity project featuring dynamic weather, NPC systems and wildlife interactions.",
-                'date' => "June 2026",
+                'reference_type' => 'project',
+                'reference_id' => 1,
                 'is_pinned' => true,
-                'is_published' => true,
+                'is_read' => false,
             ]);
-            \App\Models\PortfolioUpdate::create([
+            \App\Models\Notification::create([
+                'type' => 'experience_created',
                 'title' => "Added Staff PSDM Experience",
                 'description' => "Added organizational experience section.",
-                'date' => "April 2026",
+                'reference_type' => 'experience',
+                'reference_id' => 1,
                 'is_pinned' => false,
-                'is_published' => true,
+                'is_read' => false,
             ]);
-            \App\Models\PortfolioUpdate::create([
+            \App\Models\Notification::create([
+                'type' => 'settings_updated',
                 'title' => "Updated Homepage Animations",
                 'description' => "Improved celestial background system.",
-                'date' => "March 2026",
                 'is_pinned' => false,
-                'is_published' => true,
+                'is_read' => false,
             ]);
         }
     }

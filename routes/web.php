@@ -7,11 +7,13 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ExperienceController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\HomeController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Middleware\EnsureAdmin;
 use App\Models\AboutSection;
 use App\Models\Experience;
 use App\Models\Project;
 use App\Models\Resume;
+use App\Models\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -162,6 +164,14 @@ Route::get('/api/archive/projects', function (\Illuminate\Http\Request $request)
 
 
 /* -----------------------------
+   Notification API routes
+   ----------------------------- */
+Route::get('/api/notifications', [NotificationController::class, 'index']);
+Route::get('/api/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+Route::post('/api/notifications/mark-read', [NotificationController::class, 'markAllRead']);
+Route::post('/api/notifications/{notification}/mark-read', [NotificationController::class, 'markRead']);
+
+/* -----------------------------
    Admin routes
    ----------------------------- */
 Route::get('/admin/login', [AuthController::class, 'login'])->name('admin.login');
@@ -194,6 +204,7 @@ Route::middleware([EnsureAdmin::class])->prefix('admin')->name('admin.')->group(
         \App\Models\SiteSetting::updateOrCreate(['key' => 'site_title'], ['value' => $request->input('site_title')]);
         \App\Models\SiteSetting::updateOrCreate(['key' => 'meta_description'], ['value' => $request->input('meta_description')]);
         \App\Models\ActivityLog::log('Settings updated', 'Updated SEO Title and Meta Description.');
+        Notification::send('settings_updated', 'Settings updated', 'Updated SEO Title and Meta Description.');
         return redirect()->route('admin.settings.index')->with('success', 'Settings updated successfully.');
     })->name('settings.update');
 });

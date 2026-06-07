@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Project;
 use App\Models\Tag;
 use App\Models\ActivityLog;
+use App\Models\Notification;
 use Illuminate\Support\Facades\Storage;
 
 class ProjectController extends BaseAdminController
@@ -96,6 +97,7 @@ class ProjectController extends BaseAdminController
         $project->tags()->sync($tagIds);
 
         ActivityLog::log('Project created', 'Created project: ' . $project->title);
+        Notification::send('project_created', 'New project added', 'Created project: ' . $project->title, 'project', $project->id);
 
         return redirect()->route('admin.projects.index')->with('success', 'Project berhasil ditambahkan.');
     }
@@ -199,6 +201,7 @@ class ProjectController extends BaseAdminController
         $project->tags()->sync($tagIds);
 
         ActivityLog::log('Project edited', 'Edited project: ' . $project->title);
+        Notification::send('project_updated', 'Project updated', 'Updated project: ' . $project->title, 'project', $project->id);
 
         return redirect()->route('admin.projects.index')->with('success', 'Project berhasil diperbarui.');
     }
@@ -228,6 +231,7 @@ class ProjectController extends BaseAdminController
         $project->delete();
 
         ActivityLog::log('Project deleted', 'Deleted project: ' . $title);
+        Notification::send('project_deleted', 'Project removed', 'Deleted project: ' . $title);
 
         return redirect()->route('admin.projects.index')->with('success', 'Project berhasil dihapus.');
     }

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\AboutSection;
 use App\Models\SiteSetting;
 use App\Models\ActivityLog;
+use App\Models\Notification;
 use Illuminate\Support\Facades\Storage;
 
 class HomeController extends Controller
@@ -98,6 +99,7 @@ class HomeController extends Controller
         SiteSetting::updateOrCreate(['key' => 'footer_copyright_text'], ['value' => $request->input('footer_copyright_text') ?? '']);
 
         ActivityLog::log('Home Content edited', 'Updated Left/Right panels, Social Links, and Footer.');
+        Notification::send('homepage_updated', 'Homepage content updated', 'Updated Left/Right panels, Social Links, and Footer.');
 
         return redirect()->route('admin.about.edit')->with('success', 'Home Content berhasil diperbarui.');
     }

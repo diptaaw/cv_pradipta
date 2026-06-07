@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\ActivityLog;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -68,6 +69,7 @@ class AdminUserController extends Controller
         ]);
 
         ActivityLog::log('Admin added', 'Added new admin: ' . $admin->email);
+        Notification::send('admin_created', 'New admin added', 'Added new admin: ' . $admin->name, 'admin', $admin->id);
 
         return redirect()->route('admin.admins.index')->with('success', 'Admin "' . $admin->name . '" berhasil ditambahkan.');
     }
@@ -126,6 +128,7 @@ class AdminUserController extends Controller
         $admin->update($data);
 
         ActivityLog::log('Admin edited', 'Updated admin user: ' . $admin->email);
+        Notification::send('admin_updated', 'Admin updated', 'Updated admin user: ' . $admin->name, 'admin', $admin->id);
 
         return redirect()->route('admin.admins.index')->with('success', 'Admin "' . $admin->name . '" berhasil diperbarui.');
     }
