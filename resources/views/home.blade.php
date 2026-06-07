@@ -14,10 +14,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
 </head>
 
-<body id="top">
+<body id="top" class="loading-active">
+
+@include('partials.loader')
 
 <div class="bg-orb orb-1"></div>
 <div class="bg-orb orb-2"></div>

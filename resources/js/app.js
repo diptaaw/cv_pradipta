@@ -8,6 +8,208 @@ let currentX = 0;
 let currentY = 0;
 
 const cursor = document.querySelector(".custom-cursor");
+
+/* LOADER SYSTEM */
+window.portfolioLoader = {
+    fonts: false,
+    images: false,
+    constellations: false,
+    starfield: false,
+    fireflies: false,
+    haze: false,
+    reveals: false,
+    notifications: false,
+    
+    listeners: [],
+    
+    update(system) {
+        if (this[system] === false) {
+            this[system] = true;
+            console.log(`[Loader] System '${system}' loaded.`);
+            this.notify();
+        }
+    },
+    
+    notify() {
+        this.listeners.forEach(fn => fn(this.getProgress(), this.getLoadedSystemName()));
+    },
+    
+    getLoadedSystemName() {
+        const keys = ['fonts', 'images', 'constellations', 'starfield', 'fireflies', 'haze', 'reveals', 'notifications'];
+        const loaded = keys.filter(k => this[k]);
+        if (loaded.length === 0) return 'INITIALIZING MATRIX';
+        return loaded[loaded.length - 1].toUpperCase();
+    },
+    
+    getProgress() {
+        const keys = ['fonts', 'images', 'constellations', 'starfield', 'fireflies', 'haze', 'reveals', 'notifications'];
+        const count = keys.filter(k => this[k]).length;
+        return (count / keys.length) * 100;
+    }
+};
+
+// Check if the loader should be skipped
+(function() {
+    const isReload = (window.performance && ((window.performance.getEntriesByType && window.performance.getEntriesByType("navigation")[0] && window.performance.getEntriesByType("navigation")[0].type === "reload") || (window.performance.navigation && window.performance.navigation.type === 1)));
+    const isSkipped = sessionStorage.getItem('portfolioLoaded') && !isReload;
+    
+    window.portfolioLoader.isSkipped = !!isSkipped;
+    
+    if (isSkipped) {
+        document.body.classList.remove("loading-active");
+        const loaderOverlay = document.getElementById("retro-loader");
+        if (loaderOverlay) {
+            loaderOverlay.remove();
+        }
+    }
+})();
+
+// Update status and visual progress bar
+window.portfolioLoader.listeners.push((progress, lastSystem) => {
+    // Custom constellation progress bar logic
+    const activeNodesCount = Math.round((progress / 100) * 8);
+    for (let i = 1; i <= 8; i++) {
+        const node = document.querySelector(`.constellation-node[data-index="${i}"]`);
+        if (node) {
+            if (i <= activeNodesCount) {
+                node.classList.add("active");
+            } else {
+                node.classList.remove("active");
+            }
+        }
+        
+        const line = document.querySelector(`.constellation-line[data-index="${i}"]`);
+        if (line) {
+            if (i < activeNodesCount) {
+                line.classList.add("active");
+            } else {
+                line.classList.remove("active");
+            }
+        }
+    }
+    
+    if (progress === 100) {
+        // Set sessionStorage
+        sessionStorage.setItem('portfolioLoaded', 'true');
+        
+        if (window.portfolioLoader.isSkipped) {
+            return;
+        }
+        
+        // Pause for 500ms (within 400-600ms range)
+        setTimeout(() => {
+            const loaderOverlay = document.getElementById("retro-loader");
+            if (loaderOverlay) {
+                // 1. Move downward slightly (12px)
+                loaderOverlay.classList.add("exit-prep");
+                
+                setTimeout(() => {
+                    // 2. Smoothly accelerate upward off-screen + scale down + motion blur
+                    loaderOverlay.classList.remove("exit-prep");
+                    loaderOverlay.classList.add("exit-animate");
+                    
+                    // Crossfade: start fading in the homepage content
+                    document.body.classList.remove("loading-active");
+                    
+                    // Cleanup loader element after transition (transition takes 800ms)
+                    setTimeout(() => {
+                        loaderOverlay.remove();
+                    }, 850);
+                }, 250); // 250ms delay for the downward dip before spring-up
+            }
+        }, 500);
+    }
+});
+
+// Setup image and font loading promises
+(function() {
+    // Fonts
+    if (document.fonts) {
+        document.fonts.ready.then(() => {
+            window.portfolioLoader.update('fonts');
+        }).catch(() => {
+            window.portfolioLoader.update('fonts');
+        });
+    } else {
+        window.portfolioLoader.update('fonts');
+    }
+
+    // Images
+    const handleImages = () => {
+        const imgs = Array.from(document.querySelectorAll('img:not([loading="lazy"])'));
+        if (imgs.length === 0) {
+            window.portfolioLoader.update('images');
+        } else {
+            let loadedCount = 0;
+            const onImgLoad = () => {
+                loadedCount++;
+                if (loadedCount >= imgs.length) {
+                    window.portfolioLoader.update('images');
+                }
+            };
+            imgs.forEach(img => {
+                if (img.complete) {
+                    onImgLoad();
+                } else {
+                    img.addEventListener('load', onImgLoad);
+                    img.addEventListener('error', onImgLoad);
+                }
+            });
+        }
+    };
+    
+    if (document.readyState === "complete" || document.readyState === "interactive") {
+        handleImages();
+    } else {
+        window.addEventListener("DOMContentLoaded", handleImages);
+    }
+
+    // Background Stars inside the loader container
+    const setupStars = () => {
+        const starsBg = document.querySelector(".loader-bg-stars");
+        if (starsBg) {
+            for (let i = 0; i < 45; i++) {
+                const star = document.createElement("div");
+                star.className = "pixel-star";
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.animationDelay = `${Math.random() * 3}s`;
+                starsBg.appendChild(star);
+            }
+        }
+        
+        // Loader text dots animation
+        let dotCount = 1;
+        const textInterval = setInterval(() => {
+            const statusText = document.getElementById("loader-status-text");
+            if (!statusText) return;
+            
+            const progress = window.portfolioLoader.getProgress();
+            if (progress < 100) {
+                let baseText = "Loading";
+                if (progress >= 75) {
+                    baseText = "Almost ready";
+                } else if (progress >= 50) {
+                    baseText = "Loading content";
+                } else if (progress >= 25) {
+                    baseText = "Preparing portfolio";
+                }
+                statusText.textContent = baseText + ".".repeat(dotCount);
+                dotCount = (dotCount % 3) + 1;
+            } else {
+                statusText.textContent = "Almost ready...";
+                clearInterval(textInterval);
+            }
+        }, 400);
+    };
+
+    if (document.readyState === "complete" || document.readyState === "interactive") {
+        setupStars();
+    } else {
+        window.addEventListener("DOMContentLoaded", setupStars);
+    }
+})();
+
 /* ACTIVITY FEED / NOTIFICATION DROPDOWN CONTROLLER */
 const updatesButton = document.querySelector("[data-updates-toggle]");
 const updatesDropdown = document.querySelector("[data-updates-dropdown]");
@@ -177,11 +379,13 @@ async function fetchNotifications() {
         renderNotifications(notifications);
         updateBadgeCount();
         updateLoadMoreButton();
+        if (window.portfolioLoader) window.portfolioLoader.update('notifications');
     } catch (err) {
         console.error('Error loading notifications:', err);
         if (updatesContent) {
             updatesContent.innerHTML = `<div class="updates-loader" style="color: #ff6b6b;">Failed to load activity.</div>`;
         }
+        if (window.portfolioLoader) window.portfolioLoader.update('notifications');
     }
 }
 
@@ -550,6 +754,8 @@ function initScrollReveal() {
             }
         });
     }, 3000);
+    
+    if (window.portfolioLoader) window.portfolioLoader.update('reveals');
 }
 
 if (document.readyState === "complete") {
@@ -902,6 +1108,7 @@ if (particlesContainer) {
         initStarLifecycleRandomized(star);
         medStars.push(star);
     }
+    if (window.portfolioLoader) window.portfolioLoader.update('starfield');
 
     function transitionAtmosphereState(obj, newState) {
         obj.state = newState;
@@ -1028,6 +1235,7 @@ if (particlesContainer) {
         }
     ];
     hazeLayers.forEach(initAtmosphereLifecycleRandomized);
+    if (window.portfolioLoader) window.portfolioLoader.update('haze');
 
     // Layer 3: Constellation templates
     const constellationTemplates = [
@@ -1442,6 +1650,7 @@ if (particlesContainer) {
             p.blurFactor = 1.0 + t * 0.5;
         }
     }
+    if (window.portfolioLoader) window.portfolioLoader.update('constellations');
 
     // Layer 5: Fireflies
     const fireflies = [];
@@ -1483,6 +1692,7 @@ if (particlesContainer) {
         initFireflyLifecycleRandomized(ff);
         fireflies.push(ff);
     }
+    if (window.portfolioLoader) window.portfolioLoader.update('fireflies');
 
     // Layer 6: Foreground blurred particles
     const foregroundParticles = [];
@@ -2238,6 +2448,13 @@ if (particlesContainer) {
     }
 
     animateConstellations();
+} else {
+    if (window.portfolioLoader) {
+        window.portfolioLoader.update('starfield');
+        window.portfolioLoader.update('haze');
+        window.portfolioLoader.update('constellations');
+        window.portfolioLoader.update('fireflies');
+    }
 }
 
 
@@ -3076,4 +3293,43 @@ if (document.readyState === "complete") {
         initExpandableDescriptions();
     });
 }
+
+// Debugging helper for navbar layout
+function logNavbarLayoutDebug(stage) {
+    const navbar = document.querySelector(".top-navbar");
+    const layoutShell = document.querySelector(".layout-shell");
+    
+    console.log(`[Layout Debug - ${stage}]`);
+    if (navbar) {
+        const style = window.getComputedStyle(navbar);
+        console.log(`  Navbar: position=${style.position}, width=${style.width}, max-width=${style.maxWidth}, transform=${style.transform}`);
+    } else {
+        console.log("  Navbar not found");
+    }
+    
+    if (layoutShell) {
+        const style = window.getComputedStyle(layoutShell);
+        console.log(`  Layout Shell: position=${style.position}, left=${style.left}, transform=${style.transform}, width=${style.width}`);
+    }
+    
+    const bodyStyle = window.getComputedStyle(document.body);
+    console.log(`  Body: overflow=${bodyStyle.overflow}, position=${bodyStyle.position}, width=${bodyStyle.width}`);
+    
+    const docStyle = window.getComputedStyle(document.documentElement);
+    console.log(`  Doc: overflow=${docStyle.overflow}, position=${docStyle.position}`);
+}
+
+// Log layout after load/navigation
+window.addEventListener("load", () => {
+    // Wait a short moment to ensure transitions have settled/started
+    setTimeout(() => {
+        logNavbarLayoutDebug("After Navigation/Load");
+    }, 500);
+});
+
+// Log layout before navigation/unload
+window.addEventListener("beforeunload", () => {
+    logNavbarLayoutDebug("Before Navigation/Unload");
+});
+
 
