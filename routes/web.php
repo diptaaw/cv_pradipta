@@ -85,6 +85,15 @@ Route::get('/resume', function () {
 });
 
 
+Route::get('/api/updates', function () {
+    return response()->json(
+        \App\Models\PortfolioUpdate::where('is_published', true)
+            ->orderBy('is_pinned', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->get()
+    );
+});
+
 Route::get('/api/archive/projects', function (\Illuminate\Http\Request $request) {
     $query = \App\Models\Project::where('is_published', true)->orderBy('position');
 
@@ -167,6 +176,7 @@ Route::middleware([EnsureAdmin::class])->prefix('admin')->name('admin.')->group(
     Route::resource('resumes', \App\Http\Controllers\Admin\ResumeFileController::class)->except(['show']);
     Route::post('resumes/{resume}/publish', [\App\Http\Controllers\Admin\ResumeFileController::class, 'publish'])->name('resumes.publish');
     Route::post('resumes/{resume}/unpublish', [\App\Http\Controllers\Admin\ResumeFileController::class, 'unpublish'])->name('resumes.unpublish');
+    Route::resource('updates', \App\Http\Controllers\Admin\PortfolioUpdateController::class)->except(['show']);
     Route::resource('admins', \App\Http\Controllers\Admin\AdminUserController::class)->except(['show']);
     Route::get('about', [HomeController::class, 'edit'])->name('about.edit');
     Route::put('about', [HomeController::class, 'update'])->name('about.update');

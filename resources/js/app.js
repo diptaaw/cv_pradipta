@@ -8,42 +8,135 @@ let currentX = 0;
 let currentY = 0;
 
 const cursor = document.querySelector(".custom-cursor");
+/* WHAT'S NEW DROPDOWN CONTROLLER */
+const updatesButton = document.querySelector("[data-updates-toggle]");
+const updatesDropdown = document.querySelector("[data-updates-dropdown]");
+const updatesDot = document.querySelector("[data-updates-dot]");
+const updatesContent = document.querySelector("[data-updates-content]");
 
-const themeToggle =
-    document.querySelector("[data-theme-toggle]");
+let cachedUpdates = [];
+let latestUpdateId = null;
 
-const savedTheme =
-    localStorage.getItem("portfolio-theme");
-
-if (savedTheme === "light") {
-    document.body.dataset.theme = "light";
+function escapeHtml(str) {
+    if (!str) return '';
+    return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
-if (themeToggle) {
-    themeToggle.setAttribute(
-        "aria-pressed",
-        document.body.dataset.theme === "light"
-            ? "true"
-            : "false"
-    );
+function renderUpdates(updates) {
+    if (!updatesContent) return;
+    if (updates.length === 0) {
+        updatesContent.innerHTML = `<div class="updates-loader">No updates yet.</div>`;
+        return;
+    }
+    updatesContent.innerHTML = updates.map(update => `
+        <div class="update-item">
+            <div class="update-item-header">
+                <h4 class="update-item-title">
+                    ${update.is_pinned ? '<span class="update-pin-badge">Pinned</span>' : ''}
+                    ${escapeHtml(update.title)}
+                </h4>
+                <span class="update-item-date">${escapeHtml(update.date)}</span>
+            </div>
+            <p class="update-item-desc">${escapeHtml(update.description)}</p>
+        </div>
+    `).join('');
+}
 
-    themeToggle.addEventListener("click", () => {
+async function fetchUpdates() {
+    try {
+        const response = await fetch('/api/updates');
+        if (!response.ok) throw new Error('Failed to fetch updates');
+        const updates = await response.json();
+        cachedUpdates = updates;
+        
+        renderUpdates(updates);
 
-        const isLight =
-            document.body.dataset.theme === "light";
-
-        if (isLight) {
-            document.body.removeAttribute("data-theme");
-            localStorage.setItem("portfolio-theme", "dark");
-            themeToggle.setAttribute("aria-pressed", "false");
-        } else {
-            document.body.dataset.theme = "light";
-            localStorage.setItem("portfolio-theme", "light");
-            themeToggle.setAttribute("aria-pressed", "true");
+        if (updates.length > 0) {
+            const latest = updates[0];
+            latestUpdateId = latest.id;
+            
+            const lastViewedId = localStorage.getItem("portfolio-last-viewed-update-id");
+            if (!lastViewedId || parseInt(lastViewedId) !== latestUpdateId) {
+                if (updatesDot) {
+                    updatesDot.classList.remove("hidden");
+                }
+            }
         }
+    } catch (err) {
+        console.error('Error loading portfolio updates:', err);
+        if (updatesContent) {
+            updatesContent.innerHTML = `<div class="updates-loader" style="color: #ff6b6b;">Failed to load updates.</div>`;
+        }
+    }
+}
 
+function openUpdatesDropdown() {
+    if (!updatesDropdown || !updatesButton) return;
+    updatesDropdown.classList.remove("hidden");
+    updatesButton.setAttribute("aria-expanded", "true");
+    updatesButton.classList.add("active");
+    // Force reflow
+    updatesDropdown.offsetHeight;
+    updatesDropdown.classList.add("active");
+
+    // Clear unread dot on open
+    if (latestUpdateId !== null) {
+        localStorage.setItem("portfolio-last-viewed-update-id", latestUpdateId.toString());
+        if (updatesDot) {
+            updatesDot.classList.add("hidden");
+        }
+    }
+}
+
+function closeUpdatesDropdown() {
+    if (!updatesDropdown || !updatesButton || !updatesDropdown.classList.contains("active")) return;
+    updatesDropdown.classList.remove("active");
+    updatesButton.setAttribute("aria-expanded", "false");
+    updatesButton.classList.remove("active");
+    
+    // Add hidden back after transition ends
+    const onTransitionEnd = (e) => {
+        if (e.propertyName === "opacity" && !updatesDropdown.classList.contains("active")) {
+            updatesDropdown.classList.add("hidden");
+            updatesDropdown.removeEventListener("transitionend", onTransitionEnd);
+        }
+    };
+    updatesDropdown.addEventListener("transitionend", onTransitionEnd);
+}
+
+if (updatesButton && updatesDropdown) {
+    updatesButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const isOpen = updatesDropdown.classList.contains("active");
+        if (isOpen) {
+            closeUpdatesDropdown();
+        } else {
+            openUpdatesDropdown();
+        }
+    });
+
+    // Close when clicking outside
+    document.addEventListener("click", (e) => {
+        if (!updatesDropdown.contains(e.target) && !updatesButton.contains(e.target)) {
+            closeUpdatesDropdown();
+        }
+    });
+
+    // Close on Escape key press
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            closeUpdatesDropdown();
+        }
     });
 }
+
+// Fetch updates on page load
+fetchUpdates();
 
 /* MOUSE MOVE */
 
@@ -163,31 +256,28 @@ hoverItems.forEach((item) => {
 
 /* SPOTLIGHT ANIMATION */
 
+let lastSpotlightTime = performance.now();
 function animateSpotlight() {
+    const now = performance.now();
+    const dt = Math.min((now - lastSpotlightTime) / 1000, 0.1);
+    lastSpotlightTime = now;
 
-    currentX +=
-        (mouseX - currentX) * 0.08;
-
-    currentY +=
-        (mouseY - currentY) * 0.08;
+    // Time-based smooth trailing easing (4.8 rad/s convergence)
+    const ease = 1.0 - Math.exp(-4.8 * dt);
+    currentX += (mouseX - currentX) * ease;
+    currentY += (mouseY - currentY) * ease;
 
     if (spotlight) {
-        spotlight.style.left =
-            `${currentX}px`;
-
-        spotlight.style.top =
-            `${currentY}px`;
+        spotlight.style.left = `${currentX}px`;
+        spotlight.style.top = `${currentY}px`;
     }
 
-    requestAnimationFrame(
-        animateSpotlight
-    );
-
+    requestAnimationFrame(animateSpotlight);
 }
 
 animateSpotlight();
 
-// Upgraded Canvas-based Cosmic Background System
+// Overhauled Canvas-based Celestial Background System
 const particlesContainer = document.querySelector(".particles");
 
 if (particlesContainer) {
@@ -200,7 +290,6 @@ if (particlesContainer) {
         document.body.appendChild(particlesOverlayContainer);
     }
 
-    // Append Canvas elements
     const bgCanvas = document.createElement("canvas");
     bgCanvas.id = "constellation-bg";
     particlesContainer.appendChild(bgCanvas);
@@ -213,14 +302,12 @@ if (particlesContainer) {
 
     document.body.classList.add("canvas-active");
 
-    // Dimensions
     let width = window.innerWidth;
     let height = window.innerHeight;
 
     let isMobileDevice = width <= 768;
     let isTabletDevice = width > 768 && width <= 1024;
 
-    // Canvas scaling
     function resizeCanvases() {
         width = window.innerWidth;
         height = window.innerHeight;
@@ -246,137 +333,1351 @@ if (particlesContainer) {
     window.addEventListener("resize", resizeCanvases);
     resizeCanvases();
 
-    // Particle pools configuration
-    const smallStarCount = isMobileDevice ? 25 : (isTabletDevice ? 45 : 65);
-    const medStarCount = isMobileDevice ? 12 : (isTabletDevice ? 22 : 30);
-    const constellationCount = isMobileDevice ? 16 : (isTabletDevice ? 26 : 38);
-    const fireflyCount = isMobileDevice ? 8 : (isTabletDevice ? 14 : 20);
-    const foregroundCount = isMobileDevice ? 4 : (isTabletDevice ? 7 : 10);
+    // Counts based on device performance
+    const smallStarCount = isMobileDevice ? 30 : (isTabletDevice ? 50 : 80);
+    const medStarCount = isMobileDevice ? 15 : (isTabletDevice ? 25 : 35);
+    const fireflyCount = isMobileDevice ? 10 : (isTabletDevice ? 16 : 24);
+    const foregroundCount = isMobileDevice ? 3 : (isTabletDevice ? 5 : 8);
 
-    // Coordinate state tracking
     let smoothMouseOffsetX = 0;
     let smoothMouseOffsetY = 0;
     let interpolatedScrollY = window.scrollY;
     let lastScrollY = window.scrollY;
     let scrollVelocity = 0;
 
-    // Small stars
-    const smallStars = [];
-    for (let i = 0; i < smallStarCount; i++) {
-        smallStars.push({
-            baseX: Math.random() * width,
-            baseY: Math.random() * height,
-            size: 0.6 + Math.random() * 0.9,
-            twinklePhase: Math.random() * Math.PI * 2,
-            twinkleSpeed: 0.003 + Math.random() * 0.007,
-            baseOpacity: 0.25 + Math.random() * 0.5,
-            parallaxFactor: 0.08 + Math.random() * 0.06
-        });
-    }
-
-    // Medium stars
-    const medStars = [];
-    for (let i = 0; i < medStarCount; i++) {
-        medStars.push({
-            baseX: Math.random() * width,
-            baseY: Math.random() * height,
-            size: 1.5 + Math.random() * 1.2,
-            twinklePhase: Math.random() * Math.PI * 2,
-            twinkleSpeed: 0.002 + Math.random() * 0.005,
-            baseOpacity: 0.4 + Math.random() * 0.45,
-            parallaxFactor: 0.14 + Math.random() * 0.1
-        });
-    }
-
-    // Constellation stars
-    const constellationStars = [];
-    for (let i = 0; i < constellationCount; i++) {
-        constellationStars.push({
-            baseX: Math.random() * width,
-            baseY: Math.random() * height,
-            vx: (Math.random() - 0.5) * 0.07,
-            vy: (Math.random() - 0.5) * 0.07,
-            size: 1.2 + Math.random() * 1.5,
-            baseOpacity: 0.35 + Math.random() * 0.35,
-            brightness: 1.0,
-            brightnessTarget: 1.0,
-            brighteningTimer: 0,
-            breathePhase: Math.random() * Math.PI * 2,
-            breatheSpeed: 0.002 + Math.random() * 0.005,
-            parallaxFactor: 0.12
-        });
-    }
-
-    // Nebula morphing blobs
-    const nebulaBlobs = [
-        { baseXFraction: 0.15, baseYFraction: 0.25, radiusFraction: 0.55, colorIndex: 0, angleX: Math.random() * 10, angleY: Math.random() * 10, speedX: 0.0004, speedY: 0.0002 },
-        { baseXFraction: 0.85, baseYFraction: 0.75, radiusFraction: 0.50, colorIndex: 1, angleX: Math.random() * 10, angleY: Math.random() * 10, speedX: 0.0002, speedY: 0.0004 },
-        { baseXFraction: 0.50, baseYFraction: 0.55, radiusFraction: 0.60, colorIndex: 2, angleX: Math.random() * 10, angleY: Math.random() * 10, speedX: 0.0003, speedY: 0.0003 },
-        { baseXFraction: 0.75, baseYFraction: 0.20, radiusFraction: 0.45, colorIndex: 3, angleX: Math.random() * 10, angleY: Math.random() * 10, speedX: 0.0005, speedY: 0.0001 }
+    // Star Color Themes for organic light/color bleeding
+    const starColorThemes = [
+        {
+            name: 'purple',
+            core: 'rgba(245, 240, 255, 1.0)',
+            glowRGB: { r: 139, g: 92, b: 255 },
+            lineRGB: { r: 169, g: 150, b: 255 },
+            lineCoreRGB: { r: 245, g: 240, b: 255 }
+        },
+        {
+            name: 'magenta',
+            core: 'rgba(255, 240, 245, 1.0)',
+            glowRGB: { r: 219, g: 39, b: 119 },
+            lineRGB: { r: 219, g: 39, b: 119 },
+            lineCoreRGB: { r: 255, g: 240, b: 245 }
+        },
+        {
+            name: 'violet',
+            core: 'rgba(245, 240, 255, 1.0)',
+            glowRGB: { r: 124, g: 58, b: 237 },
+            lineRGB: { r: 124, g: 58, b: 237 },
+            lineCoreRGB: { r: 245, g: 240, b: 255 }
+        },
+        {
+            name: 'blue',
+            core: 'rgba(240, 250, 255, 1.0)',
+            glowRGB: { r: 14, g: 165, b: 233 },
+            lineRGB: { r: 56, g: 189, b: 248 },
+            lineCoreRGB: { r: 240, g: 250, b: 255 }
+        }
     ];
 
-    // Fireflies
-    const fireflies = [];
-    for (let i = 0; i < fireflyCount; i++) {
-        const size = 6 + Math.random() * 12;
-        const opacity = 0.35 + Math.random() * 0.45;
-        const speedMult = 0.4 + Math.random() * 0.4;
-        fireflies.push({
+    function scaleRGBAOpacity(rgbaStr, factor) {
+        const match = rgbaStr.match(/rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d\.]+)\s*\)/);
+        if (match) {
+            const r = match[1];
+            const g = match[2];
+            const b = match[3];
+            const a = parseFloat(match[4]);
+            return `rgba(${r}, ${g}, ${b}, ${(a * factor).toFixed(5)})`;
+        }
+        return rgbaStr;
+    }
+
+    function transitionStarState(star, newState) {
+        star.state = newState;
+        star.stateTimer = 0;
+        if (newState === 'spawning') {
+            star.stateDuration = 1.5 + Math.random() * 2.5; // 1.5 - 4s
+            star.birthStartScale = 0.1 + Math.random() * 0.2; // 0.1 - 0.3
+            star.scaleFactor = star.birthStartScale;
+            star.brightnessFactor = 0.0;
+            star.blurFactor = 1.0;
+        } else if (newState === 'active') {
+            star.stateDuration = 20 + Math.random() * 40; // 20-60s active
+            star.scaleFactor = 1.0;
+            star.brightnessFactor = 1.0;
+            star.blurFactor = 1.0;
+        } else if (newState === 'despawning') {
+            star.stateDuration = 3 + Math.random() * 3; // 3-6s
+            star.scaleFactor = 1.0;
+            star.brightnessFactor = 1.0;
+            star.blurFactor = 1.0;
+        } else if (newState === 'dormant') {
+            star.stateDuration = 1 + Math.random() * 4; // 1-5s dormant
+            star.scaleFactor = 0.0;
+            star.brightnessFactor = 0.0;
+            star.blurFactor = 1.0;
+        }
+    }
+
+    function updateStarLifecycle(star, dt) {
+        star.stateTimer += dt;
+        if (star.state === 'spawning') {
+            const progress = Math.min(star.stateTimer / star.stateDuration, 1.0);
+            const t = progress * progress * (3 - 2 * progress);
+            star.scaleFactor = star.birthStartScale + (1.0 - star.birthStartScale) * t;
+            star.brightnessFactor = t;
+            star.blurFactor = 1.0;
+            if (star.stateTimer >= star.stateDuration) {
+                transitionStarState(star, 'active');
+            }
+        } else if (star.state === 'active') {
+            star.scaleFactor = 1.0;
+            star.brightnessFactor = 1.0;
+            star.blurFactor = 1.0;
+            if (star.stateTimer >= star.stateDuration) {
+                transitionStarState(star, 'despawning');
+            }
+        } else if (star.state === 'despawning') {
+            const progress = Math.min(star.stateTimer / star.stateDuration, 1.0);
+            const t = progress * progress * (3 - 2 * progress);
+            star.scaleFactor = 1.0 - t;
+            star.brightnessFactor = 1.0 - t;
+            star.blurFactor = 1.0 + t * 0.5;
+            if (star.stateTimer >= star.stateDuration) {
+                transitionStarState(star, 'dormant');
+            }
+        } else if (star.state === 'dormant') {
+            star.scaleFactor = 0.0;
+            star.brightnessFactor = 0.0;
+            star.blurFactor = 1.0;
+            if (star.stateTimer >= star.stateDuration) {
+                star.baseX = Math.random() * width;
+                star.baseY = Math.random() * height;
+                transitionStarState(star, 'spawning');
+            }
+        }
+    }
+
+    function initStarLifecycleRandomized(star) {
+        const rand = Math.random();
+        if (rand < 0.7) {
+            star.state = 'active';
+            star.stateDuration = 20 + Math.random() * 40;
+            star.stateTimer = Math.random() * star.stateDuration;
+            star.scaleFactor = 1.0;
+            star.brightnessFactor = 1.0;
+            star.blurFactor = 1.0;
+        } else if (rand < 0.85) {
+            star.state = 'spawning';
+            star.stateDuration = 1.5 + Math.random() * 2.5;
+            star.stateTimer = Math.random() * star.stateDuration;
+            star.birthStartScale = 0.1 + Math.random() * 0.2;
+            const progress = star.stateTimer / star.stateDuration;
+            const t = progress * progress * (3 - 2 * progress);
+            star.scaleFactor = star.birthStartScale + (1.0 - star.birthStartScale) * t;
+            star.brightnessFactor = t;
+            star.blurFactor = 1.0;
+        } else {
+            star.state = 'despawning';
+            star.stateDuration = 3 + Math.random() * 3;
+            star.stateTimer = Math.random() * star.stateDuration;
+            star.birthStartScale = 0.1 + Math.random() * 0.2;
+            const progress = star.stateTimer / star.stateDuration;
+            const t = progress * progress * (3 - 2 * progress);
+            star.scaleFactor = 1.0 - t;
+            star.brightnessFactor = 1.0 - t;
+            star.blurFactor = 1.0 + t * 0.5;
+        }
+    }
+
+    // Layer 4: Independent Twinkling Stars
+    const smallStars = [];
+    for (let i = 0; i < smallStarCount; i++) {
+        const star = {
             baseX: Math.random() * width,
             baseY: Math.random() * height,
-            vx: (Math.random() - 0.5) * 0.3 * speedMult,
-            vy: (Math.random() - 0.5) * 0.3 * speedMult,
+            size: 0.35 + Math.random() * 0.35, // much smaller far stars (0.35 - 0.7)
+            twinklePhase: Math.random() * Math.PI * 2,
+            twinkleSpeed: 0.003 + Math.random() * 0.004, // slower and more organic twinkle speed
+            baseOpacity: 0.15 + Math.random() * 0.20, // lower opacity for far stars (15% to 35%)
+            parallaxMouse: 0.015,
+            parallaxScroll: 0.035,
+            driftAngle: Math.random() * Math.PI * 2,
+            driftSpeed: 0.0008 + Math.random() * 0.0012,
+            theme: starColorThemes[Math.floor(Math.random() * starColorThemes.length)],
+            seed: Math.random() * 1000
+        };
+        initStarLifecycleRandomized(star);
+        smallStars.push(star);
+    }
+
+    const medStars = [];
+    for (let i = 0; i < medStarCount; i++) {
+        const star = {
+            baseX: Math.random() * width,
+            baseY: Math.random() * height,
+            size: 0.8 + Math.random() * 0.6, // mid-distance sizes (0.8 - 1.4)
+            twinklePhase: Math.random() * Math.PI * 2,
+            twinkleSpeed: 0.002 + Math.random() * 0.003, // slower and more organic twinkle speed
+            baseOpacity: 0.45 + Math.random() * 0.20, // normal opacity (45% to 65%)
+            parallaxMouse: 0.04,
+            parallaxScroll: 0.08,
+            driftAngle: Math.random() * Math.PI * 2,
+            driftSpeed: 0.0012 + Math.random() * 0.0018,
+            theme: starColorThemes[Math.floor(Math.random() * starColorThemes.length)],
+            seed: Math.random() * 1000
+        };
+        initStarLifecycleRandomized(star);
+        medStars.push(star);
+    }
+
+    function transitionAtmosphereState(obj, newState) {
+        obj.state = newState;
+        obj.stateTimer = 0;
+        if (newState === 'spawning') {
+            obj.stateDuration = 5 + Math.random() * 5; // 5-10s
+            obj.lifecycleFade = 0;
+        } else if (newState === 'active') {
+            obj.stateDuration = 40 + Math.random() * 40; // 40-80s active
+            obj.lifecycleFade = 1;
+        } else if (newState === 'despawning') {
+            obj.stateDuration = 8 + Math.random() * 7; // 8-15s
+            obj.lifecycleFade = 1;
+        } else if (newState === 'dormant') {
+            obj.stateDuration = 2 + Math.random() * 4; // 2-6s dormant
+            obj.lifecycleFade = 0;
+        }
+    }
+
+    function updateAtmosphereLifecycle(obj, dt) {
+        obj.stateTimer += dt;
+        if (obj.state === 'spawning') {
+            const t = Math.min(obj.stateTimer / obj.stateDuration, 1);
+            obj.lifecycleFade = t * t * (3 - 2 * t);
+            if (obj.stateTimer >= obj.stateDuration) {
+                transitionAtmosphereState(obj, 'active');
+            }
+        } else if (obj.state === 'active') {
+            obj.lifecycleFade = 1.0;
+            if (obj.stateTimer >= obj.stateDuration) {
+                transitionAtmosphereState(obj, 'despawning');
+            }
+        } else if (obj.state === 'despawning') {
+            const t = Math.min(obj.stateTimer / obj.stateDuration, 1);
+            obj.lifecycleFade = 1 - (t * t * (3 - 2 * t));
+            if (obj.stateTimer >= obj.stateDuration) {
+                transitionAtmosphereState(obj, 'dormant');
+            }
+        } else if (obj.state === 'dormant') {
+            obj.lifecycleFade = 0.0;
+            if (obj.stateTimer >= obj.stateDuration) {
+                // Reposition the fraction randomly
+                obj.baseXFraction = 0.15 + Math.random() * 0.7;
+                obj.baseYFraction = 0.15 + Math.random() * 0.7;
+                transitionAtmosphereState(obj, 'spawning');
+            }
+        }
+    }
+
+    function initAtmosphereLifecycleRandomized(obj) {
+        const rand = Math.random();
+        if (rand < 0.7) {
+            obj.state = 'active';
+            obj.stateDuration = 40 + Math.random() * 40;
+            obj.stateTimer = Math.random() * obj.stateDuration;
+            obj.lifecycleFade = 1.0;
+        } else if (rand < 0.85) {
+            obj.state = 'spawning';
+            obj.stateDuration = 5 + Math.random() * 5;
+            obj.stateTimer = Math.random() * obj.stateDuration;
+            const t = obj.stateTimer / obj.stateDuration;
+            obj.lifecycleFade = t * t * (3 - 2 * t);
+        } else {
+            obj.state = 'despawning';
+            obj.stateDuration = 8 + Math.random() * 7;
+            obj.stateTimer = Math.random() * obj.stateDuration;
+            const t = obj.stateTimer / obj.stateDuration;
+            obj.lifecycleFade = 1 - (t * t * (3 - 2 * t));
+        }
+    }
+
+    // Layer 1: Living Nebula Gradients
+    const nebulaBlobs = [
+        { baseXFraction: 0.20, baseYFraction: 0.30, radiusFraction: 0.60, color: 'rgba(54, 31, 147, 0.12)', angleX: Math.random() * 10, angleY: Math.random() * 10, speedX: 0.0003, speedY: 0.00015 },
+        { baseXFraction: 0.80, baseYFraction: 0.70, radiusFraction: 0.55, color: 'rgba(139, 92, 255, 0.09)', angleX: Math.random() * 10, angleY: Math.random() * 10, speedX: 0.00015, speedY: 0.00022 },
+        { baseXFraction: 0.45, baseYFraction: 0.60, radiusFraction: 0.65, color: 'rgba(88, 56, 255, 0.08)', angleX: Math.random() * 10, angleY: Math.random() * 10, speedX: 0.00022, speedY: 0.0002 },
+        { baseXFraction: 0.70, baseYFraction: 0.25, radiusFraction: 0.50, color: 'rgba(198, 107, 255, 0.07)', angleX: Math.random() * 10, angleY: Math.random() * 10, speedX: 0.00035, speedY: 0.0001 }
+    ];
+    nebulaBlobs.forEach(initAtmosphereLifecycleRandomized);
+
+    // Layer 2: Interactive Parallax Haze Layers
+    const hazeLayers = [
+        {
+            name: 'Far Haze',
+            baseXFraction: 0.35,
+            baseYFraction: 0.40,
+            scaleX: 3.5,
+            scaleY: 1.2,
+            radius: 280,
+            color0: 'rgba(54, 31, 147, 0.04)',
+            color5: 'rgba(54, 31, 147, 0.012)',
+            driftAngle: Math.random() * Math.PI,
+            driftSpeed: 0.0001,
+            parallaxMouse: 0.01,
+            parallaxScroll: 0.02
+        },
+        {
+            name: 'Middle Haze',
+            baseXFraction: 0.65,
+            baseYFraction: 0.55,
+            scaleX: 3.0,
+            scaleY: 1.0,
+            radius: 220,
+            color0: 'rgba(139, 92, 255, 0.03)',
+            color5: 'rgba(139, 92, 255, 0.008)',
+            driftAngle: Math.random() * Math.PI,
+            driftSpeed: 0.0002,
+            parallaxMouse: 0.03,
+            parallaxScroll: 0.06
+        },
+        {
+            name: 'Near Haze',
+            baseXFraction: 0.45,
+            baseYFraction: 0.75,
+            scaleX: 2.5,
+            scaleY: 0.8,
+            radius: 180,
+            color0: 'rgba(198, 107, 255, 0.038)',
+            color5: 'rgba(198, 107, 255, 0.01)',
+            driftAngle: Math.random() * Math.PI,
+            driftSpeed: 0.0003,
+            parallaxMouse: 0.05,
+            parallaxScroll: 0.10
+        }
+    ];
+    hazeLayers.forEach(initAtmosphereLifecycleRandomized);
+
+    // Layer 3: Constellation templates
+    const constellationTemplates = [
+        {
+            name: "Ursa Major",
+            stars: [{x: 0, y: 35}, {x: 35, y: 30}, {x: 65, y: 45}, {x: 90, y: 55}, {x: 95, y: 85}, {x: 140, y: 95}, {x: 145, y: 55}, {x: 95, y: 85}],
+            lines: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 4]]
+        },
+        {
+            name: "Cassiopeia",
+            stars: [{x: 0, y: 10}, {x: 25, y: 35}, {x: 50, y: 15}, {x: 75, y: 40}, {x: 100, y: 20}],
+            lines: [[0, 1], [1, 2], [2, 3], [3, 4]]
+        },
+        {
+            name: "Cygnus",
+            stars: [{x: 50, y: 0}, {x: 50, y: 40}, {x: 50, y: 80}, {x: 50, y: 120}, {x: 10, y: 40}, {x: 90, y: 40}],
+            lines: [[0, 1], [1, 2], [2, 3], [1, 4], [1, 5]]
+        },
+        {
+            name: "Orion",
+            stars: [{x: 10, y: 0}, {x: 60, y: 5}, {x: 100, y: 10}, {x: 35, y: 45}, {x: 50, y: 46}, {x: 65, y: 47}, {x: 20, y: 90}, {x: 85, y: 95}, {x: 30, y: 15}],
+            lines: [[0, 1], [1, 2], [2, 5], [5, 4], [4, 3], [3, 0], [3, 6], [6, 7], [7, 5], [0, 8]]
+        },
+        {
+            name: "Pegasus",
+            stars: [{x: 0, y: 0}, {x: 80, y: 0}, {x: 80, y: 80}, {x: 0, y: 80}, {x: -30, y: 110}, {x: 110, y: -30}],
+            lines: [[0, 1], [1, 2], [2, 3], [3, 0], [3, 4], [1, 5]]
+        }
+    ];
+
+    const constellations = [
+        { layer: 'far', state: 'inactive' },
+        { layer: 'far', state: 'inactive' },
+        { layer: 'middle', state: 'inactive' },
+        { layer: 'middle', state: 'inactive' },
+        { layer: 'near', state: 'inactive' },
+        { layer: 'near', state: 'inactive' }
+    ];
+
+    function initConstellation(c, randomizeState = false) {
+        const templateIdx = Math.floor(Math.random() * constellationTemplates.length);
+        const template = constellationTemplates[templateIdx];
+
+        const margin = 80;
+        c.baseX = -margin + Math.random() * (width + margin * 2);
+        c.baseY = -margin + Math.random() * (height + margin * 2);
+
+        // Assign a color theme
+        c.theme = starColorThemes[Math.floor(Math.random() * starColorThemes.length)];
+
+        if (c.layer === 'far') {
+            c.scale = 0.55 + Math.random() * 0.15;
+            c.maxOpacity = 0.22 + Math.random() * 0.06;
+            c.parallaxMouse = 0.015;
+            c.parallaxScroll = 0.035;
+        } else if (c.layer === 'middle') {
+            c.scale = 0.85 + Math.random() * 0.25;
+            c.maxOpacity = 0.45 + Math.random() * 0.10;
+            c.parallaxMouse = 0.04;
+            c.parallaxScroll = 0.08;
+        } else {
+            c.scale = 1.35 + Math.random() * 0.35;
+            c.maxOpacity = 0.68 + Math.random() * 0.12;
+            c.parallaxMouse = 0.075;
+            c.parallaxScroll = 0.15;
+        }
+
+        c.rotationAngle = Math.random() * Math.PI * 2;
+        c.template = template;
+
+        c.stars = template.stars.map((s, idx) => {
+            const birthStartScale = 0.1 + Math.random() * 0.2;
+            return {
+                x: s.x,
+                y: s.y,
+                twinklePhase: Math.random() * Math.PI * 2,
+                twinkleSpeed: 0.6 + Math.random() * 1.2, // Rad/sec (scaled in update)
+                seed: Math.random() * 1000,
+                starId: idx,
+                fadeVal: 0,
+                birthStartScale: birthStartScale,
+                scaleFactor: birthStartScale,
+                brightnessFactor: 0.0,
+                blurFactor: 1.0,
+                birthDuration: 1.5 + Math.random() * 2.5, // 1.5 - 4.0 seconds duration
+                birthTimer: 0
+            };
+        });
+
+        // Reset line draw values
+        c.lines = template.lines.map(() => ({
+            drawVal: 0,
+            drawDuration: 1.5 + Math.random() * 2.5, // 1.5 - 4.0 seconds duration
+            drawTimer: 0
+        }));
+
+        c.driftAngle = Math.random() * Math.PI * 2;
+        c.driftSpeed = 0.018 + Math.random() * 0.024; // Rad/sec
+        c.driftX = 0;
+        c.driftY = 0;
+
+        // Select initial stars (2-3) to fade in during the spawning phase
+        const initialStarsSet = new Set();
+        if (template.lines.length > 0) {
+            initialStarsSet.add(template.lines[0][0]);
+            initialStarsSet.add(template.lines[0][1]);
+        }
+        if (template.stars.length > 2) {
+            for (let i = 0; i < template.stars.length; i++) {
+                if (!initialStarsSet.has(i)) {
+                    initialStarsSet.add(i);
+                    break;
+                }
+            }
+        }
+        c.initialStars = Array.from(initialStarsSet);
+
+        // Build flat sequential construction tasks list
+        c.constructionTasks = [];
+        const revealedStars = new Set(c.initialStars); // Start with initial stars marked as revealed
+        template.lines.forEach((line, lineIdx) => {
+            const [starA, starB] = line;
+            if (!revealedStars.has(starA)) {
+                c.constructionTasks.push({ type: 'star', starIdx: starA });
+                revealedStars.add(starA);
+            }
+            if (!revealedStars.has(starB)) {
+                c.constructionTasks.push({ type: 'star', starIdx: starB });
+                revealedStars.add(starB);
+            }
+            c.constructionTasks.push({ type: 'line', lineIdx: lineIdx });
+        });
+
+        // Ensure all stars are revealed (fallback)
+        template.stars.forEach((_, starIdx) => {
+            if (!revealedStars.has(starIdx)) {
+                c.constructionTasks.push({ type: 'star', starIdx: starIdx });
+                revealedStars.add(starIdx);
+            }
+        });
+
+        c.fadeOutDuration = 5 + Math.random() * 5; // 5-10 seconds fading out
+        c.hasSpawnedReplacement = false;
+        c.fadeVal = 1.0;
+
+        if (randomizeState) {
+            const rand = Math.random();
+            if (rand < 0.35) {
+                // Start as completed (idle)
+                c.state = 'idle';
+                c.idleTimer = Math.random() * 20;
+                c.stars.forEach(s => {
+                    s.fadeVal = 1.0;
+                    s.scaleFactor = 1.0;
+                    s.brightnessFactor = 1.0;
+                });
+                c.lines.forEach(l => l.drawVal = 1.0);
+            } else if (rand < 0.7 && c.constructionTasks.length > 0) {
+                // Start constructing partially
+                c.state = 'constructing';
+                c.taskIdx = Math.floor(Math.random() * c.constructionTasks.length);
+                // Set prior tasks to complete
+                c.stars.forEach(s => {
+                    s.fadeVal = 1.0;
+                    s.scaleFactor = 1.0;
+                    s.brightnessFactor = 1.0;
+                });
+                c.lines.forEach(l => l.drawVal = 1.0);
+                // Hide future tasks
+                for (let idx = c.taskIdx; idx < c.constructionTasks.length; idx++) {
+                    const task = c.constructionTasks[idx];
+                    if (task.type === 'star') {
+                        const s = c.stars[task.starIdx];
+                        s.fadeVal = 0;
+                        s.scaleFactor = s.birthStartScale;
+                        s.brightnessFactor = 0;
+                    } else if (task.type === 'line') {
+                        c.lines[task.lineIdx].drawVal = 0;
+                    }
+                }
+                c.taskTimer = 0;
+                c.taskState = 'delay';
+                c.delayDuration = 0.3 + Math.random() * 0.9;
+            } else {
+                // Start spawning
+                c.state = 'spawning';
+                c.initialStars.forEach(idx => {
+                    const s = c.stars[idx];
+                    if (s) {
+                        s.birthTimer = Math.random() * s.birthDuration;
+                        const progress = s.birthTimer / s.birthDuration;
+                        const t = progress * progress * (3 - 2 * progress);
+                        s.fadeVal = t;
+                        s.scaleFactor = s.birthStartScale + (1.0 - s.birthStartScale) * t;
+                        s.brightnessFactor = t;
+                    }
+                });
+            }
+        } else {
+            // Normal initialization
+            c.state = 'spawning';
+            c.taskIdx = 0;
+            c.taskTimer = 0;
+            c.taskState = 'delay';
+            c.delayDuration = 0.3 + Math.random() * 0.9;
+        }
+    }
+
+    constellations.forEach((c, idx) => {
+        if (idx % 2 === 0) {
+            initConstellation(c, true);
+        } else {
+            c.state = 'inactive';
+        }
+    });
+
+
+    function transitionFireflyState(ff, newState) {
+        ff.state = newState;
+        ff.stateTimer = 0;
+        if (newState === 'spawning') {
+            ff.stateDuration = 1.5 + Math.random() * 2.5; // 1.5-4s
+            ff.birthStartScale = 0.1 + Math.random() * 0.2;
+            ff.scaleFactor = ff.birthStartScale;
+            ff.brightnessFactor = 0.0;
+            ff.blurFactor = 1.0;
+        } else if (newState === 'active') {
+            ff.stateDuration = 20 + Math.random() * 20; // 20-40s active
+            ff.scaleFactor = 1.0;
+            ff.brightnessFactor = 1.0;
+            ff.blurFactor = 1.0;
+        } else if (newState === 'despawning') {
+            ff.stateDuration = 3 + Math.random() * 2; // 3-5s
+            ff.scaleFactor = 1.0;
+            ff.brightnessFactor = 1.0;
+            ff.blurFactor = 1.0;
+        } else if (newState === 'dormant') {
+            ff.stateDuration = 1 + Math.random() * 3; // 1-4s dormant
+            ff.scaleFactor = 0.0;
+            ff.brightnessFactor = 0.0;
+            ff.blurFactor = 1.0;
+        }
+    }
+
+    function updateFireflyLifecycle(ff, dt) {
+        ff.stateTimer += dt;
+        if (ff.state === 'spawning') {
+            const progress = Math.min(ff.stateTimer / ff.stateDuration, 1.0);
+            const t = progress * progress * (3 - 2 * progress);
+            ff.scaleFactor = ff.birthStartScale + (1.0 - ff.birthStartScale) * t;
+            ff.brightnessFactor = t;
+            ff.blurFactor = 1.0;
+            if (ff.stateTimer >= ff.stateDuration) {
+                transitionFireflyState(ff, 'active');
+            }
+        } else if (ff.state === 'active') {
+            ff.scaleFactor = 1.0;
+            ff.brightnessFactor = 1.0;
+            ff.blurFactor = 1.0;
+            if (ff.stateTimer >= ff.stateDuration) {
+                transitionFireflyState(ff, 'despawning');
+            }
+        } else if (ff.state === 'despawning') {
+            const progress = Math.min(ff.stateTimer / ff.stateDuration, 1.0);
+            const t = progress * progress * (3 - 2 * progress);
+            ff.scaleFactor = 1.0 - t;
+            ff.brightnessFactor = 1.0 - t;
+            ff.blurFactor = 1.0 + t * 0.5;
+            if (ff.stateTimer >= ff.stateDuration) {
+                transitionFireflyState(ff, 'dormant');
+            }
+        } else if (ff.state === 'dormant') {
+            ff.scaleFactor = 0.0;
+            ff.brightnessFactor = 0.0;
+            ff.blurFactor = 1.0;
+            if (ff.stateTimer >= ff.stateDuration) {
+                ff.baseX = Math.random() * width;
+                ff.baseY = Math.random() * height;
+                ff.vx = 0;
+                ff.vy = 0;
+                transitionFireflyState(ff, 'spawning');
+            }
+        }
+    }
+
+    function initFireflyLifecycleRandomized(ff) {
+        const rand = Math.random();
+        if (rand < 0.7) {
+            ff.state = 'active';
+            ff.stateDuration = 20 + Math.random() * 20;
+            ff.stateTimer = Math.random() * ff.stateDuration;
+            ff.scaleFactor = 1.0;
+            ff.brightnessFactor = 1.0;
+            ff.blurFactor = 1.0;
+        } else if (rand < 0.85) {
+            ff.state = 'spawning';
+            ff.stateDuration = 1.5 + Math.random() * 2.5;
+            ff.stateTimer = Math.random() * ff.stateDuration;
+            ff.birthStartScale = 0.1 + Math.random() * 0.2;
+            const progress = ff.stateTimer / ff.stateDuration;
+            const t = progress * progress * (3 - 2 * progress);
+            ff.scaleFactor = ff.birthStartScale + (1.0 - ff.birthStartScale) * t;
+            ff.brightnessFactor = t;
+            ff.blurFactor = 1.0;
+        } else {
+            ff.state = 'despawning';
+            ff.stateDuration = 3 + Math.random() * 2;
+            ff.stateTimer = Math.random() * ff.stateDuration;
+            ff.birthStartScale = 0.1 + Math.random() * 0.2;
+            const progress = ff.stateTimer / ff.stateDuration;
+            const t = progress * progress * (3 - 2 * progress);
+            ff.scaleFactor = 1.0 - t;
+            ff.brightnessFactor = 1.0 - t;
+            ff.blurFactor = 1.0 + t * 0.5;
+        }
+    }
+
+    function transitionForegroundParticleState(p, newState) {
+        p.state = newState;
+        p.stateTimer = 0;
+        if (newState === 'spawning') {
+            p.stateDuration = 1.5 + Math.random() * 2.5; // 1.5-4s
+            p.birthStartScale = 0.1 + Math.random() * 0.2;
+            p.scaleFactor = p.birthStartScale;
+            p.brightnessFactor = 0.0;
+            p.blurFactor = 1.0;
+        } else if (newState === 'active') {
+            p.stateDuration = 15 + Math.random() * 20; // 15-35s active
+            p.scaleFactor = 1.0;
+            p.brightnessFactor = 1.0;
+            p.blurFactor = 1.0;
+        } else if (newState === 'despawning') {
+            p.stateDuration = 3 + Math.random() * 3; // 3-6s
+            p.scaleFactor = 1.0;
+            p.brightnessFactor = 1.0;
+            p.blurFactor = 1.0;
+        } else if (newState === 'dormant') {
+            p.stateDuration = 1 + Math.random() * 3; // 1-4s dormant
+            p.scaleFactor = 0.0;
+            p.brightnessFactor = 0.0;
+            p.blurFactor = 1.0;
+        }
+    }
+
+    function updateForegroundParticleLifecycle(p, dt) {
+        p.stateTimer += dt;
+        if (p.state === 'spawning') {
+            const progress = Math.min(p.stateTimer / p.stateDuration, 1.0);
+            const t = progress * progress * (3 - 2 * progress);
+            p.scaleFactor = p.birthStartScale + (1.0 - p.birthStartScale) * t;
+            p.brightnessFactor = t;
+            p.blurFactor = 1.0;
+            if (p.stateTimer >= p.stateDuration) {
+                transitionForegroundParticleState(p, 'active');
+            }
+        } else if (p.state === 'active') {
+            p.scaleFactor = 1.0;
+            p.brightnessFactor = 1.0;
+            p.blurFactor = 1.0;
+            if (p.stateTimer >= p.stateDuration) {
+                transitionForegroundParticleState(p, 'despawning');
+            }
+        } else if (p.state === 'despawning') {
+            const progress = Math.min(p.stateTimer / p.stateDuration, 1.0);
+            const t = progress * progress * (3 - 2 * progress);
+            p.scaleFactor = 1.0 - t;
+            p.brightnessFactor = 1.0 - t;
+            p.blurFactor = 1.0 + t * 0.5;
+            if (p.stateTimer >= p.stateDuration) {
+                transitionForegroundParticleState(p, 'dormant');
+            }
+        } else if (p.state === 'dormant') {
+            p.scaleFactor = 0.0;
+            p.brightnessFactor = 0.0;
+            p.blurFactor = 1.0;
+            if (p.stateTimer >= p.stateDuration) {
+                p.baseX = Math.random() * width;
+                p.baseY = Math.random() * height;
+                transitionForegroundParticleState(p, 'spawning');
+            }
+        }
+    }
+
+    function initForegroundParticleLifecycleRandomized(p) {
+        const rand = Math.random();
+        if (rand < 0.7) {
+            p.state = 'active';
+            p.stateDuration = 15 + Math.random() * 20;
+            p.stateTimer = Math.random() * p.stateDuration;
+            p.scaleFactor = 1.0;
+            p.brightnessFactor = 1.0;
+            p.blurFactor = 1.0;
+        } else if (rand < 0.85) {
+            p.state = 'spawning';
+            p.stateDuration = 1.5 + Math.random() * 2.5;
+            p.stateTimer = Math.random() * p.stateDuration;
+            p.birthStartScale = 0.1 + Math.random() * 0.2;
+            const progress = p.stateTimer / p.stateDuration;
+            const t = progress * progress * (3 - 2 * progress);
+            p.scaleFactor = p.birthStartScale + (1.0 - p.birthStartScale) * t;
+            p.brightnessFactor = t;
+            p.blurFactor = 1.0;
+        } else {
+            p.state = 'despawning';
+            p.stateDuration = 3 + Math.random() * 3;
+            p.stateTimer = Math.random() * p.stateDuration;
+            p.birthStartScale = 0.1 + Math.random() * 0.2;
+            const progress = p.stateTimer / p.stateDuration;
+            const t = progress * progress * (3 - 2 * progress);
+            p.scaleFactor = 1.0 - t;
+            p.brightnessFactor = 1.0 - t;
+            p.blurFactor = 1.0 + t * 0.5;
+        }
+    }
+
+    // Layer 5: Fireflies
+    const fireflies = [];
+    for (let i = 0; i < fireflyCount; i++) {
+        const size = 5 + Math.random() * 9;
+        const opacity = 0.3 + Math.random() * 0.4;
+        const speedMult = 0.35 + Math.random() * 0.45;
+        
+        // Depth distribution
+        const randDepth = Math.random();
+        let parallaxFactor = 0.16;
+        let scale = 1.0;
+        if (randDepth < 0.25) {
+            parallaxFactor = 0.10; // Distant
+            scale = 0.6;
+        } else if (randDepth > 0.8) {
+            parallaxFactor = 0.26; // Foreground
+            scale = 1.6;
+        }
+
+        const ff = {
+            baseX: Math.random() * width,
+            baseY: Math.random() * height,
+            vx: 0,
+            vy: 0,
             targetVx: 0,
             targetVy: 0,
+            size: size * scale,
+            baseOpacity: opacity,
+            currentOpacity: opacity,
+            angle: Math.random() * Math.PI * 2,
+            speed: (20 + Math.random() * 25) * speedMult, // 7 to 36 px/sec base speed
+            wobbleSeed: Math.random() * 1000,
+            wobbleSpeed: 0.003 + Math.random() * 0.006,
+            parallaxFactor: parallaxFactor,
+            speedMult: speedMult,
+            colorIndex: Math.floor(Math.random() * 3)
+        };
+        initFireflyLifecycleRandomized(ff);
+        fireflies.push(ff);
+    }
+
+    // Layer 6: Foreground blurred particles
+    const foregroundParticles = [];
+    for (let i = 0; i < foregroundCount; i++) {
+        const size = 65 + Math.random() * 50;
+        const opacity = 0.10 + Math.random() * 0.15;
+        const p = {
+            baseX: Math.random() * width,
+            baseY: Math.random() * height,
+            vx: (Math.random() - 0.5) * 0.06,
+            vy: (Math.random() - 0.5) * 0.06,
             size: size,
             baseOpacity: opacity,
             currentOpacity: opacity,
             angle: Math.random() * Math.PI * 2,
-            speed: (0.0015 + Math.random() * 0.002) * speedMult,
-            wobbleSeed: Math.random() * 1000,
-            wobbleSpeed: 0.003 + Math.random() * 0.007,
-            parallaxFactor: 0.22,
-            speedMult: speedMult,
-            colorIndex: Math.floor(Math.random() * 4)
+            speed: 0.00015 + Math.random() * 0.00035,
+            parallaxFactor: 0.32
+        };
+        initForegroundParticleLifecycleRandomized(p);
+        foregroundParticles.push(p);
+    }
+
+    const fireflyColors = [
+        { r: 109, g: 76, b: 255 },  // Purple
+        { r: 139, g: 92, b: 255 },  // Violet
+        { r: 198, g: 107, b: 255 }  // Magenta
+    ];
+
+    // Helper to draw wide, soft environment light diffusion (Reacting to bright stars)
+    function drawHazeReaction(ctx, cx, cy, radius, colorRGB, opacity) {
+        if (opacity <= 0) return;
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+        const { r, g, b } = colorRGB;
+        const maxOp = 0.035 * opacity;
+        grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${maxOp})`);
+        grad.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${maxOp * 0.25})`);
+        grad.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    // Helper to draw organic, turbulent star halo (Breaking perfect circles)
+    function drawOrganicHalo(ctx, cx, cy, baseRadius, colorRGB, opacity, phase, seed) {
+        if (opacity <= 0) return;
+        ctx.save();
+        const { r, g, b } = colorRGB;
+        ctx.beginPath();
+        const points = 10;
+        
+        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, baseRadius * 1.4);
+        grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${opacity})`);
+        grad.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${opacity * 0.35})`);
+        grad.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad;
+
+        for (let i = 0; i < points; i++) {
+            const angle = (i / points) * Math.PI * 2;
+            const offset = 0.18 * Math.sin(phase + angle * 3 + seed) + 0.08 * Math.cos(phase * 1.7 - angle * 5 + seed * 1.3);
+            const radius = baseRadius * (1.0 + offset);
+            const tx = cx + Math.cos(angle) * radius;
+            const ty = cy + Math.sin(angle) * radius;
+            if (i === 0) {
+                ctx.moveTo(tx, ty);
+            } else {
+                ctx.lineTo(tx, ty);
+            }
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+    }
+
+    // Helper to draw volumetric lens spikes (Diffraction spikes for mid/near stars)
+    function drawDiffractionSpikes(ctx, cx, cy, length, width, colorRGB, opacity, angle) {
+        if (opacity <= 0 || length <= 0) return;
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.translate(cx, cy);
+        ctx.rotate(angle);
+
+        const { r, g, b } = colorRGB;
+
+        // Draw horizontal spike
+        let gradH = ctx.createRadialGradient(0, 0, 0, 0, 0, length);
+        gradH.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${0.45 * opacity})`);
+        gradH.addColorStop(0.3, `rgba(${r}, ${g}, ${b}, ${0.15 * opacity})`);
+        gradH.addColorStop(1, 'transparent');
+        ctx.fillStyle = gradH;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, length, width, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Draw vertical spike
+        let gradV = ctx.createRadialGradient(0, 0, 0, 0, 0, length);
+        gradV.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${0.45 * opacity})`);
+        gradV.addColorStop(0.3, `rgba(${r}, ${g}, ${b}, ${0.15 * opacity})`);
+        gradV.addColorStop(1, 'transparent');
+        ctx.fillStyle = gradV;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, width, length, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+    }
+
+    // Volumetric star renderer combining organic glow, color bleed, and lens flares
+    function drawStarVolumetric(ctx, cx, cy, size, opacity, theme, depth, phase, seed, linePulseFactor = 0) {
+        const { glowRGB, core } = theme;
+        const totalOpacity = opacity * (1.0 + linePulseFactor * 0.4);
+
+        if (depth === 'far') {
+            // Far stars: almost no bloom, less saturated (use soft desaturated white-blue), no spikes
+            const farGlowRGB = { r: 200, g: 215, b: 255 };
+            
+            // Faint, tiny organic halo
+            drawOrganicHalo(ctx, cx, cy, size * 1.6, farGlowRGB, totalOpacity * 0.3, phase, seed);
+            
+            // Sharp tiny core
+            ctx.beginPath();
+            ctx.fillStyle = 'rgba(235, 240, 255, 1.0)';
+            ctx.arc(cx, cy, size, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (depth === 'middle') {
+            // Mid stars: moderate bloom, desaturated glow, short spikes
+            // 1. Moderate local haze reaction
+            drawHazeReaction(ctx, cx, cy, 35, glowRGB, totalOpacity * 0.7);
+
+            // 2. Volumetric organic bloom
+            drawOrganicHalo(ctx, cx, cy, size * 3.5, glowRGB, totalOpacity * 0.35, phase, seed);
+            drawOrganicHalo(ctx, cx, cy, size * 1.5, glowRGB, totalOpacity * 0.65, phase, seed + 2);
+
+            // 3. Subtle spikes
+            const spikeLength = size * 10;
+            const spikeWidth = size * 0.5;
+            const rotationAngle = (phase * 0.05) + seed;
+            drawDiffractionSpikes(ctx, cx, cy, spikeLength, spikeWidth, glowRGB, totalOpacity * 0.25, rotationAngle);
+
+            // 4. Star Core
+            ctx.beginPath();
+            ctx.fillStyle = core;
+            ctx.arc(cx, cy, size, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            // Near stars: bright volumetric flares, prominent diffraction spikes
+            // 1. Environmental haze reaction
+            drawHazeReaction(ctx, cx, cy, 140, glowRGB, totalOpacity);
+
+            // 2. Organic volumetric bloom
+            drawOrganicHalo(ctx, cx, cy, size * 6.5, glowRGB, totalOpacity * 0.45, phase, seed);
+            drawOrganicHalo(ctx, cx, cy, size * 2.8, glowRGB, totalOpacity * 0.8, phase, seed + 2);
+
+            // 3. Prominent lens diffraction spikes
+            const spikeLength = size * 26;
+            const spikeWidth = size * 1.3;
+            const rotationAngle = (phase * 0.05) + seed;
+            drawDiffractionSpikes(ctx, cx, cy, spikeLength, spikeWidth, glowRGB, totalOpacity * 0.35, rotationAngle);
+
+            // 4. Large Core
+            ctx.beginPath();
+            ctx.fillStyle = core;
+            ctx.arc(cx, cy, size * 1.2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    function drawHazeLayer(haze, dt) {
+        updateAtmosphereLifecycle(haze, dt);
+
+        haze.driftAngle = (haze.driftAngle + haze.driftSpeed * 60 * (1.0 + scrollVelocity * 0.4) * dt) % (Math.PI * 2);
+
+        const driftX = Math.sin(haze.driftAngle) * (width * 0.08);
+        const driftY = Math.cos(haze.driftAngle * 0.8) * (height * 0.06);
+
+        const scrollShiftY = -interpolatedScrollY * haze.parallaxScroll;
+        const mouseShiftX = smoothMouseOffsetX * haze.parallaxMouse;
+        const mouseShiftY = smoothMouseOffsetY * haze.parallaxMouse;
+
+        let cx = (width * haze.baseXFraction + driftX + mouseShiftX) % width;
+        if (cx < 0) cx += width;
+        let cy = (height * haze.baseYFraction + driftY + scrollShiftY + mouseShiftY) % height;
+        if (cy < 0) cy += height;
+
+        bgCtx.save();
+        bgCtx.translate(cx, cy);
+        bgCtx.scale(haze.scaleX, haze.scaleY);
+
+        let grad = bgCtx.createRadialGradient(0, 0, 0, 0, 0, haze.radius);
+        grad.addColorStop(0, scaleRGBAOpacity(haze.color0, haze.lifecycleFade));
+        grad.addColorStop(0.5, scaleRGBAOpacity(haze.color5, haze.lifecycleFade));
+        grad.addColorStop(1, 'transparent');
+
+        bgCtx.fillStyle = grad;
+        bgCtx.beginPath();
+        bgCtx.arc(0, 0, haze.radius, 0, Math.PI * 2);
+        bgCtx.fill();
+        bgCtx.restore();
+    }
+
+    function updateConstellation(c, dt) {
+        c.driftAngle = (c.driftAngle + c.driftSpeed * dt) % (Math.PI * 2);
+        c.driftX = Math.sin(c.driftAngle) * 16;
+        c.driftY = Math.cos(c.driftAngle * 0.75) * 12;
+
+        if (c.state === 'inactive') return;
+
+        if (c.state === 'spawning') {
+            c.stars.forEach(s => {
+                s.twinklePhase = (s.twinklePhase + s.twinkleSpeed * 0.5 * dt) % (Math.PI * 2);
+            });
+            c.spawnTimer += dt;
+            
+            let allInitialStarsStabilized = true;
+            c.initialStars.forEach(idx => {
+                const s = c.stars[idx];
+                if (s) {
+                    s.birthTimer += dt;
+                    const progress = Math.min(s.birthTimer / s.birthDuration, 1.0);
+                    const t = progress * progress * (3 - 2 * progress); // smoothstep
+                    s.fadeVal = t;
+                    s.scaleFactor = s.birthStartScale + (1.0 - s.birthStartScale) * t;
+                    s.brightnessFactor = t;
+                    if (s.birthTimer < s.birthDuration) {
+                        allInitialStarsStabilized = false;
+                    }
+                }
+            });
+
+            c.fadeVal = 1.0;
+
+            if (allInitialStarsStabilized) {
+                c.initialStars.forEach(idx => {
+                    const s = c.stars[idx];
+                    if (s) {
+                        s.fadeVal = 1.0;
+                        s.scaleFactor = 1.0;
+                        s.brightnessFactor = 1.0;
+                    }
+                });
+                c.state = 'constructing';
+                c.taskIdx = 0;
+                c.taskState = 'delay';
+                c.delayDuration = 0.3 + Math.random() * 0.9;
+                c.taskTimer = 0;
+            }
+        } else if (c.state === 'constructing') {
+            c.stars.forEach(s => {
+                s.twinklePhase = (s.twinklePhase + s.twinkleSpeed * 0.5 * dt) % (Math.PI * 2);
+            });
+
+            if (c.taskIdx >= c.constructionTasks.length) {
+                c.state = 'shimmering';
+                c.shimmerProgress = 0;
+                return;
+            }
+
+            if (c.taskState === 'delay') {
+                c.taskTimer += dt;
+                if (c.taskTimer >= c.delayDuration) {
+                    c.taskState = 'animating';
+                    c.taskTimer = 0;
+                    
+                    // Initialize current task values
+                    const currentTask = c.constructionTasks[c.taskIdx];
+                    if (currentTask.type === 'star') {
+                        const star = c.stars[currentTask.starIdx];
+                        star.birthDuration = 1.5 + Math.random() * 2.5; // 1.5 - 4.0s
+                        star.birthTimer = 0;
+                        star.birthStartScale = 0.1 + Math.random() * 0.2;
+                        star.fadeVal = 0;
+                        star.scaleFactor = star.birthStartScale;
+                        star.brightnessFactor = 0.0;
+                        star.blurFactor = 1.0;
+                    } else if (currentTask.type === 'line') {
+                        const line = c.lines[currentTask.lineIdx];
+                        line.drawDuration = 1.5 + Math.random() * 2.5; // 1.5 - 4.0s
+                        line.drawTimer = 0;
+                        line.drawVal = 0;
+                    }
+                }
+            } else if (c.taskState === 'animating') {
+                const currentTask = c.constructionTasks[c.taskIdx];
+                if (currentTask.type === 'star') {
+                    const star = c.stars[currentTask.starIdx];
+                    star.birthTimer += dt;
+                    const progress = Math.min(star.birthTimer / star.birthDuration, 1.0);
+                    const t = progress * progress * (3 - 2 * progress); // smoothstep
+                    
+                    star.scaleFactor = star.birthStartScale + (1.0 - star.birthStartScale) * t;
+                    star.fadeVal = t;
+                    star.brightnessFactor = t;
+                    star.blurFactor = 1.0;
+
+                    if (star.birthTimer >= star.birthDuration) {
+                        star.scaleFactor = 1.0;
+                        star.fadeVal = 1.0;
+                        star.brightnessFactor = 1.0;
+                        
+                        c.taskIdx++;
+                        c.taskState = 'delay';
+                        c.delayDuration = 0.3 + Math.random() * 0.9;
+                        c.taskTimer = 0;
+                    }
+                } else if (currentTask.type === 'line') {
+                    const line = c.lines[currentTask.lineIdx];
+                    line.drawTimer += dt;
+                    const progress = Math.min(line.drawTimer / line.drawDuration, 1.0);
+                    line.drawVal = progress; // grows length 0% to 100%
+
+                    if (line.drawTimer >= line.drawDuration) {
+                        line.drawVal = 1.0;
+                        
+                        c.taskIdx++;
+                        c.taskState = 'delay';
+                        c.delayDuration = 0.3 + Math.random() * 0.9;
+                        c.taskTimer = 0;
+                    }
+                }
+            }
+        } else if (c.state === 'shimmering') {
+            c.stars.forEach(s => {
+                s.twinklePhase = (s.twinklePhase + s.twinkleSpeed * dt) % (Math.PI * 2);
+            });
+            c.shimmerProgress += dt / 1.5; // Elegant 1.5 second shimmer duration
+            if (c.shimmerProgress >= 1) {
+                c.shimmerProgress = 1;
+                c.state = 'idle';
+                c.idleTimer = 10 + Math.random() * 10; // 10 to 20 seconds idle
+            }
+        } else if (c.state === 'idle') {
+            c.stars.forEach(s => {
+                s.twinklePhase = (s.twinklePhase + s.twinkleSpeed * dt) % (Math.PI * 2);
+            });
+            c.idleTimer -= dt;
+            if (c.idleTimer <= 0) {
+                c.state = 'fading_out';
+                c.fadeVal = 1.0;
+                c.replacementDelay = 2 + Math.random() * 6; // random delay 2-8 seconds
+            }
+        } else if (c.state === 'fading_out') {
+            c.stars.forEach(s => {
+                s.twinklePhase = (s.twinklePhase + s.twinkleSpeed * 1.5 * dt) % (Math.PI * 2);
+            });
+            c.fadeVal -= dt / c.fadeOutDuration; // Smooth 5-10s fade out
+
+            // Separate fading rates for lines and stars during fading_out
+            let starFade = Math.min(1.0, c.fadeVal / 0.7);
+
+            // Scale and blur factors during death sequence
+            c.stars.forEach(s => {
+                s.scaleFactor = starFade;
+                s.fadeVal = starFade;
+                s.blurFactor = 1.0 + (1.0 - starFade) * 0.5; // slight blur increase
+            });
+
+            // Trigger replacement constellation with a delay
+            if (!c.hasSpawnedReplacement) {
+                c.replacementDelay -= dt;
+                if (c.replacementDelay <= 0) {
+                    c.hasSpawnedReplacement = true;
+                    // Find an inactive replacement constellation in the pool for this layer!
+                    const replacement = constellations.find(other => other.layer === c.layer && other.state === 'inactive');
+                    if (replacement) {
+                        initConstellation(replacement, false); // Start its birth sequence
+                    }
+                }
+            }
+
+            if (c.fadeVal <= 0) {
+                c.fadeVal = 0;
+                c.state = 'inactive';
+            }
+        }
+    }
+
+    function drawConstellation(c) {
+        if (c.state === 'inactive') return;
+
+        const { stars, template, baseX, baseY, progress, shimmerProgress, state, scale, rotationAngle, maxOpacity, fadeVal } = c;
+
+        let scrollShiftY = -interpolatedScrollY * c.parallaxScroll;
+        let px = smoothMouseOffsetX * c.parallaxMouse;
+        let py = smoothMouseOffsetY * c.parallaxMouse;
+
+        const cosRot = Math.cos(rotationAngle);
+        const sinRot = Math.sin(rotationAngle);
+
+        stars.forEach(s => {
+            const scaledX = s.x * scale;
+            const scaledY = s.y * scale;
+            const rotX = scaledX * cosRot - scaledY * sinRot;
+            const rotY = scaledX * sinRot + scaledY * cosRot;
+
+            s.currX = baseX + rotX + px + c.driftX;
+            s.currY = baseY + rotY + py + scrollShiftY + c.driftY;
+        });
+
+        // 1. Draw paths
+        const lineCount = template.lines.length;
+
+        // Separate fading rates for lines and stars during fading_out
+        let lineFade = 1.0;
+        if (state === 'fading_out') {
+            // Lines fade out completely first (during the first 60% of the fade-out)
+            lineFade = Math.max(0, (fadeVal - 0.4) / 0.6);
+        }
+
+        for (let i = 0; i < lineCount; i++) {
+            const edge = template.lines[i];
+            const starA = stars[edge[0]];
+            const starB = stars[edge[1]];
+            const ratio = c.lines[i].drawVal;
+
+            if (ratio > 0) {
+                // Lines fade in while being drawn (multiply by ratio), and fade out via lineFade
+                const finalLineOpacity = maxOpacity * lineFade * ratio;
+
+                bgCtx.beginPath();
+                bgCtx.moveTo(starA.currX, starA.currY);
+                bgCtx.lineTo(
+                    starA.currX + (starB.currX - starA.currX) * ratio,
+                    starA.currY + (starB.currY - starA.currY) * ratio
+                );
+                bgCtx.strokeStyle = `rgba(${c.theme.lineRGB.r}, ${c.theme.lineRGB.g}, ${c.theme.lineRGB.b}, ${0.12 * finalLineOpacity})`;
+                bgCtx.lineWidth = 2.4 * scale;
+                bgCtx.stroke();
+
+                bgCtx.beginPath();
+                bgCtx.moveTo(starA.currX, starA.currY);
+                bgCtx.lineTo(
+                    starA.currX + (starB.currX - starA.currX) * ratio,
+                    starA.currY + (starB.currY - starA.currY) * ratio
+                );
+                bgCtx.strokeStyle = `rgba(${c.theme.lineCoreRGB.r}, ${c.theme.lineCoreRGB.g}, ${c.theme.lineCoreRGB.b}, ${0.36 * finalLineOpacity})`;
+                bgCtx.lineWidth = 0.85 * scale;
+                bgCtx.stroke();
+            }
+        }
+
+        // 2. Shimmer pulse (triggered only once per completed constellation, during shimmering state)
+        let activeShimmerLineIdx = -1;
+        let lineRatio = 0;
+        if (state === 'shimmering' && shimmerProgress > 0) {
+            const pulsePos = shimmerProgress * lineCount;
+            activeShimmerLineIdx = Math.floor(pulsePos);
+            lineRatio = pulsePos % 1;
+
+            if (activeShimmerLineIdx < lineCount) {
+                const edge = template.lines[activeShimmerLineIdx];
+                const starA = stars[edge[0]];
+                const starB = stars[edge[1]];
+
+                const pulseX = starA.currX + (starB.currX - starA.currX) * lineRatio;
+                const pulseY = starA.currY + (starB.currY - starA.currY) * lineRatio;
+
+                const pulseOpacity = maxOpacity;
+
+                // Subtle, elegant shimmer completion effect: size 4*scale, opacity 0.5
+                let pulseGrad = bgCtx.createRadialGradient(pulseX, pulseY, 0, pulseX, pulseY, 4 * scale);
+                pulseGrad.addColorStop(0, `rgba(255, 255, 255, ${0.45 * pulseOpacity})`);
+                pulseGrad.addColorStop(0.3, `rgba(${c.theme.glowRGB.r}, ${c.theme.glowRGB.g}, ${c.theme.glowRGB.b}, ${0.28 * pulseOpacity})`);
+                pulseGrad.addColorStop(1, 'transparent');
+
+                bgCtx.fillStyle = pulseGrad;
+                bgCtx.beginPath();
+                bgCtx.arc(pulseX, pulseY, 4 * scale, 0, Math.PI * 2);
+                bgCtx.fill();
+            }
+        }
+
+        // 3. Draw stars with advanced volumetric bloom & depth reaction
+        stars.forEach(s => {
+            if (s.fadeVal <= 0) return;
+
+            let starSize = 1.6 * scale * (s.scaleFactor || 1.0) * (s.blurFactor || 1.0);
+            let twinkleOp = 1.0;
+
+            // Twinkle only when fully stabilized
+            if (s.fadeVal >= 1.0 && s.scaleFactor >= 1.0 && (state === 'constructing' || state === 'shimmering' || state === 'idle' || state === 'fading_out')) {
+                const rawVal = 0.5 + 0.35 * Math.sin(s.twinklePhase) + 0.15 * Math.cos(s.twinklePhase * 2.2 + s.seed);
+                // Apply smoothstep easing: rawVal^2 * (3 - 2*rawVal)
+                const tVal = rawVal * rawVal * (3 - 2 * rawVal);
+                twinkleOp = tVal;
+                starSize = (1.2 + 0.8 * tVal) * scale * (s.scaleFactor || 1.0) * (s.blurFactor || 1.0);
+            }
+
+            const starOpacity = maxOpacity * s.fadeVal * twinkleOp;
+
+            let linePulseFactor = 0;
+            if (activeShimmerLineIdx !== -1) {
+                const edge = template.lines[activeShimmerLineIdx];
+                if (edge[0] === s.starId) {
+                    linePulseFactor = Math.max(0, 1.0 - lineRatio);
+                } else if (edge[1] === s.starId) {
+                    linePulseFactor = lineRatio;
+                }
+            }
+
+            drawStarVolumetric(bgCtx, s.currX, s.currY, starSize, starOpacity, c.theme, c.layer, s.twinklePhase, s.seed, linePulseFactor);
         });
     }
 
-    // Foreground large blurred particles
-    const foregroundParticles = [];
-    for (let i = 0; i < foregroundCount; i++) {
-        const size = 70 + Math.random() * 55;
-        const opacity = 0.12 + Math.random() * 0.18;
-        foregroundParticles.push({
-            baseX: Math.random() * width,
-            baseY: Math.random() * height,
-            vx: (Math.random() - 0.5) * 0.08,
-            vy: (Math.random() - 0.5) * 0.08,
-            size: size,
-            baseOpacity: opacity,
-            currentOpacity: opacity,
-            angle: Math.random() * Math.PI * 2,
-            speed: 0.0002 + Math.random() * 0.0005,
-            parallaxFactor: 0.55
-        });
+    function drawSmallStar(star, dt) {
+        star.driftAngle = (star.driftAngle + star.driftSpeed * 60 * dt) % (Math.PI * 2);
+        const driftX = Math.sin(star.driftAngle) * 3;
+        const driftY = Math.cos(star.driftAngle * 0.7) * 2;
+
+        let drawX = (star.baseX + driftX + smoothMouseOffsetX * star.parallaxMouse) % width;
+        if (drawX < 0) drawX += width;
+        let drawY = (star.baseY + driftY + smoothMouseOffsetY * star.parallaxMouse - interpolatedScrollY * star.parallaxScroll) % height;
+        if (drawY < 0) drawY += height;
+
+        star.twinklePhase = (star.twinklePhase + star.twinkleSpeed * 60 * dt) % (Math.PI * 2);
+        const rawVal = 0.625 + 0.275 * Math.sin(star.twinklePhase) + 0.1 * Math.cos(star.twinklePhase * 1.7 + star.seed);
+        const twinkleVal = rawVal * rawVal * (3 - 2 * rawVal);
+        
+        updateStarLifecycle(star, dt);
+        const currentOp = star.baseOpacity * twinkleVal * star.brightnessFactor;
+        const currentSize = star.size * star.scaleFactor * star.blurFactor;
+
+        drawStarVolumetric(bgCtx, drawX, drawY, currentSize, currentOp, star.theme, 'far', star.twinklePhase, star.seed);
     }
+
+    function drawMediumStar(star, dt) {
+        star.driftAngle = (star.driftAngle + star.driftSpeed * 60 * dt) % (Math.PI * 2);
+        const driftX = Math.sin(star.driftAngle) * 8;
+        const driftY = Math.cos(star.driftAngle * 0.7) * 6;
+
+        let drawX = (star.baseX + driftX + smoothMouseOffsetX * star.parallaxMouse) % width;
+        if (drawX < 0) drawX += width;
+        let drawY = (star.baseY + driftY + smoothMouseOffsetY * star.parallaxMouse - interpolatedScrollY * star.parallaxScroll) % height;
+        if (drawY < 0) drawY += height;
+
+        star.twinklePhase = (star.twinklePhase + star.twinkleSpeed * 60 * dt) % (Math.PI * 2);
+        const rawVal = 0.625 + 0.275 * Math.sin(star.twinklePhase) + 0.1 * Math.cos(star.twinklePhase * 1.7 + star.seed);
+        const twinkleVal = rawVal * rawVal * (3 - 2 * rawVal);
+        
+        updateStarLifecycle(star, dt);
+        const currentOp = star.baseOpacity * twinkleVal * star.brightnessFactor;
+        const currentSize = star.size * star.scaleFactor * star.blurFactor;
+
+        drawStarVolumetric(bgCtx, drawX, drawY, currentSize, currentOp, star.theme, 'middle', star.twinklePhase, star.seed);
+    }
+
+    let lastTime = performance.now();
 
     // Main animation loop
     function animateConstellations() {
-        // Theme selection
-        const isLight = document.body.dataset.theme === "light";
+        const now = performance.now();
+        const dt = Math.min((now - lastTime) / 1000, 0.1); // clamp dt to max 100ms
+        lastTime = now;
 
-        // Parallax calculations
+        // Easing mouse offsets (time-delta normalizer)
         const targetOffsetX = mouseX - width / 2;
         const targetOffsetY = mouseY - height / 2;
-        smoothMouseOffsetX += (targetOffsetX - smoothMouseOffsetX) * 0.05;
-        smoothMouseOffsetY += (targetOffsetY - smoothMouseOffsetY) * 0.05;
+        const mouseEase = 1.0 - Math.exp(-2.4 * dt); // ~0.04 at 60fps
+        smoothMouseOffsetX += (targetOffsetX - smoothMouseOffsetX) * mouseEase;
+        smoothMouseOffsetY += (targetOffsetY - smoothMouseOffsetY) * mouseEase;
 
         // Scroll velocity computations
-        interpolatedScrollY += (window.scrollY - interpolatedScrollY) * 0.08;
+        const scrollEase = 1.0 - Math.exp(-4.8 * dt); // ~0.08 at 60fps
+        interpolatedScrollY += (window.scrollY - interpolatedScrollY) * scrollEase;
         const scrollDelta = Math.abs(window.scrollY - lastScrollY);
-        scrollVelocity += scrollDelta * 0.1;
+        scrollVelocity += scrollDelta * 4.8 * dt;
         scrollVelocity = Math.min(scrollVelocity, 12);
-        scrollVelocity *= 0.94;
+        scrollVelocity *= Math.exp(-3.6 * dt); // deceleration
         lastScrollY = window.scrollY;
 
         // Clear canvas states
@@ -384,59 +1685,31 @@ if (particlesContainer) {
         fgCtx.clearRect(0, 0, width, height);
 
         // Fill background color
-        bgCtx.fillStyle = isLight ? "#f4f0ff" : "#05050a";
+        bgCtx.fillStyle = "#05050a";
         bgCtx.fillRect(0, 0, width, height);
 
         // --- LAYER 1: NEBULA SYSTEM ---
         nebulaBlobs.forEach((blob) => {
-            // Speed accelerates during scroll
-            blob.angleX += blob.speedX * (1.0 + scrollVelocity * 0.25);
-            blob.angleY += blob.speedY * (1.0 + scrollVelocity * 0.25);
+            updateAtmosphereLifecycle(blob, dt);
+
+            blob.angleX = (blob.angleX + blob.speedX * 60 * (1.0 + scrollVelocity * 0.3) * dt) % (Math.PI * 2);
+            blob.angleY = (blob.angleY + blob.speedY * 60 * (1.0 + scrollVelocity * 0.3) * dt) % (Math.PI * 2);
 
             const driftX = Math.sin(blob.angleX) * (width * 0.08);
             const driftY = Math.cos(blob.angleY) * (height * 0.08);
 
-            const scrollShiftY = -interpolatedScrollY * 0.05;
+            const scrollShiftY = -interpolatedScrollY * 0.02;
 
-            let cx = (width * blob.baseXFraction + driftX + smoothMouseOffsetX * 0.02) % width;
+            let cx = (width * blob.baseXFraction + driftX + smoothMouseOffsetX * 0.01) % width;
             if (cx < 0) cx += width;
-            let cy = (height * blob.baseYFraction + driftY + scrollShiftY + smoothMouseOffsetY * 0.02) % height;
+            let cy = (height * blob.baseYFraction + driftY + scrollShiftY + smoothMouseOffsetY * 0.01) % height;
             if (cy < 0) cy += height;
 
             const radius = Math.max(width, height) * blob.radiusFraction;
             let grad = bgCtx.createRadialGradient(cx, cy, 0, cx, cy, radius);
 
-            const baseOp = isLight ? 0.032 : 0.085;
-
-            if (isLight) {
-                if (blob.colorIndex === 0) {
-                    grad.addColorStop(0, `rgba(109, 80, 255, ${baseOp * 0.75})`);
-                    grad.addColorStop(0.5, `rgba(109, 80, 255, ${baseOp * 0.25})`);
-                } else if (blob.colorIndex === 1) {
-                    grad.addColorStop(0, `rgba(166, 92, 255, ${baseOp * 0.65})`);
-                    grad.addColorStop(0.5, `rgba(166, 92, 255, ${baseOp * 0.2})`);
-                } else if (blob.colorIndex === 2) {
-                    grad.addColorStop(0, `rgba(77, 110, 255, ${baseOp * 0.55})`);
-                    grad.addColorStop(0.5, `rgba(77, 110, 255, ${baseOp * 0.15})`);
-                } else {
-                    grad.addColorStop(0, `rgba(224, 82, 255, ${baseOp * 0.3})`);
-                    grad.addColorStop(0.5, `rgba(224, 82, 255, ${baseOp * 0.08})`);
-                }
-            } else {
-                if (blob.colorIndex === 0) {
-                    grad.addColorStop(0, `rgba(109, 80, 255, ${baseOp})`);
-                    grad.addColorStop(0.5, `rgba(109, 80, 255, ${baseOp * 0.3})`);
-                } else if (blob.colorIndex === 1) {
-                    grad.addColorStop(0, `rgba(137, 58, 255, ${baseOp * 0.95})`);
-                    grad.addColorStop(0.5, `rgba(137, 58, 255, ${baseOp * 0.25})`);
-                } else if (blob.colorIndex === 2) {
-                    grad.addColorStop(0, `rgba(70, 40, 180, ${baseOp * 0.8})`);
-                    grad.addColorStop(0.5, `rgba(70, 40, 180, ${baseOp * 0.2})`);
-                } else {
-                    grad.addColorStop(0, `rgba(224, 82, 255, ${baseOp * 0.65})`);
-                    grad.addColorStop(0.5, `rgba(224, 82, 255, ${baseOp * 0.15})`);
-                }
-            }
+            grad.addColorStop(0, scaleRGBAOpacity(blob.color, blob.lifecycleFade));
+            grad.addColorStop(0.5, scaleRGBAOpacity(blob.color, blob.lifecycleFade * 0.3));
             grad.addColorStop(1, "transparent");
 
             bgCtx.fillStyle = grad;
@@ -445,210 +1718,122 @@ if (particlesContainer) {
             bgCtx.fill();
         });
 
-        // --- LAYER 3 & 4: TWINKLING STARS ---
-        smallStars.forEach((star) => {
-            let drawX = (star.baseX + smoothMouseOffsetX * star.parallaxFactor) % width;
-            if (drawX < 0) drawX += width;
-            let drawY = (star.baseY + smoothMouseOffsetY * star.parallaxFactor - interpolatedScrollY * star.parallaxFactor) % height;
-            if (drawY < 0) drawY += height;
-
-            star.twinklePhase += star.twinkleSpeed;
-            const currentOp = star.baseOpacity * (0.15 + 0.85 * (0.5 + 0.5 * Math.sin(star.twinklePhase)));
-
-            bgCtx.beginPath();
-            bgCtx.fillStyle = isLight
-                ? `rgba(109, 76, 255, ${currentOp * 0.22})`
-                : `rgba(230, 220, 255, ${currentOp * 0.45})`;
-            bgCtx.arc(drawX, drawY, star.size, 0, Math.PI * 2);
-            bgCtx.fill();
-        });
-
-        medStars.forEach((star) => {
-            let drawX = (star.baseX + smoothMouseOffsetX * star.parallaxFactor) % width;
-            if (drawX < 0) drawX += width;
-            let drawY = (star.baseY + smoothMouseOffsetY * star.parallaxFactor - interpolatedScrollY * star.parallaxFactor) % height;
-            if (drawY < 0) drawY += height;
-
-            star.twinklePhase += star.twinkleSpeed;
-            const currentOp = star.baseOpacity * (0.15 + 0.85 * (0.5 + 0.5 * Math.sin(star.twinklePhase)));
-
-            bgCtx.beginPath();
-            bgCtx.fillStyle = isLight
-                ? `rgba(109, 76, 255, ${currentOp * 0.28})`
-                : `rgba(230, 220, 255, ${currentOp * 0.55})`;
-            bgCtx.arc(drawX, drawY, star.size, 0, Math.PI * 2);
-            bgCtx.fill();
-        });
-
-        // --- LAYER 2: PROCEDURAL CONSTELLATIONS ---
-        constellationStars.forEach((star) => {
-            star.baseX += star.vx * (1.0 + scrollVelocity * 0.1);
-            star.baseY += star.vy * (1.0 + scrollVelocity * 0.1);
-
-            // Wrap bounds
-            if (star.baseX < 0) star.baseX += width;
-            if (star.baseX > width) star.baseX -= width;
-            if (star.baseY < 0) star.baseY += height;
-            if (star.baseY > height) star.baseY -= height;
-
-            // Occasional gentle brightening cycle
-            if (star.brighteningTimer > 0) {
-                star.brighteningTimer--;
-                if (star.brighteningTimer === 0) star.brightnessTarget = 1.0;
-            } else {
-                if (Math.random() < 0.0001) {
-                    star.brightnessTarget = 2.0 + Math.random() * 1.5;
-                    star.brighteningTimer = 180 + Math.floor(Math.random() * 120);
-                }
-            }
-        });
-
-        // Loop to connect constellation stars
-        for (let i = 0; i < constellationStars.length; i++) {
-            const starA = constellationStars[i];
-            let ax = (starA.baseX + smoothMouseOffsetX * starA.parallaxFactor) % width;
-            if (ax < 0) ax += width;
-            let ay = (starA.baseY + smoothMouseOffsetY * starA.parallaxFactor - interpolatedScrollY * starA.parallaxFactor) % height;
-            if (ay < 0) ay += height;
-
-            // Update interactive cursor hover state
-            const dx = ax - mouseX;
-            const dy = ay - mouseY;
-            const distToMouse = Math.sqrt(dx * dx + dy * dy);
-            let hoverFactor = 0;
-            if (distToMouse < 180) {
-                hoverFactor = Math.pow((180 - distToMouse) / 180, 1.5);
-            }
-            starA.breathePhase += starA.breatheSpeed;
-            const breatheAlpha = 0.75 + 0.25 * Math.sin(starA.breathePhase);
-
-            starA.brightness += (starA.brightnessTarget + hoverFactor * 1.8 - starA.brightness) * 0.08;
-
-            for (let j = i + 1; j < constellationStars.length; j++) {
-                const starB = constellationStars[j];
-                let bx = (starB.baseX + smoothMouseOffsetX * starB.parallaxFactor) % width;
-                if (bx < 0) bx += width;
-                let by = (starB.baseY + smoothMouseOffsetY * starB.parallaxFactor - interpolatedScrollY * starB.parallaxFactor) % height;
-                if (by < 0) by += height;
-
-                const lineDx = ax - bx;
-                const lineDy = ay - by;
-                const lineDist = Math.sqrt(lineDx * lineDx + lineDy * lineDy);
-
-                if (lineDist < 140) {
-                    const minBrightness = Math.min(starA.brightness, starB.brightness);
-                    const ratio = 1 - lineDist / 140;
-                    const lineOpacity = ratio * (isLight ? 0.035 : 0.12) * minBrightness * breatheAlpha;
-
-                    bgCtx.beginPath();
-                    bgCtx.strokeStyle = isLight
-                        ? `rgba(109, 76, 255, ${lineOpacity})`
-                        : `rgba(220, 215, 255, ${lineOpacity})`;
-                    bgCtx.lineWidth = 0.55;
-                    bgCtx.moveTo(ax, ay);
-                    bgCtx.lineTo(bx, by);
-                    bgCtx.stroke();
-                }
-            }
-
-            // Draw constellation star
-            bgCtx.beginPath();
-            const radius = starA.size * (0.85 + 0.15 * Math.sin(starA.breathePhase));
-            const starOpacity = (isLight ? 0.095 : 0.24) * starA.brightness * breatheAlpha;
-            bgCtx.fillStyle = isLight
-                ? `rgba(109, 76, 255, ${starOpacity})`
-                : `rgba(235, 230, 255, ${starOpacity})`;
-
-            bgCtx.arc(ax, ay, radius, 0, Math.PI * 2);
-            bgCtx.fill();
-
-            // Hover glow ring
-            if (starA.brightness > 1.25) {
-                bgCtx.beginPath();
-                bgCtx.fillStyle = isLight
-                    ? `rgba(109, 76, 255, ${starOpacity * 0.26})`
-                    : `rgba(169, 150, 255, ${starOpacity * 0.32})`;
-                bgCtx.arc(ax, ay, radius * 3.2, 0, Math.PI * 2);
-                bgCtx.fill();
-            }
+        // Update active constellation drifts and cycles
+        for (let i = 0; i < constellations.length; i++) {
+            updateConstellation(constellations[i], dt);
         }
+
+        // --- LAYER 2, 3, 4: DEEP PARALLAX ATMOSPHERIC PASSES ---
+
+        // PASS A: Far depth
+        drawHazeLayer(hazeLayers[0], dt);
+        constellations.forEach(c => {
+            if (c.layer === 'far') drawConstellation(c);
+        });
+        smallStars.forEach(s => drawSmallStar(s, dt));
+
+        // PASS B: Mid depth
+        drawHazeLayer(hazeLayers[1], dt);
+        constellations.forEach(c => {
+            if (c.layer === 'middle') drawConstellation(c);
+        });
+        medStars.forEach(s => drawMediumStar(s, dt));
+
+        // PASS C: Near depth
+        drawHazeLayer(hazeLayers[2], dt);
+        constellations.forEach(c => {
+            if (c.layer === 'near') drawConstellation(c);
+        });
 
         // --- LAYER 5: Drifting FIREFLIES ---
         fireflies.forEach((ff) => {
-            ff.angle += ff.speed;
-            ff.wobbleSeed += ff.wobbleSpeed;
+            updateFireflyLifecycle(ff, dt);
 
-            const windX = Math.sin(ff.wobbleSeed) * 0.12 * ff.speedMult;
-            const windY = Math.cos(ff.wobbleSeed * 0.8) * 0.12 * ff.speedMult;
+            // Organic random-walk steering wandering updates
+            ff.wobbleSeed = (ff.wobbleSeed + ff.wobbleSpeed * 60 * dt) % (Math.PI * 2);
+            const angleDelta = (Math.sin(ff.wobbleSeed * 0.3) * 0.04 + (Math.random() - 0.5) * 0.05) * 60 * dt;
+            ff.angle = (ff.angle + angleDelta) % (Math.PI * 2);
 
-            ff.targetVx = Math.cos(ff.angle) * 0.18 * ff.speedMult + windX;
-            ff.targetVy = Math.sin(ff.angle) * 0.18 * ff.speedMult + windY;
+            const windX = Math.sin(ff.wobbleSeed) * 0.12 * 60 * ff.speedMult;
+            const windY = Math.cos(ff.wobbleSeed * 0.8) * 0.12 * 60 * ff.speedMult;
 
-            let fx = (ff.baseX + smoothMouseOffsetX * ff.parallaxFactor) % width;
-            if (fx < 0) fx += width;
-            let fy = (ff.baseY + smoothMouseOffsetY * ff.parallaxFactor - interpolatedScrollY * ff.parallaxFactor) % height;
-            if (fy < 0) fy += height;
+            // Physical speed: 20px/s to 45px/s scaled by speedMult and brightnessFactor
+            const wanderSpeed = (20 + ff.speedMult * 25) * ff.brightnessFactor;
+            ff.targetVx = Math.cos(ff.angle) * wanderSpeed + windX * ff.brightnessFactor;
+            ff.targetVy = Math.sin(ff.angle) * wanderSpeed + windY * ff.brightnessFactor;
 
-            // Cursor repelling
+            // Parallax screen positions
+            let fx = ff.baseX + smoothMouseOffsetX * ff.parallaxFactor;
+            let fy = ff.baseY + smoothMouseOffsetY * ff.parallaxFactor - interpolatedScrollY * ff.parallaxFactor;
+
+            // Seamless wrap check based on final screen coordinates
+            if (fx < -50) {
+                ff.baseX += width + 100;
+                fx += width + 100;
+            } else if (fx > width + 50) {
+                ff.baseX -= width + 100;
+                fx -= width + 100;
+            }
+
+            if (fy < -50) {
+                ff.baseY += height + 100;
+                fy += height + 100;
+            } else if (fy > height + 50) {
+                ff.baseY -= height + 100;
+                fy -= height + 100;
+            }
+
+            // Interactive hovering nearby repelling & opacity reduction
             const dx = fx - mouseX;
             const dy = fy - mouseY;
             const dist = Math.sqrt(dx * dx + dy * dy);
-
-            if (dist < 180) {
-                const force = Math.pow((180 - dist) / 180, 2);
-                ff.targetVx += (dx / dist) * force * 0.45 * ff.speedMult;
-                ff.targetVy += (dy / dist) * force * 0.45 * ff.speedMult;
+            
+            let hoverFactor = 1.0;
+            // Guard against division by zero and NaN states
+            if (dist < 150 && dist > 0.1 && !isNaN(dist)) {
+                const repelForce = Math.pow((150 - dist) / 150, 1.5);
+                const forceMagnitude = repelForce * 120 * ff.speedMult;
+                ff.targetVx += (dx / dist) * forceMagnitude;
+                ff.targetVy += (dy / dist) * forceMagnitude;
+                
+                hoverFactor = 0.35 + 0.65 * (dist / 150);
             }
 
-            ff.vx += (ff.targetVx - ff.vx) * 0.03;
-            ff.vy += (ff.targetVy - ff.vy) * 0.03;
+            // Converge velocity smoothly (accelRate = 4.0/s)
+            ff.vx += (ff.targetVx - ff.vx) * 4.0 * dt;
+            ff.vy += (ff.targetVy - ff.vy) * 4.0 * dt;
 
-            ff.baseX += ff.vx;
-            ff.baseY += ff.vy;
+            // Position update
+            ff.baseX += ff.vx * dt;
+            ff.baseY += ff.vy * dt;
 
-            // Wrap boundaries
-            if (ff.baseX < -50) ff.baseX = width + 50;
-            if (ff.baseX > width + 50) ff.baseX = -50;
-            if (ff.baseY < -50) ff.baseY = height + 50;
-            if (ff.baseY > height + 50) ff.baseY = -50;
+            ff.currentOpacity += (ff.baseOpacity * hoverFactor - ff.currentOpacity) * 6.0 * dt;
+            const fireflyOpacity = ff.currentOpacity * 0.65 * ff.brightnessFactor;
 
-            const baseOp = isLight ? 0.22 : 0.65;
-            const fireflyOpacity = ff.baseOpacity * baseOp;
+            const color = fireflyColors[ff.colorIndex];
+            const currentSize = ff.size * ff.scaleFactor * ff.blurFactor;
 
-            let color;
-            if (isLight) {
-                color = { r: 109, g: 76, b: 255 };
-            } else {
-                const FIREFLY_PALETTE_DARK = [
-                    { r: 108, g: 77, b: 255 },
-                    { r: 139, g: 92, b: 255 },
-                    { r: 167, g: 123, b: 255 },
-                    { r: 198, g: 107, b: 255 }
-                ];
-                color = FIREFLY_PALETTE_DARK[ff.colorIndex];
-            }
-
-            let grad = bgCtx.createRadialGradient(fx, fy, 0, fx, fy, ff.size * 1.5);
+            let grad = bgCtx.createRadialGradient(fx, fy, 0, fx, fy, currentSize * 1.5);
             grad.addColorStop(0, `rgba(${color.r}, ${color.g}, ${color.b}, ${fireflyOpacity})`);
             grad.addColorStop(0.3, `rgba(${color.r}, ${color.g}, ${color.b}, ${fireflyOpacity * 0.4})`);
             grad.addColorStop(1, "transparent");
 
             bgCtx.fillStyle = grad;
             bgCtx.beginPath();
-            bgCtx.arc(fx, fy, ff.size * 1.5, 0, Math.PI * 2);
+            bgCtx.arc(fx, fy, currentSize * 1.5, 0, Math.PI * 2);
             bgCtx.fill();
         });
 
         // --- LAYER 6: FOREGROUND BLURRED PARTICLES (Foreground Canvas) ---
         fgCtx.save();
-        fgCtx.globalCompositeOperation = isLight ? "multiply" : "screen";
+        fgCtx.globalCompositeOperation = "screen";
 
         foregroundParticles.forEach((p) => {
-            p.angle += p.speed;
-            p.baseX += p.vx + Math.sin(p.angle) * 0.03;
-            p.baseY += p.vy + Math.cos(p.angle) * 0.03;
+            updateForegroundParticleLifecycle(p, dt);
+            p.angle = (p.angle + p.speed * 60 * dt) % (Math.PI * 2);
+            p.baseX += (p.vx * 60 + Math.sin(p.angle) * 0.03 * 60) * dt;
+            p.baseY += (p.vy * 60 + Math.cos(p.angle) * 0.03 * 60) * dt;
 
-            // Wrap boundaries
             if (p.baseX < -150) p.baseX = width + 150;
             if (p.baseX > width + 150) p.baseX = -150;
             if (p.baseY < -150) p.baseY = height + 150;
@@ -659,22 +1844,17 @@ if (particlesContainer) {
             let finalY = (p.baseY + smoothMouseOffsetY * p.parallaxFactor - interpolatedScrollY * p.parallaxFactor) % height;
             if (finalY < 0) finalY += height;
 
-            const baseOp = isLight ? 0.015 : 0.055;
+            const baseOp = 0.055 * p.brightnessFactor;
+            const currentSize = p.size * p.scaleFactor * p.blurFactor;
 
-            let grad = fgCtx.createRadialGradient(finalX, finalY, 0, finalX, finalY, p.size);
-            if (isLight) {
-                grad.addColorStop(0, `rgba(109, 76, 255, ${baseOp})`);
-                grad.addColorStop(0.5, `rgba(109, 76, 255, ${baseOp * 0.3})`);
-                grad.addColorStop(1, "transparent");
-            } else {
-                grad.addColorStop(0, `rgba(169, 150, 255, ${baseOp})`);
-                grad.addColorStop(0.5, `rgba(169, 150, 255, ${baseOp * 0.3})`);
-                grad.addColorStop(1, "transparent");
-            }
+            let grad = fgCtx.createRadialGradient(finalX, finalY, 0, finalX, finalY, currentSize);
+            grad.addColorStop(0, `rgba(169, 150, 255, ${baseOp})`);
+            grad.addColorStop(0.5, `rgba(169, 150, 255, ${baseOp * 0.3})`);
+            grad.addColorStop(1, "transparent");
 
             fgCtx.fillStyle = grad;
             fgCtx.beginPath();
-            fgCtx.arc(finalX, finalY, p.size, 0, Math.PI * 2);
+            fgCtx.arc(finalX, finalY, currentSize, 0, Math.PI * 2);
             fgCtx.fill();
         });
         fgCtx.restore();
@@ -684,6 +1864,7 @@ if (particlesContainer) {
 
     animateConstellations();
 }
+
 
 /* RESPONSIVE NAVBAR - ZOOM & VIEWPORT DETECTION */
 

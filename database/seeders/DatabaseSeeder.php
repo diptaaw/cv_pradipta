@@ -135,5 +135,30 @@ class DatabaseSeeder extends Seeder
         foreach ($settings as $key => $value) {
             \App\Models\SiteSetting::firstOrCreate(['key' => $key], ['value' => $value]);
         }
+
+        // 8. Seed Portfolio Updates
+        if (\App\Models\PortfolioUpdate::count() === 0) {
+            \App\Models\PortfolioUpdate::create([
+                'title' => "Added Interactive Wildlife Park",
+                'description' => "New Unity project featuring dynamic weather, NPC systems and wildlife interactions.",
+                'date' => "June 2026",
+                'is_pinned' => true,
+                'is_published' => true,
+            ]);
+            \App\Models\PortfolioUpdate::create([
+                'title' => "Added Staff PSDM Experience",
+                'description' => "Added organizational experience section.",
+                'date' => "April 2026",
+                'is_pinned' => false,
+                'is_published' => true,
+            ]);
+            \App\Models\PortfolioUpdate::create([
+                'title' => "Updated Homepage Animations",
+                'description' => "Improved celestial background system.",
+                'date' => "March 2026",
+                'is_pinned' => false,
+                'is_published' => true,
+            ]);
+        }
     }
 }
