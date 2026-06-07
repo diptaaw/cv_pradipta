@@ -187,281 +187,502 @@ function animateSpotlight() {
 
 animateSpotlight();
 
-const particlesContainer =
-    document.querySelector(".particles");
-
-let particlesOverlayContainer = document.querySelector(".particles-overlay");
-if (!particlesOverlayContainer && particlesContainer) {
-    particlesOverlayContainer = document.createElement("div");
-    particlesOverlayContainer.classList.add("particles", "particles-overlay");
-    particlesOverlayContainer.style.zIndex = "15";
-    particlesOverlayContainer.style.pointerEvents = "none";
-    document.body.appendChild(particlesOverlayContainer);
-}
-
-const particles = [];
-
-let isMobile = window.innerWidth <= 768;
-let isTablet = window.innerWidth > 768 && window.innerWidth <= 1024;
-let LAYER_1_COUNT = isMobile ? 6 : (isTablet ? 10 : 16);
-let LAYER_2_COUNT = isMobile ? 8 : (isTablet ? 14 : 22);
-let LAYER_3_COUNT = isMobile ? 4 : (isTablet ? 8 : 12);
-
-const FIREFLY_PALETTE = [
-    { r: 108, g: 77, b: 255 },  // 0: Deep Violet
-    { r: 139, g: 92, b: 255 },  // 1: Electric Purple
-    { r: 167, g: 123, b: 255 }, // 2: Soft Lavender
-    { r: 198, g: 107, b: 255 }, // 3: Pinkish Purple
-    { r: 217, g: 92, b: 255 },  // 4: Orchid
-    { r: 224, g: 82, b: 255 },  // 5: Magenta Violet
-    { r: 242, g: 91, b: 255 }   // 6: Soft Neon Magenta
-];
-
-function getLayerColorIndex(layer) {
-    let rand = Math.random();
-    if (layer === 1) {
-        return rand < 0.6 ? 0 : 1;
-    } else if (layer === 2) {
-        if (rand < 0.4) return 1;
-        if (rand < 0.7) return 2;
-        return 3;
-    } else {
-        if (rand < 0.4) return 3;
-        if (rand < 0.7) return 4;
-        if (rand < 0.9) return 5;
-        return 6;
-    }
-}
-
-function createParticle(layer) {
-    const particle = document.createElement("div");
-    particle.classList.add("particle");
-    
-    let size, opacity, blur, speedMult, parallaxFactor, isOverlay = false;
-    
-    if (layer === 1) {
-        size = 3 + Math.random() * 5;
-        opacity = 0.35 + Math.random() * 0.2;
-        blur = 1 + Math.random() * 2;
-        speedMult = 0.4;
-        parallaxFactor = 0.15;
-    } else if (layer === 2) {
-        size = 12 + Math.random() * 18;
-        opacity = 0.45 + Math.random() * 0.35;
-        blur = 3 + Math.random() * 4;
-        speedMult = 1.4;
-        parallaxFactor = 0.8;
-    } else {
-        size = 60 + Math.random() * 40;
-        opacity = 0.4 + Math.random() * 0.4;
-        blur = 18 + Math.random() * 22;
-        speedMult = 2.5 + Math.random() * 1;
-        parallaxFactor = 3.0;
-        isOverlay = Math.random() > 0.3;
-    }
-
-    if (isOverlay) {
-        if (particlesOverlayContainer) particlesOverlayContainer.appendChild(particle);
-        particle.style.mixBlendMode = "screen";
-    } else {
-        if (particlesContainer) particlesContainer.appendChild(particle);
-    }
-    
-    const baseColorIndex = getLayerColorIndex(layer);
-    const color = FIREFLY_PALETTE[baseColorIndex];
-
-    const obj = {
-        el: particle,
-        layer: layer,
-        baseX: Math.random() * window.innerWidth,
-        baseY: Math.random() * window.innerHeight,
-        vx: (Math.random() - 0.5) * 0.5 * speedMult,
-        vy: (Math.random() - 0.5) * 0.5 * speedMult,
-        targetVx: 0,
-        targetVy: 0,
-        size: size,
-        angle: Math.random() * Math.PI * 2,
-        speed: (0.002 + Math.random() * 0.003) * speedMult,
-        baseOpacity: opacity,
-        currentOpacity: 0,
-        baseBlur: blur,
-        currentBlur: blur,
-        parallaxFactor: parallaxFactor,
-        speedMult: speedMult,
-        isOverlay: isOverlay,
-        checkOffset: Math.floor(Math.random() * 10),
-        overlapTargetMult: 1,
-        overlapOpacityMult: 1,
-        wobbleSeed: Math.random() * 1000,
-        wobbleSpeed: 0.005 + Math.random() * 0.01,
-        isHero: false,
-        scale: 1,
-        colorIndex: baseColorIndex,
-        targetColorIndex: baseColorIndex,
-        colorNextChangeTime: Date.now() + 10000 + Math.random() * 10000,
-        currentColor: { r: color.r, g: color.g, b: color.b }
-    };
-
-    particle.style.width = `${obj.size}px`;
-    particle.style.height = `${obj.size}px`;
-    particle.style.opacity = obj.currentOpacity;
-    particle.style.filter = `blur(${obj.baseBlur}px)`;
-    particle.style.setProperty('--p-r', obj.currentColor.r);
-    particle.style.setProperty('--p-g', obj.currentColor.g);
-    particle.style.setProperty('--p-b', obj.currentColor.b);
-    
-    return obj;
-}
+// Upgraded Canvas-based Cosmic Background System
+const particlesContainer = document.querySelector(".particles");
 
 if (particlesContainer) {
-    for(let i = 0; i < LAYER_1_COUNT; i++) particles.push(createParticle(1));
-    for(let i = 0; i < LAYER_2_COUNT; i++) particles.push(createParticle(2));
-    for(let i = 0; i < LAYER_3_COUNT; i++) particles.push(createParticle(3));
-}
-
-let parallaxMouseX = window.innerWidth / 2;
-let parallaxMouseY = window.innerHeight / 2;
-let frameCount = 0;
-let lastHeroTime = Date.now();
-
-function triggerHeroMoment() {
-    const foregroundParticles = particles.filter(p => p.layer === 3);
-    if (foregroundParticles.length > 0) {
-        const p = foregroundParticles[Math.floor(Math.random() * foregroundParticles.length)];
-        p.isHero = true;
-        p.targetColorIndex = Math.random() > 0.5 ? 5 : 6;
-        setTimeout(() => { 
-            p.isHero = false; 
-            p.targetColorIndex = p.colorIndex;
-        }, 1500 + Math.random() * 1000);
-    }
-}
-
-function animateParticles(){
-    frameCount++;
-    parallaxMouseX += (mouseX - parallaxMouseX) * 0.05;
-    parallaxMouseY += (mouseY - parallaxMouseY) * 0.05;
-    
-    const centerX = window.innerWidth / 2;
-    const centerY = window.innerHeight / 2;
-    const parallaxOffsetX = (centerX - parallaxMouseX);
-    const parallaxOffsetY = (centerY - parallaxMouseY);
-
-    if (Date.now() - lastHeroTime > 6000 + Math.random() * 4000) {
-        triggerHeroMoment();
-        lastHeroTime = Date.now();
+    let particlesOverlayContainer = document.querySelector(".particles-overlay");
+    if (!particlesOverlayContainer) {
+        particlesOverlayContainer = document.createElement("div");
+        particlesOverlayContainer.classList.add("particles", "particles-overlay");
+        particlesOverlayContainer.style.zIndex = "15";
+        particlesOverlayContainer.style.pointerEvents = "none";
+        document.body.appendChild(particlesOverlayContainer);
     }
 
-    particles.forEach((p) => {
-        p.angle += p.speed;
-        p.wobbleSeed += p.wobbleSpeed;
-        
-        const windX = Math.sin(p.wobbleSeed) * 0.35 * p.speedMult;
-        const windY = Math.cos(p.wobbleSeed * 0.8) * 0.35 * p.speedMult;
-        
-        p.targetVx = Math.cos(p.angle) * 0.25 * p.speedMult + windX;
-        p.targetVy = Math.sin(p.angle) * 0.25 * p.speedMult + windY;
-        
-        const screenX = p.baseX + (parallaxOffsetX * p.parallaxFactor) * 0.05;
-        const screenY = p.baseY + (parallaxOffsetY * p.parallaxFactor) * 0.05;
-        
-        const dx = screenX - mouseX;
-        const dy = screenY - mouseY;
-        const distance = Math.sqrt(dx * dx + dy * dy);
+    // Append Canvas elements
+    const bgCanvas = document.createElement("canvas");
+    bgCanvas.id = "constellation-bg";
+    particlesContainer.appendChild(bgCanvas);
+    const bgCtx = bgCanvas.getContext("2d");
 
-        let interactionScale = 1;
-        if(distance < 300){
-            const force = Math.pow((300 - distance) / 300, 2);
-            p.targetVx += (dx / distance) * force * 0.6 * p.speedMult;
-            p.targetVy += (dy / distance) * force * 0.6 * p.speedMult;
-            interactionScale = 1 + force * 0.4;
-        }
+    const fgCanvas = document.createElement("canvas");
+    fgCanvas.id = "constellation-fg";
+    particlesOverlayContainer.appendChild(fgCanvas);
+    const fgCtx = fgCanvas.getContext("2d");
 
-        p.vx += (p.targetVx - p.vx) * 0.02;
-        p.vy += (p.targetVy - p.vy) * 0.02;
+    document.body.classList.add("canvas-active");
 
-        p.baseX += p.vx;
-        p.baseY += p.vy;
+    // Dimensions
+    let width = window.innerWidth;
+    let height = window.innerHeight;
 
-        if(p.baseX < -200) p.baseX = window.innerWidth + 200;
-        if(p.baseX > window.innerWidth + 200) p.baseX = -200;
-        if(p.baseY < -200) p.baseY = window.innerHeight + 200;
-        if(p.baseY > window.innerHeight + 200) p.baseY = -200;
+    let isMobileDevice = width <= 768;
+    let isTabletDevice = width > 768 && width <= 1024;
 
-        const finalX = p.baseX + (parallaxOffsetX * p.parallaxFactor) * 0.05;
-        const finalY = p.baseY + (parallaxOffsetY * p.parallaxFactor) * 0.05;
+    // Canvas scaling
+    function resizeCanvases() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        isMobileDevice = width <= 768;
+        isTabletDevice = width > 768 && width <= 1024;
 
-        if (p.isOverlay && frameCount % 10 === p.checkOffset) {
-            if (finalX >= 0 && finalX <= window.innerWidth && finalY >= 0 && finalY <= window.innerHeight) {
-                const el = document.elementFromPoint(finalX, finalY);
-                if (el) {
-                    const tag = el.tagName.toLowerCase();
-                    const textTags = ['h1','h2','h3','h4','p','a','span','strong','em','button'];
-                    const isTextElement = textTags.includes(tag) || el.closest('a') || el.closest('.card-content') || el.closest('.name');
-                    p.overlapTargetMult = isTextElement ? 0.3 : 1;
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+
+        bgCanvas.width = width * dpr;
+        bgCanvas.height = height * dpr;
+        bgCanvas.style.width = `${width}px`;
+        bgCanvas.style.height = `${height}px`;
+        bgCtx.resetTransform();
+        bgCtx.scale(dpr, dpr);
+
+        fgCanvas.width = width * dpr;
+        fgCanvas.height = height * dpr;
+        fgCanvas.style.width = `${width}px`;
+        fgCanvas.style.height = `${height}px`;
+        fgCtx.resetTransform();
+        fgCtx.scale(dpr, dpr);
+    }
+    window.addEventListener("resize", resizeCanvases);
+    resizeCanvases();
+
+    // Particle pools configuration
+    const smallStarCount = isMobileDevice ? 25 : (isTabletDevice ? 45 : 65);
+    const medStarCount = isMobileDevice ? 12 : (isTabletDevice ? 22 : 30);
+    const constellationCount = isMobileDevice ? 16 : (isTabletDevice ? 26 : 38);
+    const fireflyCount = isMobileDevice ? 8 : (isTabletDevice ? 14 : 20);
+    const foregroundCount = isMobileDevice ? 4 : (isTabletDevice ? 7 : 10);
+
+    // Coordinate state tracking
+    let smoothMouseOffsetX = 0;
+    let smoothMouseOffsetY = 0;
+    let interpolatedScrollY = window.scrollY;
+    let lastScrollY = window.scrollY;
+    let scrollVelocity = 0;
+
+    // Small stars
+    const smallStars = [];
+    for (let i = 0; i < smallStarCount; i++) {
+        smallStars.push({
+            baseX: Math.random() * width,
+            baseY: Math.random() * height,
+            size: 0.6 + Math.random() * 0.9,
+            twinklePhase: Math.random() * Math.PI * 2,
+            twinkleSpeed: 0.003 + Math.random() * 0.007,
+            baseOpacity: 0.25 + Math.random() * 0.5,
+            parallaxFactor: 0.08 + Math.random() * 0.06
+        });
+    }
+
+    // Medium stars
+    const medStars = [];
+    for (let i = 0; i < medStarCount; i++) {
+        medStars.push({
+            baseX: Math.random() * width,
+            baseY: Math.random() * height,
+            size: 1.5 + Math.random() * 1.2,
+            twinklePhase: Math.random() * Math.PI * 2,
+            twinkleSpeed: 0.002 + Math.random() * 0.005,
+            baseOpacity: 0.4 + Math.random() * 0.45,
+            parallaxFactor: 0.14 + Math.random() * 0.1
+        });
+    }
+
+    // Constellation stars
+    const constellationStars = [];
+    for (let i = 0; i < constellationCount; i++) {
+        constellationStars.push({
+            baseX: Math.random() * width,
+            baseY: Math.random() * height,
+            vx: (Math.random() - 0.5) * 0.07,
+            vy: (Math.random() - 0.5) * 0.07,
+            size: 1.2 + Math.random() * 1.5,
+            baseOpacity: 0.35 + Math.random() * 0.35,
+            brightness: 1.0,
+            brightnessTarget: 1.0,
+            brighteningTimer: 0,
+            breathePhase: Math.random() * Math.PI * 2,
+            breatheSpeed: 0.002 + Math.random() * 0.005,
+            parallaxFactor: 0.12
+        });
+    }
+
+    // Nebula morphing blobs
+    const nebulaBlobs = [
+        { baseXFraction: 0.15, baseYFraction: 0.25, radiusFraction: 0.55, colorIndex: 0, angleX: Math.random() * 10, angleY: Math.random() * 10, speedX: 0.0004, speedY: 0.0002 },
+        { baseXFraction: 0.85, baseYFraction: 0.75, radiusFraction: 0.50, colorIndex: 1, angleX: Math.random() * 10, angleY: Math.random() * 10, speedX: 0.0002, speedY: 0.0004 },
+        { baseXFraction: 0.50, baseYFraction: 0.55, radiusFraction: 0.60, colorIndex: 2, angleX: Math.random() * 10, angleY: Math.random() * 10, speedX: 0.0003, speedY: 0.0003 },
+        { baseXFraction: 0.75, baseYFraction: 0.20, radiusFraction: 0.45, colorIndex: 3, angleX: Math.random() * 10, angleY: Math.random() * 10, speedX: 0.0005, speedY: 0.0001 }
+    ];
+
+    // Fireflies
+    const fireflies = [];
+    for (let i = 0; i < fireflyCount; i++) {
+        const size = 6 + Math.random() * 12;
+        const opacity = 0.35 + Math.random() * 0.45;
+        const speedMult = 0.4 + Math.random() * 0.4;
+        fireflies.push({
+            baseX: Math.random() * width,
+            baseY: Math.random() * height,
+            vx: (Math.random() - 0.5) * 0.3 * speedMult,
+            vy: (Math.random() - 0.5) * 0.3 * speedMult,
+            targetVx: 0,
+            targetVy: 0,
+            size: size,
+            baseOpacity: opacity,
+            currentOpacity: opacity,
+            angle: Math.random() * Math.PI * 2,
+            speed: (0.0015 + Math.random() * 0.002) * speedMult,
+            wobbleSeed: Math.random() * 1000,
+            wobbleSpeed: 0.003 + Math.random() * 0.007,
+            parallaxFactor: 0.22,
+            speedMult: speedMult,
+            colorIndex: Math.floor(Math.random() * 4)
+        });
+    }
+
+    // Foreground large blurred particles
+    const foregroundParticles = [];
+    for (let i = 0; i < foregroundCount; i++) {
+        const size = 70 + Math.random() * 55;
+        const opacity = 0.12 + Math.random() * 0.18;
+        foregroundParticles.push({
+            baseX: Math.random() * width,
+            baseY: Math.random() * height,
+            vx: (Math.random() - 0.5) * 0.08,
+            vy: (Math.random() - 0.5) * 0.08,
+            size: size,
+            baseOpacity: opacity,
+            currentOpacity: opacity,
+            angle: Math.random() * Math.PI * 2,
+            speed: 0.0002 + Math.random() * 0.0005,
+            parallaxFactor: 0.55
+        });
+    }
+
+    // Main animation loop
+    function animateConstellations() {
+        // Theme selection
+        const isLight = document.body.dataset.theme === "light";
+
+        // Parallax calculations
+        const targetOffsetX = mouseX - width / 2;
+        const targetOffsetY = mouseY - height / 2;
+        smoothMouseOffsetX += (targetOffsetX - smoothMouseOffsetX) * 0.05;
+        smoothMouseOffsetY += (targetOffsetY - smoothMouseOffsetY) * 0.05;
+
+        // Scroll velocity computations
+        interpolatedScrollY += (window.scrollY - interpolatedScrollY) * 0.08;
+        const scrollDelta = Math.abs(window.scrollY - lastScrollY);
+        scrollVelocity += scrollDelta * 0.1;
+        scrollVelocity = Math.min(scrollVelocity, 12);
+        scrollVelocity *= 0.94;
+        lastScrollY = window.scrollY;
+
+        // Clear canvas states
+        bgCtx.clearRect(0, 0, width, height);
+        fgCtx.clearRect(0, 0, width, height);
+
+        // Fill background color
+        bgCtx.fillStyle = isLight ? "#f4f0ff" : "#05050a";
+        bgCtx.fillRect(0, 0, width, height);
+
+        // --- LAYER 1: NEBULA SYSTEM ---
+        nebulaBlobs.forEach((blob) => {
+            // Speed accelerates during scroll
+            blob.angleX += blob.speedX * (1.0 + scrollVelocity * 0.25);
+            blob.angleY += blob.speedY * (1.0 + scrollVelocity * 0.25);
+
+            const driftX = Math.sin(blob.angleX) * (width * 0.08);
+            const driftY = Math.cos(blob.angleY) * (height * 0.08);
+
+            const scrollShiftY = -interpolatedScrollY * 0.05;
+
+            let cx = (width * blob.baseXFraction + driftX + smoothMouseOffsetX * 0.02) % width;
+            if (cx < 0) cx += width;
+            let cy = (height * blob.baseYFraction + driftY + scrollShiftY + smoothMouseOffsetY * 0.02) % height;
+            if (cy < 0) cy += height;
+
+            const radius = Math.max(width, height) * blob.radiusFraction;
+            let grad = bgCtx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+
+            const baseOp = isLight ? 0.032 : 0.085;
+
+            if (isLight) {
+                if (blob.colorIndex === 0) {
+                    grad.addColorStop(0, `rgba(109, 80, 255, ${baseOp * 0.75})`);
+                    grad.addColorStop(0.5, `rgba(109, 80, 255, ${baseOp * 0.25})`);
+                } else if (blob.colorIndex === 1) {
+                    grad.addColorStop(0, `rgba(166, 92, 255, ${baseOp * 0.65})`);
+                    grad.addColorStop(0.5, `rgba(166, 92, 255, ${baseOp * 0.2})`);
+                } else if (blob.colorIndex === 2) {
+                    grad.addColorStop(0, `rgba(77, 110, 255, ${baseOp * 0.55})`);
+                    grad.addColorStop(0.5, `rgba(77, 110, 255, ${baseOp * 0.15})`);
+                } else {
+                    grad.addColorStop(0, `rgba(224, 82, 255, ${baseOp * 0.3})`);
+                    grad.addColorStop(0.5, `rgba(224, 82, 255, ${baseOp * 0.08})`);
                 }
             } else {
-                p.overlapTargetMult = 1;
+                if (blob.colorIndex === 0) {
+                    grad.addColorStop(0, `rgba(109, 80, 255, ${baseOp})`);
+                    grad.addColorStop(0.5, `rgba(109, 80, 255, ${baseOp * 0.3})`);
+                } else if (blob.colorIndex === 1) {
+                    grad.addColorStop(0, `rgba(137, 58, 255, ${baseOp * 0.95})`);
+                    grad.addColorStop(0.5, `rgba(137, 58, 255, ${baseOp * 0.25})`);
+                } else if (blob.colorIndex === 2) {
+                    grad.addColorStop(0, `rgba(70, 40, 180, ${baseOp * 0.8})`);
+                    grad.addColorStop(0.5, `rgba(70, 40, 180, ${baseOp * 0.2})`);
+                } else {
+                    grad.addColorStop(0, `rgba(224, 82, 255, ${baseOp * 0.65})`);
+                    grad.addColorStop(0.5, `rgba(224, 82, 255, ${baseOp * 0.15})`);
+                }
             }
-        }
-        
-        p.overlapOpacityMult += (p.overlapTargetMult - p.overlapOpacityMult) * 0.05;
+            grad.addColorStop(1, "transparent");
 
-        let targetOp = p.baseOpacity * p.overlapOpacityMult * interactionScale;
-        let targetScale = 1;
-        
-        if (p.isHero) {
-            targetOp = Math.min(1, targetOp + 0.2);
-            p.currentBlur += (Math.max(4, p.baseBlur - 8) - p.currentBlur) * 0.05;
-            targetScale = 1.1;
-        } else {
-            p.currentBlur += (p.baseBlur - p.currentBlur) * 0.02;
-            targetScale = 1;
-        }
-        
-        p.scale += (targetScale - p.scale) * 0.05;
-        p.currentOpacity += (targetOp - p.currentOpacity) * 0.05;
-        
-        const now = Date.now();
-        if (now > p.colorNextChangeTime && !p.isHero) {
-            let newIndex = p.colorIndex;
-            if (Math.random() > 0.5) {
-                newIndex = Math.min(p.colorIndex + 1, FIREFLY_PALETTE.length - 1);
+            bgCtx.fillStyle = grad;
+            bgCtx.beginPath();
+            bgCtx.arc(cx, cy, radius, 0, Math.PI * 2);
+            bgCtx.fill();
+        });
+
+        // --- LAYER 3 & 4: TWINKLING STARS ---
+        smallStars.forEach((star) => {
+            let drawX = (star.baseX + smoothMouseOffsetX * star.parallaxFactor) % width;
+            if (drawX < 0) drawX += width;
+            let drawY = (star.baseY + smoothMouseOffsetY * star.parallaxFactor - interpolatedScrollY * star.parallaxFactor) % height;
+            if (drawY < 0) drawY += height;
+
+            star.twinklePhase += star.twinkleSpeed;
+            const currentOp = star.baseOpacity * (0.15 + 0.85 * (0.5 + 0.5 * Math.sin(star.twinklePhase)));
+
+            bgCtx.beginPath();
+            bgCtx.fillStyle = isLight
+                ? `rgba(109, 76, 255, ${currentOp * 0.22})`
+                : `rgba(230, 220, 255, ${currentOp * 0.45})`;
+            bgCtx.arc(drawX, drawY, star.size, 0, Math.PI * 2);
+            bgCtx.fill();
+        });
+
+        medStars.forEach((star) => {
+            let drawX = (star.baseX + smoothMouseOffsetX * star.parallaxFactor) % width;
+            if (drawX < 0) drawX += width;
+            let drawY = (star.baseY + smoothMouseOffsetY * star.parallaxFactor - interpolatedScrollY * star.parallaxFactor) % height;
+            if (drawY < 0) drawY += height;
+
+            star.twinklePhase += star.twinkleSpeed;
+            const currentOp = star.baseOpacity * (0.15 + 0.85 * (0.5 + 0.5 * Math.sin(star.twinklePhase)));
+
+            bgCtx.beginPath();
+            bgCtx.fillStyle = isLight
+                ? `rgba(109, 76, 255, ${currentOp * 0.28})`
+                : `rgba(230, 220, 255, ${currentOp * 0.55})`;
+            bgCtx.arc(drawX, drawY, star.size, 0, Math.PI * 2);
+            bgCtx.fill();
+        });
+
+        // --- LAYER 2: PROCEDURAL CONSTELLATIONS ---
+        constellationStars.forEach((star) => {
+            star.baseX += star.vx * (1.0 + scrollVelocity * 0.1);
+            star.baseY += star.vy * (1.0 + scrollVelocity * 0.1);
+
+            // Wrap bounds
+            if (star.baseX < 0) star.baseX += width;
+            if (star.baseX > width) star.baseX -= width;
+            if (star.baseY < 0) star.baseY += height;
+            if (star.baseY > height) star.baseY -= height;
+
+            // Occasional gentle brightening cycle
+            if (star.brighteningTimer > 0) {
+                star.brighteningTimer--;
+                if (star.brighteningTimer === 0) star.brightnessTarget = 1.0;
             } else {
-                newIndex = Math.max(p.colorIndex - 1, 0);
+                if (Math.random() < 0.0001) {
+                    star.brightnessTarget = 2.0 + Math.random() * 1.5;
+                    star.brighteningTimer = 180 + Math.floor(Math.random() * 120);
+                }
             }
-            
-            let allowedMin = 0;
-            let allowedMax = 6;
-            if (p.layer === 1) { allowedMin = 0; allowedMax = 1; }
-            else if (p.layer === 2) { allowedMin = 1; allowedMax = 3; }
-            else if (p.layer === 3) { allowedMin = 3; allowedMax = 6; }
-            
-            if (newIndex >= allowedMin && newIndex <= allowedMax) {
-                p.targetColorIndex = newIndex;
-                p.colorIndex = newIndex;
+        });
+
+        // Loop to connect constellation stars
+        for (let i = 0; i < constellationStars.length; i++) {
+            const starA = constellationStars[i];
+            let ax = (starA.baseX + smoothMouseOffsetX * starA.parallaxFactor) % width;
+            if (ax < 0) ax += width;
+            let ay = (starA.baseY + smoothMouseOffsetY * starA.parallaxFactor - interpolatedScrollY * starA.parallaxFactor) % height;
+            if (ay < 0) ay += height;
+
+            // Update interactive cursor hover state
+            const dx = ax - mouseX;
+            const dy = ay - mouseY;
+            const distToMouse = Math.sqrt(dx * dx + dy * dy);
+            let hoverFactor = 0;
+            if (distToMouse < 180) {
+                hoverFactor = Math.pow((180 - distToMouse) / 180, 1.5);
             }
-            p.colorNextChangeTime = now + 10000 + Math.random() * 10000;
+            starA.breathePhase += starA.breatheSpeed;
+            const breatheAlpha = 0.75 + 0.25 * Math.sin(starA.breathePhase);
+
+            starA.brightness += (starA.brightnessTarget + hoverFactor * 1.8 - starA.brightness) * 0.08;
+
+            for (let j = i + 1; j < constellationStars.length; j++) {
+                const starB = constellationStars[j];
+                let bx = (starB.baseX + smoothMouseOffsetX * starB.parallaxFactor) % width;
+                if (bx < 0) bx += width;
+                let by = (starB.baseY + smoothMouseOffsetY * starB.parallaxFactor - interpolatedScrollY * starB.parallaxFactor) % height;
+                if (by < 0) by += height;
+
+                const lineDx = ax - bx;
+                const lineDy = ay - by;
+                const lineDist = Math.sqrt(lineDx * lineDx + lineDy * lineDy);
+
+                if (lineDist < 140) {
+                    const minBrightness = Math.min(starA.brightness, starB.brightness);
+                    const ratio = 1 - lineDist / 140;
+                    const lineOpacity = ratio * (isLight ? 0.035 : 0.12) * minBrightness * breatheAlpha;
+
+                    bgCtx.beginPath();
+                    bgCtx.strokeStyle = isLight
+                        ? `rgba(109, 76, 255, ${lineOpacity})`
+                        : `rgba(220, 215, 255, ${lineOpacity})`;
+                    bgCtx.lineWidth = 0.55;
+                    bgCtx.moveTo(ax, ay);
+                    bgCtx.lineTo(bx, by);
+                    bgCtx.stroke();
+                }
+            }
+
+            // Draw constellation star
+            bgCtx.beginPath();
+            const radius = starA.size * (0.85 + 0.15 * Math.sin(starA.breathePhase));
+            const starOpacity = (isLight ? 0.095 : 0.24) * starA.brightness * breatheAlpha;
+            bgCtx.fillStyle = isLight
+                ? `rgba(109, 76, 255, ${starOpacity})`
+                : `rgba(235, 230, 255, ${starOpacity})`;
+
+            bgCtx.arc(ax, ay, radius, 0, Math.PI * 2);
+            bgCtx.fill();
+
+            // Hover glow ring
+            if (starA.brightness > 1.25) {
+                bgCtx.beginPath();
+                bgCtx.fillStyle = isLight
+                    ? `rgba(109, 76, 255, ${starOpacity * 0.26})`
+                    : `rgba(169, 150, 255, ${starOpacity * 0.32})`;
+                bgCtx.arc(ax, ay, radius * 3.2, 0, Math.PI * 2);
+                bgCtx.fill();
+            }
         }
 
-        const targetColor = FIREFLY_PALETTE[p.targetColorIndex];
-        p.currentColor.r += (targetColor.r - p.currentColor.r) * 0.005;
-        p.currentColor.g += (targetColor.g - p.currentColor.g) * 0.005;
-        p.currentColor.b += (targetColor.b - p.currentColor.b) * 0.005;
-        
-        p.el.style.transform = `translate3d(${finalX}px, ${finalY}px, 0) scale(${p.scale})`;
-        p.el.style.opacity = p.currentOpacity;
-        p.el.style.filter = `blur(${p.currentBlur}px)`;
-        p.el.style.setProperty('--p-r', Math.round(p.currentColor.r));
-        p.el.style.setProperty('--p-g', Math.round(p.currentColor.g));
-        p.el.style.setProperty('--p-b', Math.round(p.currentColor.b));
-    });
+        // --- LAYER 5: Drifting FIREFLIES ---
+        fireflies.forEach((ff) => {
+            ff.angle += ff.speed;
+            ff.wobbleSeed += ff.wobbleSpeed;
 
-    requestAnimationFrame(animateParticles);
-}
+            const windX = Math.sin(ff.wobbleSeed) * 0.12 * ff.speedMult;
+            const windY = Math.cos(ff.wobbleSeed * 0.8) * 0.12 * ff.speedMult;
 
-if (particlesContainer) {
-    animateParticles();
+            ff.targetVx = Math.cos(ff.angle) * 0.18 * ff.speedMult + windX;
+            ff.targetVy = Math.sin(ff.angle) * 0.18 * ff.speedMult + windY;
+
+            let fx = (ff.baseX + smoothMouseOffsetX * ff.parallaxFactor) % width;
+            if (fx < 0) fx += width;
+            let fy = (ff.baseY + smoothMouseOffsetY * ff.parallaxFactor - interpolatedScrollY * ff.parallaxFactor) % height;
+            if (fy < 0) fy += height;
+
+            // Cursor repelling
+            const dx = fx - mouseX;
+            const dy = fy - mouseY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < 180) {
+                const force = Math.pow((180 - dist) / 180, 2);
+                ff.targetVx += (dx / dist) * force * 0.45 * ff.speedMult;
+                ff.targetVy += (dy / dist) * force * 0.45 * ff.speedMult;
+            }
+
+            ff.vx += (ff.targetVx - ff.vx) * 0.03;
+            ff.vy += (ff.targetVy - ff.vy) * 0.03;
+
+            ff.baseX += ff.vx;
+            ff.baseY += ff.vy;
+
+            // Wrap boundaries
+            if (ff.baseX < -50) ff.baseX = width + 50;
+            if (ff.baseX > width + 50) ff.baseX = -50;
+            if (ff.baseY < -50) ff.baseY = height + 50;
+            if (ff.baseY > height + 50) ff.baseY = -50;
+
+            const baseOp = isLight ? 0.22 : 0.65;
+            const fireflyOpacity = ff.baseOpacity * baseOp;
+
+            let color;
+            if (isLight) {
+                color = { r: 109, g: 76, b: 255 };
+            } else {
+                const FIREFLY_PALETTE_DARK = [
+                    { r: 108, g: 77, b: 255 },
+                    { r: 139, g: 92, b: 255 },
+                    { r: 167, g: 123, b: 255 },
+                    { r: 198, g: 107, b: 255 }
+                ];
+                color = FIREFLY_PALETTE_DARK[ff.colorIndex];
+            }
+
+            let grad = bgCtx.createRadialGradient(fx, fy, 0, fx, fy, ff.size * 1.5);
+            grad.addColorStop(0, `rgba(${color.r}, ${color.g}, ${color.b}, ${fireflyOpacity})`);
+            grad.addColorStop(0.3, `rgba(${color.r}, ${color.g}, ${color.b}, ${fireflyOpacity * 0.4})`);
+            grad.addColorStop(1, "transparent");
+
+            bgCtx.fillStyle = grad;
+            bgCtx.beginPath();
+            bgCtx.arc(fx, fy, ff.size * 1.5, 0, Math.PI * 2);
+            bgCtx.fill();
+        });
+
+        // --- LAYER 6: FOREGROUND BLURRED PARTICLES (Foreground Canvas) ---
+        fgCtx.save();
+        fgCtx.globalCompositeOperation = isLight ? "multiply" : "screen";
+
+        foregroundParticles.forEach((p) => {
+            p.angle += p.speed;
+            p.baseX += p.vx + Math.sin(p.angle) * 0.03;
+            p.baseY += p.vy + Math.cos(p.angle) * 0.03;
+
+            // Wrap boundaries
+            if (p.baseX < -150) p.baseX = width + 150;
+            if (p.baseX > width + 150) p.baseX = -150;
+            if (p.baseY < -150) p.baseY = height + 150;
+            if (p.baseY > height + 150) p.baseY = -150;
+
+            let finalX = (p.baseX + smoothMouseOffsetX * p.parallaxFactor) % width;
+            if (finalX < 0) finalX += width;
+            let finalY = (p.baseY + smoothMouseOffsetY * p.parallaxFactor - interpolatedScrollY * p.parallaxFactor) % height;
+            if (finalY < 0) finalY += height;
+
+            const baseOp = isLight ? 0.015 : 0.055;
+
+            let grad = fgCtx.createRadialGradient(finalX, finalY, 0, finalX, finalY, p.size);
+            if (isLight) {
+                grad.addColorStop(0, `rgba(109, 76, 255, ${baseOp})`);
+                grad.addColorStop(0.5, `rgba(109, 76, 255, ${baseOp * 0.3})`);
+                grad.addColorStop(1, "transparent");
+            } else {
+                grad.addColorStop(0, `rgba(169, 150, 255, ${baseOp})`);
+                grad.addColorStop(0.5, `rgba(169, 150, 255, ${baseOp * 0.3})`);
+                grad.addColorStop(1, "transparent");
+            }
+
+            fgCtx.fillStyle = grad;
+            fgCtx.beginPath();
+            fgCtx.arc(finalX, finalY, p.size, 0, Math.PI * 2);
+            fgCtx.fill();
+        });
+        fgCtx.restore();
+
+        requestAnimationFrame(animateConstellations);
+    }
+
+    animateConstellations();
 }
 
 /* RESPONSIVE NAVBAR - ZOOM & VIEWPORT DETECTION */

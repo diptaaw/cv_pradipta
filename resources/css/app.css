@@ -1545,6 +1545,26 @@ body .noise {
     z-index: 0;
 }
 
+.particles canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    pointer-events: none;
+}
+
+/* Clear CSS fallback gradients and elements when Canvas is active */
+body.canvas-active::before,
+body.canvas-active::after {
+    background: transparent !important;
+}
+
+body.canvas-active .bg-orb {
+    display: none !important;
+}
+
 body {
     position: relative;
 }
