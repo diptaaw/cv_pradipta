@@ -38,15 +38,15 @@
 
             <div>
 
-                <h1 class="name">
+                <h1 class="name reveal">
                     {{ $about->headline ?? 'Pradipta Adicandra Wicaksono' }}
                 </h1>
 
-                <h2 class="title">
+                <h2 class="title reveal">
                     {{ $about->subheadline ?? 'Multimedia & Broadcasting Engineer' }}
                 </h2>
 
-                <p class="description">
+                <p class="description reveal">
                     {{ $about->short_intro ?? 'Exploring the intersection of visuals, storytelling, and digital experiences.' }}
                 </p>
 
@@ -68,7 +68,7 @@
 
             </div>
 
-            <div class="socials">
+            <div class="socials reveal">
 
                 <!-- Admin trigger -->
                 <a href="{{ route('admin.login') }}" class="social-link admin-trigger" aria-label="Admin Portal" title="Admin">
@@ -112,32 +112,32 @@
 
         <div class="right-panel">
 
-            <section id="about" class="section reveal">
+            <section id="about" class="section">
 
                 @if(isset($about) && is_array($about->paragraphs) && count($about->paragraphs))
                     @foreach($about->paragraphs as $paragraph)
-                        <p>{{ $paragraph }}</p>
+                        <p class="reveal">{{ $paragraph }}</p>
                     @endforeach
                 @else
-                    <p>
+                    <p class="reveal">
                         I'm a Multimedia Broadcasting student at <b> PENS (EEPIS) </b> with a strong interest in visual storytelling, creative production, and digital media. I enjoy transforming ideas into engaging visual experiences through photography, videography, live streaming, and design.
                     </p>
 
-                    <p>
+                    <p class="reveal">
                         Over the past few years, I've worked on various creative and organizational projects, from commercial photography and content production to multimedia events and student organizations. These experiences helped me develop not only technical skills, but also adaptability, communication, and collaborative event planning in fast-paced production environments.
                     </p>
 
-                    <p>
+                    <p class="reveal">
                         I'm especially interested in the creative process behind media production: how visuals, lighting, composition, and storytelling can shape emotions and audience experience.
                     </p>
                 @endif
 
             </section>
 
-            <section id="experience" class="section reveal">
+            <section id="experience" class="section">
 
                 @if($experiences->isEmpty())
-                    <div class="card">
+                    <div class="card reveal">
                         <div class="card-year">2025 — PRESENT</div>
                         <div class="card-content">
                             <h3>Staff PSDM · HIMA Multimedia Broadcasting PENS</h3>
@@ -154,7 +154,7 @@
                     </div>
                 @else
                     @foreach($experiences as $experience)
-                        <div class="card">
+                        <div class="card reveal">
                             <div class="card-year">{{ $experience->year ?? '—' }}</div>
                             <div class="card-content">
                                 <h3>{{ $experience->title }}@if($experience->organization) · {{ $experience->organization }}@endif</h3>
@@ -171,17 +171,17 @@
                     @endforeach
                 @endif
 
-                <a href="/resume" class="section-link">
+                <a href="/resume" class="section-link reveal">
                     View Full Résumé
                     <span>↗</span>
                 </a>
 
             </section>
 
-            <section id="projects" class="section reveal">
+            <section id="projects" class="section">
 
                 @if($projects->isEmpty())
-                    <div class="card">
+                    <div class="card reveal">
                         <img loading="lazy" src="{{ asset('images/projects/wildlife.png') }}" alt="Wildlife Project" class="project-image">
                         <div class="card-content">
                             <h3 class="project-title">Interactive Wildlife Park <span class="arrow">↗</span></h3>
@@ -197,7 +197,7 @@
                     </div>
                 @else
                     @foreach($projects as $project)
-                        <div class="card">
+                        <div class="card reveal">
                             <img loading="lazy" src="{{ $project->thumbnail ? asset($project->thumbnail) : asset('images/projects/wildlife.png') }}" alt="{{ $project->title }}" class="project-image">
                             <div class="card-content">
                                 <h3 class="project-title">{{ $project->title }} <span class="arrow">↗</span></h3>
@@ -214,7 +214,7 @@
                     @endforeach
                 @endif
 
-                <a href="/archive" class="section-link">
+                <a href="/archive" class="section-link reveal">
                     View Full Project Archive
                     <span>↗</span>
                 </a>

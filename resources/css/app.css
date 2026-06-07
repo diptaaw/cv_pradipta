@@ -1378,6 +1378,11 @@ body .noise {
         filter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.reveal.reveal-from-top {
+    transform:
+        translateY(-20px);
+}
+
 .reveal.active {
     opacity: 1;
 

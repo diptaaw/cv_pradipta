@@ -410,36 +410,154 @@ document.addEventListener("mousemove", (e) => {
 });
 
 /* REVEAL ON SCROLL */
+function initScrollReveal() {
+    const observerOptions = {
+        root: null,
+        rootMargin: "80px 0px 80px 0px", // reveals elements 80px before they enter viewport
+        threshold: 0.12 // 12% visibility threshold
+    };
 
-const reveals =
-    document.querySelectorAll(".reveal");
+    function setupTransitionListener(el) {
+        if (el.dataset.revealListenerAttached) return;
+        el.dataset.revealListenerAttached = "true";
 
-function revealSections() {
-
-    reveals.forEach((reveal) => {
-
-        const windowHeight =
-            window.innerHeight;
-
-        const revealTop =
-            reveal.getBoundingClientRect().top;
-
-        if (revealTop < windowHeight - 100) {
-
-            reveal.classList.add("active");
-
+        // Set initial state
+        if (!el.dataset.state) {
+            el.dataset.state = el.classList.contains("active") ? "visible" : "hidden";
+            // If it is hidden, initialize directional class based on current position
+            if (el.dataset.state === "hidden") {
+                const rect = el.getBoundingClientRect();
+                if (rect.bottom < 0) {
+                    el.classList.add("reveal-from-top");
+                } else {
+                    el.classList.remove("reveal-from-top");
+                }
+            }
         }
 
+        el.addEventListener("transitionend", (e) => {
+            if (e.target !== el) return;
+
+            const state = el.dataset.state;
+            if (state === "revealing") {
+                el.dataset.state = "visible";
+                console.log(`[Reveal Debug] State transitioned to 'visible' for element:`, el);
+            } else if (state === "hiding") {
+                el.dataset.state = "hidden";
+                console.log(`[Reveal Debug] State transitioned to 'hidden' for element:`, el);
+            }
+        });
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+        const entering = [];
+
+        entries.forEach((entry) => {
+            const el = entry.target;
+            setupTransitionListener(el);
+
+            const rect = entry.boundingClientRect;
+            const currentState = el.dataset.state || "hidden";
+
+            if (entry.isIntersecting) {
+                if (currentState === "visible" || currentState === "revealing") {
+                    if (!el.classList.contains("active")) {
+                        el.classList.add("active");
+                    }
+                    return;
+                }
+
+                console.log(`[Reveal Debug] Element entering viewport, state hidden -> revealing:`, el);
+                el.dataset.state = "revealing";
+                entering.push(el);
+            } else {
+                if (currentState === "hidden" || currentState === "hiding") {
+                    return;
+                }
+
+                console.log(`[Reveal Debug] Element leaving viewport, state visible -> hiding:`, el);
+                el.dataset.state = "hiding";
+                
+                el.classList.remove("active");
+                el.style.transitionDelay = "0s";
+
+                const exitedTop = rect.top < (window.innerHeight / 2);
+                if (exitedTop) {
+                    el.classList.add("reveal-from-top");
+                } else {
+                    el.classList.remove("reveal-from-top");
+                }
+            }
+        });
+
+        if (entering.length > 0) {
+            entering.sort((a, b) => {
+                return a.getBoundingClientRect().top - b.getBoundingClientRect().top;
+            });
+
+            entering.forEach((el, index) => {
+                el.style.transitionDelay = `${index * 0.1}s`;
+                el.classList.add("active");
+                el.classList.remove("reveal-from-top");
+            });
+        }
+    }, observerOptions);
+
+    // Observe initial elements
+    document.querySelectorAll(".reveal").forEach((el) => {
+        setupTransitionListener(el);
+        observer.observe(el);
     });
 
+    // Monitor for dynamically added elements (e.g. from filtering or AJAX updates)
+    const mutationObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    if (node.matches(".reveal")) {
+                        setupTransitionListener(node);
+                        observer.observe(node);
+                    }
+                    node.querySelectorAll(".reveal").forEach((el) => {
+                        setupTransitionListener(el);
+                        observer.observe(el);
+                    });
+                }
+            });
+        });
+    });
+
+    mutationObserver.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+
+    // Periodic safety integrity check to auto-recover any stuck elements
+    setInterval(() => {
+        const reveals = document.querySelectorAll(".reveal");
+        reveals.forEach((el) => {
+            const rect = el.getBoundingClientRect();
+            // Check if element is inside the actual viewport (with a 20px safety margin)
+            const inViewport = (rect.bottom > 20) && (rect.top < window.innerHeight - 20);
+            const state = el.dataset.state || "hidden";
+
+            if (inViewport && (state === "hidden" || state === "hiding") && !el.classList.contains("active")) {
+                console.warn("[Reveal Debug] WARNING: Element is visible in viewport but stuck in state:", state, el);
+                el.dataset.state = "revealing";
+                el.classList.remove("reveal-from-top");
+                el.style.transitionDelay = "0s";
+                el.classList.add("active");
+            }
+        });
+    }, 3000);
 }
 
-window.addEventListener(
-    "scroll",
-    revealSections
-);
+if (document.readyState === "complete") {
+    initScrollReveal();
+} else {
+    window.addEventListener("DOMContentLoaded", initScrollReveal);
+}
 
-revealSections();
 
 /* ACTIVE NAVIGATION */
 

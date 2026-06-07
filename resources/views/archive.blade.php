@@ -65,8 +65,8 @@
         </div>
     </section>
 
-    <section class="archive-list reveal" aria-label="Project archive list">
-        <div class="archive-list-head">
+    <section class="archive-list" aria-label="Project archive list">
+        <div class="archive-list-head reveal">
             <span>Year</span>
             <span>Project</span>
             <span>Category</span>
@@ -82,7 +82,7 @@
                 $githubUrl = $project->github_url ?? $project->github_link;
             @endphp
 
-            <article class="archive-row">
+            <article class="archive-row reveal">
                 <div class="archive-year">{{ $year }}</div>
 
                 <div class="archive-project-main">
@@ -179,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             const row = document.createElement('article');
-            row.className = 'archive-row';
+            row.className = 'archive-row reveal';
             row.innerHTML = `
                 <div class="archive-year">${year}</div>
 
