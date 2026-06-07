@@ -102,35 +102,33 @@ const navLinks =
 window.addEventListener("scroll", () => {
 
     let current = "";
+    const threshold = 140; // Viewport trigger line (pixels from top)
 
     sections.forEach((section) => {
-
-        const sectionTop =
-            section.offsetTop;
-
-        if (scrollY >= sectionTop - 200) {
-
-            current =
-                section.getAttribute("id");
-
+        const rect = section.getBoundingClientRect();
+        if (rect.top <= threshold && rect.bottom >= threshold) {
+            current = section.getAttribute("id");
         }
-
     });
 
-    navLinks.forEach((link) => {
-
-        link.classList.remove("active");
-
-        if (
-            link.getAttribute("href")
-            === `#${current}`
-        ) {
-
-            link.classList.add("active");
-
+    // Fallback for reaching the absolute bottom of the page
+    if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 50) {
+        if (sections.length > 0) {
+            current = sections[sections.length - 1].getAttribute("id");
         }
+    }
 
-    });
+    if (current) {
+        navLinks.forEach((link) => {
+            link.classList.remove("active");
+            if (
+                link.getAttribute("href")
+                === `#${current}`
+            ) {
+                link.classList.add("active");
+            }
+        });
+    }
 
 });
 
@@ -1083,6 +1081,33 @@ const initTagChips = () => {
         chip.style.setProperty('--shine-angle', `${angle}deg`);
         chip.style.setProperty('--shine-opacity', baseOpacity);
 
+        // Physical mouse-based 3D tilting rotation and surface reflection alignment
+        chip.addEventListener("mousemove", (e) => {
+            const rect = chip.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+
+            const rotateY = ((x - centerX) / centerX) * 8;
+            const rotateX = -((y - centerY) / centerY) * 8;
+
+            const tiltX = ((x - centerX) / centerX).toFixed(2);
+            const tiltY = ((y - centerY) / centerY).toFixed(2);
+
+            chip.style.setProperty('--rotate-x', `${rotateX.toFixed(2)}deg`);
+            chip.style.setProperty('--rotate-y', `${rotateY.toFixed(2)}deg`);
+            chip.style.setProperty('--tilt-x', tiltX);
+            chip.style.setProperty('--tilt-y', tiltY);
+        });
+
+        chip.addEventListener("mouseleave", () => {
+            chip.style.removeProperty('--rotate-x');
+            chip.style.removeProperty('--rotate-y');
+            chip.style.removeProperty('--tilt-x');
+            chip.style.removeProperty('--tilt-y');
+        });
+
         const searchGoogle = () => {
             const query = encodeURIComponent(tagName);
             window.open(
@@ -1131,10 +1156,147 @@ const initTagChips = () => {
     });
 };
 
-// Initialize tag chips interaction
+// Expandable descriptions with smooth height transitions and CSS line clamping
+const initExpandableDescriptions = () => {
+    const setups = (wrapper) => {
+        const text = wrapper.querySelector(".description-text");
+        if (!text) return;
+
+        const lastText = text.textContent;
+        if (wrapper.dataset.expandInitialized && wrapper.dataset.lastText === lastText) {
+            return;
+        }
+        wrapper.dataset.expandInitialized = "true";
+        wrapper.dataset.lastText = lastText;
+
+        // Clean up any existing view-more link
+        const oldLink = wrapper.parentNode.querySelector(".view-more-link");
+        if (oldLink) oldLink.remove();
+
+        // Apply clamped class to measure overflow
+        text.classList.add("clamped");
+        wrapper.style.maxHeight = "none";
+
+        const isOverflowing = text.scrollHeight > text.clientHeight;
+
+        if (!isOverflowing) {
+            text.classList.remove("clamped");
+            wrapper.style.maxHeight = "none";
+            return;
+        }
+
+        // Create the expandable control button
+        const link = document.createElement("a");
+        link.className = "view-more-link";
+        link.href = "#";
+        link.textContent = "View More...";
+        link.setAttribute("role", "button");
+        link.setAttribute("tabindex", "0");
+        link.setAttribute("aria-expanded", "false");
+
+        wrapper.parentNode.insertBefore(link, wrapper.nextSibling);
+
+        let isExpanded = false;
+
+        const toggleExpand = (e) => {
+            if (e) e.preventDefault();
+
+            if (isExpanded) {
+                // Collapse back to 3 lines
+                const fullHeight = text.scrollHeight;
+                wrapper.style.maxHeight = `${fullHeight}px`;
+                wrapper.offsetHeight; // force reflow
+
+                text.classList.add("clamped");
+                const clampedHeight = text.clientHeight;
+
+                wrapper.style.maxHeight = `${clampedHeight}px`;
+                link.textContent = "View More...";
+                link.setAttribute("aria-expanded", "false");
+                isExpanded = false;
+            } else {
+                // Expand to show full description
+                const clampedHeight = text.clientHeight;
+                wrapper.style.maxHeight = `${clampedHeight}px`;
+                wrapper.offsetHeight; // force reflow
+
+                text.classList.remove("clamped");
+                const fullHeight = text.scrollHeight;
+
+                wrapper.style.maxHeight = `${fullHeight}px`;
+                link.textContent = "View Less...";
+                link.setAttribute("aria-expanded", "true");
+                isExpanded = true;
+            }
+        };
+
+        wrapper.addEventListener("transitionend", () => {
+            if (isExpanded) {
+                wrapper.style.maxHeight = "none";
+            }
+        });
+
+        link.addEventListener("click", toggleExpand);
+        link.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                toggleExpand();
+            }
+        });
+    };
+
+    // Setup initially loaded descriptions
+    const wrappers = document.querySelectorAll(".description-wrapper");
+    wrappers.forEach(setups);
+
+    // Watch for dynamic modifications (e.g. in CMS preview cards or filters)
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    if (node.matches(".description-wrapper")) {
+                        setups(node);
+                    } else {
+                        const subs = node.querySelectorAll(".description-wrapper");
+                        subs.forEach(setups);
+                    }
+                }
+            });
+            // Also monitor text content changes directly for dynamic live previews
+            if (mutation.type === "characterData" || mutation.type === "childList") {
+                const target = mutation.target;
+                let element = null;
+                if (target.nodeType === Node.TEXT_NODE) {
+                    element = target.parentElement;
+                } else if (target.nodeType === Node.ELEMENT_NODE) {
+                    element = target;
+                }
+                if (element) {
+                    const textNode = element.closest(".description-text");
+                    if (textNode) {
+                        const wrapper = textNode.closest(".description-wrapper");
+                        if (wrapper) setups(wrapper);
+                    }
+                }
+            }
+        });
+    });
+
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        characterData: true
+    });
+};
+
+// Initialize tag chips & expandable descriptions interaction
 if (document.readyState === "complete") {
     initTagChips();
+    initExpandableDescriptions();
 } else {
-    window.addEventListener("load", initTagChips);
+    window.addEventListener("load", () => {
+        initTagChips();
+        initExpandableDescriptions();
+    });
 }
 

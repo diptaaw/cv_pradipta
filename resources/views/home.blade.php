@@ -141,9 +141,11 @@
                         <div class="card-year">2025 — PRESENT</div>
                         <div class="card-content">
                             <h3>Staff PSDM · HIMA Multimedia Broadcasting PENS</h3>
-                            <p>
-                                Contributed to student development programs and organizational activities through team coordination, recruitment support, and collaborative event planning.
-                            </p>
+                            <div class="description-wrapper">
+                                <p class="description-text">
+                                    Contributed to student development programs and organizational activities through team coordination, recruitment support, and collaborative event planning.
+                                </p>
+                            </div>
                             <div class="tags">
                                 <span>Leadership</span>
                                 <span>Team Coordination</span>
@@ -155,8 +157,10 @@
                         <div class="card">
                             <div class="card-year">{{ $experience->year ?? '—' }}</div>
                             <div class="card-content">
-                                <h3>{{ $experience->title }}</h3>
-                                <p>{{ $experience->description }}</p>
+                                <h3>{{ $experience->title }}@if($experience->organization) · {{ $experience->organization }}@endif</h3>
+                                <div class="description-wrapper">
+                                    <p class="description-text">{{ $experience->description }}</p>
+                                </div>
                                 <div class="tags">
                                     @foreach($experience->tags ?? [] as $tag)
                                         <span>{{ $tag->name }}</span>
@@ -181,7 +185,9 @@
                         <img loading="lazy" src="{{ asset('images/projects/wildlife.png') }}" alt="Wildlife Project" class="project-image">
                         <div class="card-content">
                             <h3 class="project-title">Interactive Wildlife Park <span class="arrow">↗</span></h3>
-                            <p>An educational wildlife park built in Unity featuring interactive systems, dynamic weather, NPC behavior, and immersive environment exploration.</p>
+                            <div class="description-wrapper">
+                                <p class="description-text">An educational wildlife park built in Unity featuring interactive systems, dynamic weather, NPC behavior, and immersive environment exploration.</p>
+                            </div>
                             <div class="tags">
                                 <span>Unity</span>
                                 <span>C#</span>
@@ -195,7 +201,9 @@
                             <img loading="lazy" src="{{ $project->thumbnail ? asset($project->thumbnail) : asset('images/projects/wildlife.png') }}" alt="{{ $project->title }}" class="project-image">
                             <div class="card-content">
                                 <h3 class="project-title">{{ $project->title }} <span class="arrow">↗</span></h3>
-                                <p>{{ $project->description }}</p>
+                                <div class="description-wrapper">
+                                    <p class="description-text">{{ $project->description }}</p>
+                                </div>
                                 <div class="tags">
                                     @foreach($project->technologies ?? [] as $tech)
                                         <span>{{ $tech }}</span>

@@ -171,7 +171,9 @@
                                 <img id="preview-thumb-img" src="{{ $project->thumbnail ? asset($project->thumbnail) : asset('images/projects/wildlife.png') }}" alt="Project Image" class="project-image" style="width: 100px; height: 65px; border-radius: 8px; object-fit: cover;">
                                 <div class="card-content" style="flex: 1;">
                                     <h3 id="preview-title" class="project-title" style="font-size: 0.95rem; font-weight: 700; color: white; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;"></h3>
-                                    <p id="preview-desc" style="font-size: 0.8rem; color: rgba(255,255,255,0.62); line-height: 1.5; margin-bottom: 10px;"></p>
+                                    <div class="description-wrapper">
+                                        <p id="preview-desc" class="description-text" style="font-size: 0.8rem; color: rgba(255,255,255,0.62); line-height: 1.5; margin-bottom: 10px;"></p>
+                                    </div>
                                     <div class="tags" id="preview-tags"></div>
                                 </div>
                             </div>

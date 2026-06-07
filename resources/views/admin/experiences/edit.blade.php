@@ -116,7 +116,9 @@
                                 <div class="card-year" id="preview-year" style="font-size: 0.78rem; font-weight: 700; color: rgba(255,255,255,0.42);"></div>
                                 <div class="card-content">
                                     <h3 id="preview-title" style="font-size: 0.95rem; font-weight: 700; color: white; margin-bottom: 6px; line-height: 1.4;"></h3>
-                                    <p id="preview-desc" style="font-size: 0.8rem; color: rgba(255,255,255,0.62); line-height: 1.5; margin-bottom: 10px;"></p>
+                                    <div class="description-wrapper">
+                                        <p id="preview-desc" class="description-text" style="font-size: 0.8rem; color: rgba(255,255,255,0.62); line-height: 1.5; margin-bottom: 10px;"></p>
+                                    </div>
                                     <div class="tags" id="preview-tags"></div>
                                 </div>
                             </div>

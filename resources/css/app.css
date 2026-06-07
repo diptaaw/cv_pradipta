@@ -991,6 +991,7 @@ body::after {
 
 .section {
     margin-bottom: 80px;
+    scroll-margin-top: 120px;
 }
 
 .section p {
@@ -1166,23 +1167,23 @@ body::after {
     transform-style: preserve-3d;
 
     transition:
-        transform 0.25s ease,
+        transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
         box-shadow 0.25s ease,
         background 0.25s ease,
         color 0.25s ease;
 
     box-shadow:
-        0 4px 12px rgba(93, 61, 245, 0.18);
+        0 4px 18px rgba(123, 97, 255, 0.18);
 
     will-change: transform;
 }
 
 .tags span:hover,
 .archive-tech-list span:hover {
-    transform: translateY(-2px);
+    transform: perspective(600px) rotateX(var(--rotate-x, 0deg)) rotateY(var(--rotate-y, 0deg)) translateY(-2px);
 
     box-shadow:
-        0 0 22px rgba(123, 97, 255, 0.28);
+        0 8px 24px rgba(123, 97, 255, 0.24);
 
     background:
         linear-gradient(135deg,
@@ -1231,7 +1232,8 @@ body::after {
         transparent 100%
     );
 
-    transform: rotate(var(--shine-angle, 15deg));
+    /* Shine reacts dynamically to tilt position */
+    transform: rotate(var(--shine-angle, 15deg)) translate3d(calc(var(--tilt-x, 0) * 12px), calc(var(--tilt-y, 0) * 12px), 0);
     pointer-events: none;
     mix-blend-mode: screen;
     filter: blur(4px);
@@ -1241,8 +1243,8 @@ body::after {
     animation: ambientShine var(--shine-duration, 6s) ease-in-out infinite;
     animation-delay: var(--shine-delay, 0s);
 
-    /* Transition for hover brightness/glow adjustments */
-    transition: opacity 0.4s ease, filter 0.4s ease;
+    /* Transition for hover brightness/glow adjustments and smooth leaves */
+    transition: opacity 0.4s ease, filter 0.4s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .tags span:hover::after,
@@ -1885,7 +1887,7 @@ body {
     overflow: hidden;
     cursor: pointer;
     transition:
-        transform 0.25s ease,
+        transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
         box-shadow 0.25s ease,
         background 0.25s ease,
         color 0.25s ease;
@@ -2795,9 +2797,9 @@ body[data-theme="light"] .archive-tech-list span:hover {
         linear-gradient(135deg,
             var(--light-accent),
             #8f73ff);
-    transform: translateY(-2px);
+    transform: perspective(600px) rotateX(var(--rotate-x, 0deg)) rotateY(var(--rotate-y, 0deg)) translateY(-2px);
     box-shadow:
-        0 8px 22px rgba(109, 76, 255, 0.22);
+        0 8px 24px rgba(109, 76, 255, 0.20);
 }
 
 body[data-theme="light"] .archive-stats,
@@ -3211,8 +3213,8 @@ body[data-theme="light"] .archive-tech-list span:hover {
     color: #2D2358;
     background: #E8E2FF;
     border-color: rgba(124, 92, 255, 0.24);
-    transform: translateY(-2px);
-    box-shadow: 0 0 22px rgba(124, 92, 255, 0.28);
+    transform: perspective(600px) rotateX(var(--rotate-x, 0deg)) rotateY(var(--rotate-y, 0deg)) translateY(-2px);
+    box-shadow: 0 8px 24px rgba(124, 92, 255, 0.20);
 }
 
 body[data-theme="light"] .archive-stats,
@@ -4472,4 +4474,52 @@ body[data-theme="light"] .resume-download.disabled {
         flex-wrap: wrap;
     }
 }
+
+/* Description Line Clamping and Expandable View More/Less Links */
+.description-wrapper {
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    position: relative;
+    margin-bottom: 18px;
+}
+
+.description-text {
+    margin-bottom: 0 !important;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.description-text.clamped {
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+}
+
+.view-more-link {
+    display: inline-block;
+    color: #a996ff;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 6px;
+    margin-bottom: 12px;
+    transition: color 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
+    opacity: 0.8;
+    text-decoration: none;
+}
+
+.view-more-link:hover {
+    color: #c7b8ff;
+    opacity: 1;
+    transform: translateY(-1px);
+}
+
+body[data-theme="light"] .view-more-link {
+    color: var(--light-accent);
+}
+
+body[data-theme="light"] .view-more-link:hover {
+    color: var(--light-accent-deep);
+}
+
 
