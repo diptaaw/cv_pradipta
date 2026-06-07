@@ -192,135 +192,279 @@ animateSpotlight();
 const particlesContainer =
     document.querySelector(".particles");
 
+let particlesOverlayContainer = document.querySelector(".particles-overlay");
+if (!particlesOverlayContainer && particlesContainer) {
+    particlesOverlayContainer = document.createElement("div");
+    particlesOverlayContainer.classList.add("particles", "particles-overlay");
+    particlesOverlayContainer.style.zIndex = "15";
+    particlesOverlayContainer.style.pointerEvents = "none";
+    document.body.appendChild(particlesOverlayContainer);
+}
+
 const particles = [];
 
-const PARTICLE_COUNT = 8;
+let isMobile = window.innerWidth <= 768;
+let isTablet = window.innerWidth > 768 && window.innerWidth <= 1024;
+let LAYER_1_COUNT = isMobile ? 6 : (isTablet ? 10 : 16);
+let LAYER_2_COUNT = isMobile ? 8 : (isTablet ? 14 : 22);
+let LAYER_3_COUNT = isMobile ? 4 : (isTablet ? 8 : 12);
 
-for(let i = 0; i < PARTICLE_COUNT; i++){
+const FIREFLY_PALETTE = [
+    { r: 108, g: 77, b: 255 },  // 0: Deep Violet
+    { r: 139, g: 92, b: 255 },  // 1: Electric Purple
+    { r: 167, g: 123, b: 255 }, // 2: Soft Lavender
+    { r: 198, g: 107, b: 255 }, // 3: Pinkish Purple
+    { r: 217, g: 92, b: 255 },  // 4: Orchid
+    { r: 224, g: 82, b: 255 },  // 5: Magenta Violet
+    { r: 242, g: 91, b: 255 }   // 6: Soft Neon Magenta
+];
 
-    const particle =
-        document.createElement("div");
+function getLayerColorIndex(layer) {
+    let rand = Math.random();
+    if (layer === 1) {
+        return rand < 0.6 ? 0 : 1;
+    } else if (layer === 2) {
+        if (rand < 0.4) return 1;
+        if (rand < 0.7) return 2;
+        return 3;
+    } else {
+        if (rand < 0.4) return 3;
+        if (rand < 0.7) return 4;
+        if (rand < 0.9) return 5;
+        return 6;
+    }
+}
 
+function createParticle(layer) {
+    const particle = document.createElement("div");
     particle.classList.add("particle");
-
-    if (particlesContainer) {
-        particlesContainer.appendChild(
-            particle
-        );
+    
+    let size, opacity, blur, speedMult, parallaxFactor, isOverlay = false;
+    
+    if (layer === 1) {
+        size = 3 + Math.random() * 5;
+        opacity = 0.35 + Math.random() * 0.2;
+        blur = 1 + Math.random() * 2;
+        speedMult = 0.4;
+        parallaxFactor = 0.15;
+    } else if (layer === 2) {
+        size = 12 + Math.random() * 18;
+        opacity = 0.45 + Math.random() * 0.35;
+        blur = 3 + Math.random() * 4;
+        speedMult = 1.4;
+        parallaxFactor = 0.8;
+    } else {
+        size = 60 + Math.random() * 40;
+        opacity = 0.4 + Math.random() * 0.4;
+        blur = 18 + Math.random() * 22;
+        speedMult = 2.5 + Math.random() * 1;
+        parallaxFactor = 3.0;
+        isOverlay = Math.random() > 0.3;
     }
 
+    if (isOverlay) {
+        if (particlesOverlayContainer) particlesOverlayContainer.appendChild(particle);
+        particle.style.mixBlendMode = "screen";
+    } else {
+        if (particlesContainer) particlesContainer.appendChild(particle);
+    }
+    
+    const baseColorIndex = getLayerColorIndex(layer);
+    const color = FIREFLY_PALETTE[baseColorIndex];
+
     const obj = {
-
-    el: particle,
-
-    x:
-        Math.random() * window.innerWidth,
-
-    y:
-        Math.random() * window.innerHeight,
-
-    vx:
-        (Math.random() - 0.5) * 0.3,
-
-    vy:
-        (Math.random() - 0.5) * 0.3,
-
-    size:
-        6 + Math.random() * 18,
-
-    angle:
-        Math.random() * Math.PI * 2,
-
-    speed:
-        0.002 + Math.random() * 0.003
-
+        el: particle,
+        layer: layer,
+        baseX: Math.random() * window.innerWidth,
+        baseY: Math.random() * window.innerHeight,
+        vx: (Math.random() - 0.5) * 0.5 * speedMult,
+        vy: (Math.random() - 0.5) * 0.5 * speedMult,
+        targetVx: 0,
+        targetVy: 0,
+        size: size,
+        angle: Math.random() * Math.PI * 2,
+        speed: (0.002 + Math.random() * 0.003) * speedMult,
+        baseOpacity: opacity,
+        currentOpacity: 0,
+        baseBlur: blur,
+        currentBlur: blur,
+        parallaxFactor: parallaxFactor,
+        speedMult: speedMult,
+        isOverlay: isOverlay,
+        checkOffset: Math.floor(Math.random() * 10),
+        overlapTargetMult: 1,
+        overlapOpacityMult: 1,
+        wobbleSeed: Math.random() * 1000,
+        wobbleSpeed: 0.005 + Math.random() * 0.01,
+        isHero: false,
+        scale: 1,
+        colorIndex: baseColorIndex,
+        targetColorIndex: baseColorIndex,
+        colorNextChangeTime: Date.now() + 10000 + Math.random() * 10000,
+        currentColor: { r: color.r, g: color.g, b: color.b }
     };
 
-    particle.style.width =
-        `${obj.size}px`;
+    particle.style.width = `${obj.size}px`;
+    particle.style.height = `${obj.size}px`;
+    particle.style.opacity = obj.currentOpacity;
+    particle.style.filter = `blur(${obj.baseBlur}px)`;
+    particle.style.setProperty('--p-r', obj.currentColor.r);
+    particle.style.setProperty('--p-g', obj.currentColor.g);
+    particle.style.setProperty('--p-b', obj.currentColor.b);
+    
+    return obj;
+}
 
-    particle.style.height =
-        `${obj.size}px`;
+if (particlesContainer) {
+    for(let i = 0; i < LAYER_1_COUNT; i++) particles.push(createParticle(1));
+    for(let i = 0; i < LAYER_2_COUNT; i++) particles.push(createParticle(2));
+    for(let i = 0; i < LAYER_3_COUNT; i++) particles.push(createParticle(3));
+}
 
-    particle.style.animationDuration =
-        `${2 + Math.random() * 4}s`;
+let parallaxMouseX = window.innerWidth / 2;
+let parallaxMouseY = window.innerHeight / 2;
+let frameCount = 0;
+let lastHeroTime = Date.now();
 
-    particle.style.animationDelay =
-        `${Math.random() * 5}s`;
-
-    particles.push(obj);
-
-    particle.style.opacity =
-        0.3 + Math.random() * 0.7;
-
-    particle.style.filter =
-        `blur(${Math.random() * 2}px)`;
-
-
+function triggerHeroMoment() {
+    const foregroundParticles = particles.filter(p => p.layer === 3);
+    if (foregroundParticles.length > 0) {
+        const p = foregroundParticles[Math.floor(Math.random() * foregroundParticles.length)];
+        p.isHero = true;
+        p.targetColorIndex = Math.random() > 0.5 ? 5 : 6;
+        setTimeout(() => { 
+            p.isHero = false; 
+            p.targetColorIndex = p.colorIndex;
+        }, 1500 + Math.random() * 1000);
+    }
 }
 
 function animateParticles(){
+    frameCount++;
+    parallaxMouseX += (mouseX - parallaxMouseX) * 0.05;
+    parallaxMouseY += (mouseY - parallaxMouseY) * 0.05;
+    
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+    const parallaxOffsetX = (centerX - parallaxMouseX);
+    const parallaxOffsetY = (centerY - parallaxMouseY);
+
+    if (Date.now() - lastHeroTime > 6000 + Math.random() * 4000) {
+        triggerHeroMoment();
+        lastHeroTime = Date.now();
+    }
 
     particles.forEach((p) => {
+        p.angle += p.speed;
+        p.wobbleSeed += p.wobbleSpeed;
+        
+        const windX = Math.sin(p.wobbleSeed) * 0.35 * p.speedMult;
+        const windY = Math.cos(p.wobbleSeed * 0.8) * 0.35 * p.speedMult;
+        
+        p.targetVx = Math.cos(p.angle) * 0.25 * p.speedMult + windX;
+        p.targetVy = Math.sin(p.angle) * 0.25 * p.speedMult + windY;
+        
+        const screenX = p.baseX + (parallaxOffsetX * p.parallaxFactor) * 0.05;
+        const screenY = p.baseY + (parallaxOffsetY * p.parallaxFactor) * 0.05;
+        
+        const dx = screenX - mouseX;
+        const dy = screenY - mouseY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
 
-        const dx =
-            p.x - mouseX;
-
-        const dy =
-            p.y - mouseY;
-
-        const distance =
-            Math.sqrt(dx * dx + dy * dy);
-            p.angle += p.speed;
-            p.vx += Math.cos(p.angle) * 0.015;
-            p.vy += Math.sin(p.angle) * 0.015;
-            p.vx += (Math.random() - 0.5) * 0.01;
-            p.vy += (Math.random() - 0.5) * 0.01;
-        /* MOUSE FEAR */
-
-        if(distance < 180){
-
-            const force =
-                (180 - distance) / 180;
-
-            p.vx +=
-                (dx / distance) * force * 0.12;
-
-            p.vy +=
-                (dy / distance) * force * 0.12;
-
+        let interactionScale = 1;
+        if(distance < 300){
+            const force = Math.pow((300 - distance) / 300, 2);
+            p.targetVx += (dx / distance) * force * 0.6 * p.speedMult;
+            p.targetVy += (dy / distance) * force * 0.6 * p.speedMult;
+            interactionScale = 1 + force * 0.4;
         }
 
-        p.x += p.vx;
-        p.y += p.vy;
+        p.vx += (p.targetVx - p.vx) * 0.02;
+        p.vy += (p.targetVy - p.vy) * 0.02;
 
-        p.vx *= 0.985;
-        p.vy *= 0.985;
+        p.baseX += p.vx;
+        p.baseY += p.vy;
 
-        if(p.x < -100)
-            p.x = window.innerWidth + 100;
+        if(p.baseX < -200) p.baseX = window.innerWidth + 200;
+        if(p.baseX > window.innerWidth + 200) p.baseX = -200;
+        if(p.baseY < -200) p.baseY = window.innerHeight + 200;
+        if(p.baseY > window.innerHeight + 200) p.baseY = -200;
 
-        if(p.x > window.innerWidth + 100)
-            p.x = -100;
+        const finalX = p.baseX + (parallaxOffsetX * p.parallaxFactor) * 0.05;
+        const finalY = p.baseY + (parallaxOffsetY * p.parallaxFactor) * 0.05;
 
-        if(p.y < -100)
-            p.y = window.innerHeight + 100;
+        if (p.isOverlay && frameCount % 10 === p.checkOffset) {
+            if (finalX >= 0 && finalX <= window.innerWidth && finalY >= 0 && finalY <= window.innerHeight) {
+                const el = document.elementFromPoint(finalX, finalY);
+                if (el) {
+                    const tag = el.tagName.toLowerCase();
+                    const textTags = ['h1','h2','h3','h4','p','a','span','strong','em','button'];
+                    const isTextElement = textTags.includes(tag) || el.closest('a') || el.closest('.card-content') || el.closest('.name');
+                    p.overlapTargetMult = isTextElement ? 0.3 : 1;
+                }
+            } else {
+                p.overlapTargetMult = 1;
+            }
+        }
+        
+        p.overlapOpacityMult += (p.overlapTargetMult - p.overlapOpacityMult) * 0.05;
 
-        if(p.y > window.innerHeight + 100)
-            p.y = -100;
+        let targetOp = p.baseOpacity * p.overlapOpacityMult * interactionScale;
+        let targetScale = 1;
+        
+        if (p.isHero) {
+            targetOp = Math.min(1, targetOp + 0.2);
+            p.currentBlur += (Math.max(4, p.baseBlur - 8) - p.currentBlur) * 0.05;
+            targetScale = 1.1;
+        } else {
+            p.currentBlur += (p.baseBlur - p.currentBlur) * 0.02;
+            targetScale = 1;
+        }
+        
+        p.scale += (targetScale - p.scale) * 0.05;
+        p.currentOpacity += (targetOp - p.currentOpacity) * 0.05;
+        
+        const now = Date.now();
+        if (now > p.colorNextChangeTime && !p.isHero) {
+            let newIndex = p.colorIndex;
+            if (Math.random() > 0.5) {
+                newIndex = Math.min(p.colorIndex + 1, FIREFLY_PALETTE.length - 1);
+            } else {
+                newIndex = Math.max(p.colorIndex - 1, 0);
+            }
+            
+            let allowedMin = 0;
+            let allowedMax = 6;
+            if (p.layer === 1) { allowedMin = 0; allowedMax = 1; }
+            else if (p.layer === 2) { allowedMin = 1; allowedMax = 3; }
+            else if (p.layer === 3) { allowedMin = 3; allowedMax = 6; }
+            
+            if (newIndex >= allowedMin && newIndex <= allowedMax) {
+                p.targetColorIndex = newIndex;
+                p.colorIndex = newIndex;
+            }
+            p.colorNextChangeTime = now + 10000 + Math.random() * 10000;
+        }
 
-        p.el.style.left = `${p.x}px`;
-        p.el.style.top = `${p.y}px`;
-
+        const targetColor = FIREFLY_PALETTE[p.targetColorIndex];
+        p.currentColor.r += (targetColor.r - p.currentColor.r) * 0.005;
+        p.currentColor.g += (targetColor.g - p.currentColor.g) * 0.005;
+        p.currentColor.b += (targetColor.b - p.currentColor.b) * 0.005;
+        
+        p.el.style.transform = `translate3d(${finalX}px, ${finalY}px, 0) scale(${p.scale})`;
+        p.el.style.opacity = p.currentOpacity;
+        p.el.style.filter = `blur(${p.currentBlur}px)`;
+        p.el.style.setProperty('--p-r', Math.round(p.currentColor.r));
+        p.el.style.setProperty('--p-g', Math.round(p.currentColor.g));
+        p.el.style.setProperty('--p-b', Math.round(p.currentColor.b));
     });
 
-    requestAnimationFrame(
-        animateParticles
-    );
-
+    requestAnimationFrame(animateParticles);
 }
 
-animateParticles();
+if (particlesContainer) {
+    animateParticles();
+}
 
 /* RESPONSIVE NAVBAR - ZOOM & VIEWPORT DETECTION */
 
@@ -916,3 +1060,81 @@ if (document.readyState === "complete") {
 } else {
     window.addEventListener("load", initInteractiveTypography);
 }
+
+// Enhance Tag Chip Interactions (Search Google on Click/Keyboard, Accessibility Roles)
+const initTagChips = () => {
+    const setupChip = (chip) => {
+        if (chip.dataset.tagInitialized) return;
+        chip.dataset.tagInitialized = "true";
+
+        const tagName = chip.textContent.trim();
+        chip.setAttribute("role", "button");
+        chip.setAttribute("tabindex", "0");
+        chip.setAttribute("aria-label", `Search Google for ${tagName}`);
+
+        // Set randomized timing, delay, intensity, and direction variables for premium ambient shine
+        const duration = (5.5 + Math.random() * 1.5).toFixed(2); // 5.5s - 7.0s
+        const delay = (-Math.random() * 7).toFixed(2); // Negative delay starts the loop immediately in a random phase
+        const angle = (10 + Math.random() * 15).toFixed(1); // 10deg - 25deg
+        const baseOpacity = (0.6 + Math.random() * 0.4).toFixed(2); // Randomized intensity/opacity
+
+        chip.style.setProperty('--shine-duration', `${duration}s`);
+        chip.style.setProperty('--shine-delay', `${delay}s`);
+        chip.style.setProperty('--shine-angle', `${angle}deg`);
+        chip.style.setProperty('--shine-opacity', baseOpacity);
+
+        const searchGoogle = () => {
+            const query = encodeURIComponent(tagName);
+            window.open(
+                `https://www.google.com/search?q=${query}`,
+                '_blank',
+                'noopener,noreferrer'
+            );
+        };
+
+        chip.addEventListener("click", (e) => {
+            e.stopPropagation();
+            searchGoogle();
+        });
+
+        chip.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                searchGoogle();
+            }
+        });
+    };
+
+    // Setup initial tag chips
+    const chips = document.querySelectorAll(".tags span, .archive-tech-list span");
+    chips.forEach(setupChip);
+
+    // Watch for dynamic tags (e.g. in live preview lists or dynamic archive page filtering)
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    if (node.matches(".tags span") || node.matches(".archive-tech-list span")) {
+                        setupChip(node);
+                    } else {
+                        const subChips = node.querySelectorAll(".tags span, .archive-tech-list span");
+                        subChips.forEach(setupChip);
+                    }
+                }
+            });
+        });
+    });
+
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+};
+
+// Initialize tag chips interaction
+if (document.readyState === "complete") {
+    initTagChips();
+} else {
+    window.addEventListener("load", initTagChips);
+}
+

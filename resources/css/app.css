@@ -1056,11 +1056,13 @@ body::after {
     flex-shrink: 0;
     font-size: clamp(0.85rem, 1.8vw, 0.95rem);
     color: rgba(255, 255, 255, 0.42);
+    transition: color 0.25s ease;
 }
 
 .card-content h3 {
     font-size: clamp(1.05rem, 2vw, 1.25rem);
     margin-bottom: 16px;
+    transition: color 0.25s ease, text-shadow 0.25s ease;
 }
 
 .card-content p {
@@ -1087,7 +1089,8 @@ body::after {
     color: white;
 
     transition:
-        color 0.25s ease;
+        color 0.25s ease,
+        text-shadow 0.25s ease;
 }
 
 .project-title .arrow {
@@ -1108,15 +1111,34 @@ body::after {
 }
 
 /* Card hover activates title effects */
-.card:hover .project-title {
-    color: #8b6dff;
+.card:hover .project-title,
+.card:hover .card-content h3 {
+    color: #a996ff;
+    text-shadow: 0 0 12px rgba(169, 150, 255, 0.25);
 }
 
 .card:hover .project-title .arrow {
     transform:
         translateX(4px) translateY(-4px);
 
-    color: #8b6dff;
+    color: #a996ff;
+}
+
+.card:hover .card-year {
+    color: rgba(169, 150, 255, 0.75);
+}
+
+.card:hover .tags span {
+    box-shadow:
+        0 12px 30px rgba(75, 57, 164, 0.38),
+        0 0 24px rgba(123, 97, 255, 0.25);
+
+    background:
+        linear-gradient(135deg,
+            #7b61ff,
+            #9c7dff);
+
+    color: rgb(255, 255, 255);
 }
 
 .tags {
@@ -1138,6 +1160,8 @@ body::after {
     font-size: clamp(0.78rem, 1.6vw, 0.9rem);
 
     position: relative;
+    overflow: hidden;
+    cursor: pointer;
 
     transform-style: preserve-3d;
 
@@ -1153,13 +1177,12 @@ body::after {
     will-change: transform;
 }
 
-.tags span:hover {
-    transform:
-        translateY(-4px) scale(1.06) rotateX(8deg) rotateY(-8deg);
+.tags span:hover,
+.archive-tech-list span:hover {
+    transform: translateY(-2px);
 
     box-shadow:
-        0 12px 30px rgba(75, 57, 164, 0.38),
-        0 0 24px rgba(123, 97, 255, 0.25);
+        0 0 22px rgba(123, 97, 255, 0.28);
 
     background:
         linear-gradient(135deg,
@@ -1186,6 +1209,75 @@ body::after {
     opacity: 0.5;
 
     pointer-events: none;
+}
+
+.tags span::after,
+.archive-tech-list span::after {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -150%;
+    width: 70%;
+    height: 200%;
+
+    background: linear-gradient(
+        115deg,
+        transparent 0%,
+        rgba(180, 150, 255, 0.04) 20%,
+        rgba(220, 190, 255, 0.12) 40%,
+        rgba(255, 255, 255, 0.10) 50%,
+        rgba(220, 190, 255, 0.12) 60%,
+        rgba(180, 150, 255, 0.04) 80%,
+        transparent 100%
+    );
+
+    transform: rotate(var(--shine-angle, 15deg));
+    pointer-events: none;
+    mix-blend-mode: screen;
+    filter: blur(4px);
+    opacity: var(--shine-opacity, 0.8);
+
+    /* Ambient float shine infinite looping animation */
+    animation: ambientShine var(--shine-duration, 6s) ease-in-out infinite;
+    animation-delay: var(--shine-delay, 0s);
+
+    /* Transition for hover brightness/glow adjustments */
+    transition: opacity 0.4s ease, filter 0.4s ease;
+}
+
+.tags span:hover::after,
+.archive-tech-list span:hover::after {
+    /* Hover increases brightness and animation speed slightly */
+    opacity: calc(var(--shine-opacity, 0.8) * 1.25);
+    filter: brightness(1.2) blur(3px);
+    animation-duration: calc(var(--shine-duration, 6s) * 0.9);
+}
+
+@keyframes ambientShine {
+    0% {
+        left: -150%;
+        opacity: 0;
+    }
+    10% {
+        opacity: 0;
+    }
+    25% {
+        opacity: var(--shine-opacity, 0.8);
+    }
+    50% {
+        opacity: calc(var(--shine-opacity, 0.8) * 0.65);
+    }
+    75% {
+        opacity: var(--shine-opacity, 0.8);
+    }
+    90% {
+        opacity: 0;
+        left: 150%;
+    }
+    100% {
+        left: 150%;
+        opacity: 0;
+    }
 }
 
 .footer {
@@ -1462,46 +1554,25 @@ body {
 
 .particle {
     position: absolute;
-
-    width: 10px;
-    height: 10px;
-
+    top: 0;
+    left: 0;
     border-radius: 50%;
-
+    /* Default fallback color (will be overridden by JS) */
+    --p-r: 170;
+    --p-g: 120;
+    --p-b: 255;
     background:
         radial-gradient(circle,
-            rgba(196, 140, 255, 0.95) 0%,
-            rgba(155, 90, 255, 0.35) 40%,
-            transparent 75%);
-
-    filter: blur(1px);
-
-    opacity: 0.7;
-
-    animation-name: pulse;
-    animation-timing-function: ease-in-out;
-    animation-iteration-count: infinite;
-
-    will-change: transform;
-}
-
-@keyframes pulse {
-
-    0%,
-    100% {
-        transform:
-            scale(1);
-
-        opacity: 0.02;
-    }
-
-    50% {
-        transform:
-            scale(1.8);
-
-        opacity: 1;
-    }
-
+            rgba(var(--p-r), var(--p-g), var(--p-b), 0.95) 0%,
+            rgba(var(--p-r), var(--p-g), var(--p-b), 0.5) 30%,
+            rgba(var(--p-r), var(--p-g), var(--p-b), 0.15) 60%,
+            transparent 80%);
+    box-shadow:
+        0 0 12px rgba(var(--p-r), var(--p-g), var(--p-b), 0.8),
+        0 0 32px rgba(var(--p-r), var(--p-g), var(--p-b), 0.45),
+        0 0 70px rgba(var(--p-r), var(--p-g), var(--p-b), 0.2);
+    will-change: transform, opacity, filter;
+    mix-blend-mode: screen;
 }
 
 /* Inner portfolio pages: archive and resume */
@@ -1810,6 +1881,14 @@ body {
     color: #d8ceff;
     font-size: 0.72rem;
     font-weight: 700;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease,
+        background 0.25s ease,
+        color 0.25s ease;
 }
 
 .archive-links {
@@ -2506,6 +2585,7 @@ body[data-theme="light"] .particle {
             rgba(109, 76, 255, 0.42) 0%,
             rgba(137, 108, 255, 0.16) 42%,
             transparent 75%);
+    mix-blend-mode: multiply;
 }
 
 body[data-theme="light"] .top-navbar {
@@ -2672,9 +2752,25 @@ body[data-theme="light"] .archive-category {
 }
 
 body[data-theme="light"] .card:hover .project-title,
+body[data-theme="light"] .card:hover .card-content h3,
 body[data-theme="light"] .project-title:hover,
 body[data-theme="light"] .card:hover .arrow {
     color: var(--light-accent-strong);
+}
+
+body[data-theme="light"] .card:hover .card-year {
+    color: rgba(109, 76, 255, 0.75);
+}
+
+body[data-theme="light"] .card:hover .tags span {
+    color: white;
+    background:
+        linear-gradient(135deg,
+            var(--light-accent),
+            #8f73ff);
+    box-shadow:
+        0 14px 34px rgba(83, 58, 160, 0.24),
+        0 0 24px rgba(109, 76, 255, 0.2);
 }
 
 body[data-theme="light"] .project-image {
@@ -2692,15 +2788,16 @@ body[data-theme="light"] .archive-tech-list span {
     box-shadow: 0 8px 18px rgba(83, 58, 160, 0.1);
 }
 
-body[data-theme="light"] .tags span:hover {
+body[data-theme="light"] .tags span:hover,
+body[data-theme="light"] .archive-tech-list span:hover {
     color: white;
     background:
         linear-gradient(135deg,
             var(--light-accent),
             #8f73ff);
+    transform: translateY(-2px);
     box-shadow:
-        0 14px 34px rgba(83, 58, 160, 0.24),
-        0 0 24px rgba(109, 76, 255, 0.2);
+        0 8px 22px rgba(109, 76, 255, 0.22);
 }
 
 body[data-theme="light"] .archive-stats,
@@ -3085,8 +3182,20 @@ body[data-theme="light"] .card:hover .project-image {
 
 body[data-theme="light"] .project-title:hover,
 body[data-theme="light"] .card:hover .project-title,
+body[data-theme="light"] .card:hover .card-content h3,
 body[data-theme="light"] .card:hover .arrow {
     color: var(--light-accent-deep);
+}
+
+body[data-theme="light"] .card:hover .card-year {
+    color: rgba(124, 92, 255, 0.75);
+}
+
+body[data-theme="light"] .card:hover .tags span {
+    color: #2D2358;
+    background: #E8E2FF;
+    border-color: rgba(124, 92, 255, 0.24);
+    box-shadow: 0 10px 22px rgba(48, 39, 76, 0.1);
 }
 
 body[data-theme="light"] .tags span,
@@ -3097,12 +3206,13 @@ body[data-theme="light"] .archive-tech-list span {
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.74);
 }
 
-body[data-theme="light"] .tags span:hover {
+body[data-theme="light"] .tags span:hover,
+body[data-theme="light"] .archive-tech-list span:hover {
     color: #2D2358;
     background: #E8E2FF;
     border-color: rgba(124, 92, 255, 0.24);
     transform: translateY(-2px);
-    box-shadow: 0 10px 22px rgba(48, 39, 76, 0.1);
+    box-shadow: 0 0 22px rgba(124, 92, 255, 0.28);
 }
 
 body[data-theme="light"] .archive-stats,
