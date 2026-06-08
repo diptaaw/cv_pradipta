@@ -75,7 +75,7 @@
                 <div class="cms-form-group">
                     <label>Profile Avatar</label>
                     <div style="display: flex; align-items: center; gap: 16px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 12px;">
-                        <img id="avatar-preview" src="{{ $admin->avatar ? asset('storage/' . $admin->avatar) : asset('images/ui/avatar.png') }}" alt="Avatar Preview" style="width: 64px; height: 64px; border-radius: 12px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2);">
+                        <img id="avatar-preview" src="{{ $admin->avatar ? storage_url($admin->avatar) : asset('images/ui/avatar.png') }}" alt="Avatar Preview" style="width: 64px; height: 64px; border-radius: 12px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2);">
                         <div>
                             <input type="file" name="avatar" id="avatar" style="display: none;" accept="image/*" onchange="previewAvatar(this)">
                             <button type="button" class="action-btn" onclick="document.getElementById('avatar').click()" style="margin-bottom: 4px;">Change Avatar</button>

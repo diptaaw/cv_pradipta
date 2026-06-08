@@ -182,7 +182,7 @@
                     @else
                         @foreach($projects as $project)
                             <div class="card reveal">
-                                <img loading="lazy" src="{{ $project->thumbnail ? asset($project->thumbnail) : asset('images/projects/wildlife.png') }}" alt="{{ $project->title }}" class="project-image">
+                                <img loading="lazy" src="{{ $project->thumbnail ? storage_url($project->thumbnail) : asset('images/projects/wildlife.png') }}" alt="{{ $project->title }}" class="project-image">
                                 <div class="card-content">
                                     <h3 class="project-title">{{ $project->title }} <span class="arrow">↗</span></h3>
                                     <div class="description-wrapper">

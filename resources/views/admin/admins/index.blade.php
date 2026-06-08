@@ -47,7 +47,7 @@
                         <tr>
                             <td>
                                 <div class="cms-avatar-cell">
-                                    <img src="{{ $admin->avatar ? asset('storage/' . $admin->avatar) : asset('images/ui/avatar.png') }}" alt="{{ $admin->name }} avatar">
+                                    <img src="{{ $admin->avatar ? storage_url($admin->avatar) : asset('images/ui/avatar.png') }}" alt="{{ $admin->name }} avatar">
                                     <span style="font-weight: 700;">{{ $admin->name }}</span>
                                 </div>
                             </td>

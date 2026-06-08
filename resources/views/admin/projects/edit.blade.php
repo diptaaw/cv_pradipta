@@ -84,7 +84,7 @@
                     <div class="cms-form-group">
                         <label>Thumbnail Photo</label>
                         <div style="display: flex; align-items: center; gap: 16px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 12px;">
-                            <img id="thumb-preview" src="{{ $project->thumbnail ? asset($project->thumbnail) : asset('images/projects/wildlife.png') }}" alt="Thumbnail Preview" style="width: 80px; height: 50px; border-radius: 6px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2);">
+                            <img id="thumb-preview" src="{{ $project->thumbnail ? storage_url($project->thumbnail) : asset('images/projects/wildlife.png') }}" alt="Thumbnail Preview" style="width: 80px; height: 50px; border-radius: 6px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2);">
                             <div>
                                 <input type="file" name="thumbnail_file" id="thumbnail_file" style="display: none;" accept="image/*" onchange="previewThumb(this)">
                                 <button type="button" class="action-btn" onclick="document.getElementById('thumbnail_file').click()" style="margin-bottom: 4px;">Change Thumbnail</button>
@@ -100,7 +100,7 @@
                             @if(is_array($project->gallery_images) && count($project->gallery_images) > 0)
                                 @foreach($project->gallery_images as $img)
                                     <div class="media-preview-item">
-                                        <img src="{{ asset($img) }}" alt="Gallery Image">
+                                        <img src="{{ storage_url($img) }}" alt="Gallery Image">
                                         <label class="remove-check">
                                             <input type="checkbox" name="remove_gallery[]" value="{{ $img }}" style="cursor: pointer;">
                                             Delete
@@ -168,7 +168,7 @@
                         <label>Live Preview (Homepage Style)</label>
                         <div style="background: #05050a; padding: 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.06); position: relative; overflow: hidden; isolation: isolate; margin-top: 6px;">
                             <div class="card" style="padding: 0; background: transparent; display: flex; gap: 16px; align-items: flex-start;">
-                                <img id="preview-thumb-img" src="{{ $project->thumbnail ? asset($project->thumbnail) : asset('images/projects/wildlife.png') }}" alt="Project Image" class="project-image" style="width: 100px; height: 65px; border-radius: 8px; object-fit: cover;">
+                                <img id="preview-thumb-img" src="{{ $project->thumbnail ? storage_url($project->thumbnail) : asset('images/projects/wildlife.png') }}" alt="Project Image" class="project-image" style="width: 100px; height: 65px; border-radius: 8px; object-fit: cover;">
                                 <div class="card-content" style="flex: 1;">
                                     <h3 id="preview-title" class="project-title" style="font-size: 0.95rem; font-weight: 700; color: white; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;"></h3>
                                     <div class="description-wrapper">

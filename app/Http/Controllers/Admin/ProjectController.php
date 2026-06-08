@@ -51,7 +51,7 @@ class ProjectController extends BaseAdminController
             $file = $request->file('thumbnail_file');
             $filename = time() . '_thumb_' . $file->getClientOriginalName();
             $path = $file->storeAs('uploads/projects', $filename, 'public');
-            $thumbnailPath = 'storage/' . $path;
+            $thumbnailPath = $path;
         }
 
         $galleryPaths = [];
@@ -60,7 +60,7 @@ class ProjectController extends BaseAdminController
                 if ($file->isValid()) {
                     $filename = time() . '_gal_' . $file->getClientOriginalName();
                     $path = $file->storeAs('uploads/projects', $filename, 'public');
-                    $galleryPaths[] = 'storage/' . $path;
+                    $galleryPaths[] = $path;
                 }
             }
         }
@@ -134,7 +134,7 @@ class ProjectController extends BaseAdminController
         if ($request->hasFile('thumbnail_file')) {
             // Delete old thumbnail if exists
             if ($project->thumbnail) {
-                $oldPath = str_replace('storage/', '', $project->thumbnail);
+                $oldPath = preg_replace('#^storage/#', '', $project->thumbnail);
                 if (Storage::disk('public')->exists($oldPath)) {
                     Storage::disk('public')->delete($oldPath);
                 }
@@ -142,7 +142,7 @@ class ProjectController extends BaseAdminController
             $file = $request->file('thumbnail_file');
             $filename = time() . '_thumb_' . $file->getClientOriginalName();
             $path = $file->storeAs('uploads/projects', $filename, 'public');
-            $project->thumbnail = 'storage/' . $path;
+            $project->thumbnail = $path;
         }
 
         // Handle gallery images removal:
@@ -152,7 +152,7 @@ class ProjectController extends BaseAdminController
             if (($key = array_search($pathToRemove, $currentGallery)) !== false) {
                 unset($currentGallery[$key]);
                 // Delete physical file
-                $oldPath = str_replace('storage/', '', $pathToRemove);
+                $oldPath = preg_replace('#^storage/#', '', $pathToRemove);
                 if (Storage::disk('public')->exists($oldPath)) {
                     Storage::disk('public')->delete($oldPath);
                 }
@@ -165,7 +165,7 @@ class ProjectController extends BaseAdminController
                 if ($file->isValid()) {
                     $filename = time() . '_gal_' . $file->getClientOriginalName();
                     $path = $file->storeAs('uploads/projects', $filename, 'public');
-                    $currentGallery[] = 'storage/' . $path;
+                    $currentGallery[] = $path;
                 }
             }
         }
@@ -212,7 +212,7 @@ class ProjectController extends BaseAdminController
 
         // Delete thumbnail from storage
         if ($project->thumbnail) {
-            $oldPath = str_replace('storage/', '', $project->thumbnail);
+            $oldPath = preg_replace('#^storage/#', '', $project->thumbnail);
             if (Storage::disk('public')->exists($oldPath)) {
                 Storage::disk('public')->delete($oldPath);
             }
@@ -221,7 +221,7 @@ class ProjectController extends BaseAdminController
         // Delete gallery images from storage
         if (is_array($project->gallery_images)) {
             foreach ($project->gallery_images as $pathToRemove) {
-                $oldPath = str_replace('storage/', '', $pathToRemove);
+                $oldPath = preg_replace('#^storage/#', '', $pathToRemove);
                 if (Storage::disk('public')->exists($oldPath)) {
                     Storage::disk('public')->delete($oldPath);
                 }

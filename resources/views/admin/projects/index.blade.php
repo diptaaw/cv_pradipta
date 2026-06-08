@@ -51,7 +51,7 @@
                         @foreach($projects as $project)
                             <tr>
                                 <td style="width: 80px;">
-                                    <img src="{{ $project->thumbnail ? asset($project->thumbnail) : asset('images/projects/wildlife.png') }}" alt="{{ $project->title }}" style="width: 60px; height: 40px; border-radius: 6px; object-fit: cover; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.02);">
+                                    <img src="{{ $project->thumbnail ? storage_url($project->thumbnail) : asset('images/projects/wildlife.png') }}" alt="{{ $project->title }}" style="width: 60px; height: 40px; border-radius: 6px; object-fit: cover; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.02);">
                                 </td>
                                 <td style="font-weight: 700;">
                                     {{ $project->title }}

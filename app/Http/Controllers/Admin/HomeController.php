@@ -71,7 +71,7 @@ class HomeController extends Controller
         if ($request->hasFile('profile_image')) {
             // Delete old profile image if exists and is not the default
             if ($about->profile_image && $about->profile_image !== 'images/ui/avatar.png') {
-                $oldPath = str_replace('storage/', '', $about->profile_image);
+                $oldPath = preg_replace('#^storage/#', '', $about->profile_image);
                 if (Storage::disk('public')->exists($oldPath)) {
                     Storage::disk('public')->delete($oldPath);
                 }
@@ -80,7 +80,7 @@ class HomeController extends Controller
             $file = $request->file('profile_image');
             $filename = time() . '_' . $file->getClientOriginalName();
             $path = $file->storeAs('uploads/about', $filename, 'public');
-            $about->profile_image = 'storage/' . $path;
+            $about->profile_image = $path;
         }
 
         // Clean paragraphs

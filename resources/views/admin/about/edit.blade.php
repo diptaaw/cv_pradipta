@@ -49,7 +49,7 @@
                 <div class="cms-form-group">
                     <label>Profile Photo</label>
                     <div style="display: flex; align-items: center; gap: 16px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 12px;">
-                        <img id="photo-preview" src="{{ $about->profile_image ? asset($about->profile_image) : asset('images/ui/avatar.png') }}" alt="Profile Image" style="width: 64px; height: 64px; border-radius: 12px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1);">
+                        <img id="photo-preview" src="{{ $about->profile_image && $about->profile_image !== 'images/ui/avatar.png' ? storage_url($about->profile_image) : asset('images/ui/avatar.png') }}" alt="Profile Image" style="width: 64px; height: 64px; border-radius: 12px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1);">
                         <div>
                             <input type="file" name="profile_image" id="profile_image" style="display: none;" accept="image/*" onchange="previewImage(this)">
                             <button type="button" class="action-btn" onclick="document.getElementById('profile_image').click()" style="margin-bottom: 4px;">Choose Photo</button>

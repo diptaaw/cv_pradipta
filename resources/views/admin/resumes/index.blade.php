@@ -65,10 +65,10 @@
                         Showing active PDF: <strong style="color: white;">{{ $activeResume->title }}</strong>
                     </div>
                     <div style="border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); height: 420px;">
-                        <object data="{{ Storage::url($activeResume->file_path) }}" type="application/pdf" width="100%" height="100%">
+                        <object data="{{ storage_url($activeResume->file_path) }}" type="application/pdf" width="100%" height="100%">
                             <div style="padding: 40px; text-align: center;">
                                 <p style="margin-bottom: 16px;">This browser does not support inline PDFs.</p>
-                                <a href="{{ Storage::url($activeResume->file_path) }}" target="_blank" class="action-btn">Open PDF in New Tab</a>
+                                <a href="{{ storage_url($activeResume->file_path) }}" target="_blank" class="action-btn">Open PDF in New Tab</a>
                             </div>
                         </object>
                     </div>
@@ -106,7 +106,7 @@
                             @foreach($resumes as $resume)
                                 <tr>
                                     <td>
-                                        <a href="{{ Storage::url($resume->file_path) }}" target="_blank" style="color: #c4b5fd; font-weight: 700; text-decoration: none;" title="Open PDF in new tab">
+                                        <a href="{{ storage_url($resume->file_path) }}" target="_blank" style="color: #c4b5fd; font-weight: 700; text-decoration: none;" title="Open PDF in new tab">
                                             {{ $resume->title }} ↗
                                         </a>
                                     </td>

@@ -57,3 +57,36 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Vercel Deployment Guide
+
+This project is prepared for Vercel with PHP support and cloud storage.
+
+Required Vercel environment variables:
+
+- `APP_NAME`
+- `APP_ENV=production`
+- `APP_DEBUG=false`
+- `APP_URL` (your Vercel domain or custom domain)
+- `APP_KEY`
+- `DB_CONNECTION` (e.g. `mysql`)
+- `DB_HOST`
+- `DB_PORT`
+- `DB_DATABASE`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+- `FILESYSTEM_DISK=public`
+- `FILESYSTEM_DRIVER=s3`
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_DEFAULT_REGION`
+- `AWS_BUCKET`
+- `AWS_ENDPOINT` (if required by your S3-compatible provider)
+- `AWS_URL` (optional, recommended for custom endpoints)
+
+Deployment checklist:
+
+1. Push the repository to GitHub.
+2. Connect the repository to Vercel.
+3. Set production environment variables in Vercel.
+4. Deploy the project.
+5. Verify the homepage, admin login, database connection, and file upload.
