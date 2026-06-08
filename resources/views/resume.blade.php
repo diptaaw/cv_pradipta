@@ -90,6 +90,7 @@
     @include('partials.footer')
 </main>
 
+    @include('partials.cat-companion')
 <div class="particles"></div>
 
 </body>

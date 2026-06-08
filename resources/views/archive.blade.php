@@ -141,7 +141,8 @@
     @include('partials.footer')
 </main>
 
-<div class="particles"></div>
+    @include('partials.cat-companion')
+    <div class="particles"></div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {

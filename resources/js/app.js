@@ -3391,3 +3391,261 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     animateParallax();
 });
+
+/* ────────────────────────────
+   PIXEL-CAT COMPANION INTERACTIVE LOGIC
+   ──────────────────────────── */
+document.addEventListener("DOMContentLoaded", () => {
+    const catContainer = document.getElementById("cat-companion");
+    if (!catContainer) return;
+
+    const catSprite = document.getElementById("cat-sprite");
+    const chatBubble = document.getElementById("cat-chat-bubble");
+    const sparklesContainer = document.getElementById("cat-sparkles-container");
+
+    // 1. LERPED MOUSE PARALLAX
+    let catMouseX = 0;
+    let catMouseY = 0;
+    let catTargetX = 0;
+    let catTargetY = 0;
+
+    document.addEventListener("mousemove", (e) => {
+        const x = (e.clientX / window.innerWidth - 0.5) * 2;
+        const y = (e.clientY / window.innerHeight - 0.5) * 2;
+        // Max translation of 8px
+        catTargetX = x * 8;
+        catTargetY = y * 8;
+    });
+
+    function updateCatParallax() {
+        catMouseX += (catTargetX - catMouseX) * 0.08;
+        catMouseY += (catTargetY - catMouseY) * 0.08;
+
+        catContainer.style.setProperty('--cat-parallax-x', `${catMouseX.toFixed(2)}px`);
+        catContainer.style.setProperty('--cat-parallax-y', `${catMouseY.toFixed(2)}px`);
+        requestAnimationFrame(updateCatParallax);
+    }
+    requestAnimationFrame(updateCatParallax);
+
+    // 2. SPARKLE GENERATOR EFFECT
+    // 2. SPARKLE CYCLE SYSTEM
+    function startSparkleCycle(sparkle) {
+        const runCycle = () => {
+            // Visible time: 2s to 4s
+            const visibleDuration = 2000 + Math.random() * 2000;
+            // Hidden time: 3s to 8s
+            const hiddenDuration = 3000 + Math.random() * 5000;
+
+            // Step 1: Stay hidden for hiddenDuration
+            setTimeout(() => {
+                const dx = sparkle.dataset.dx;
+                const dy = sparkle.dataset.dy;
+                const targetOpacity = 0.7 + Math.random() * 0.25;
+                const sizeScale = 0.8 + Math.random() * 0.4;
+                const targetRotation = Math.random() * 360;
+
+                // Step 2: Softly fade in (transition takes 0.8s)
+                sparkle.style.opacity = targetOpacity;
+                sparkle.style.transform = `translate(-50%, -50%) translate3d(${dx}, ${dy}, 0px) scale(${sizeScale}) rotate(${targetRotation}deg)`;
+
+                // Step 3: Wait for visible duration
+                setTimeout(() => {
+                    // Step 4: Softly fade out (transition takes 0.8s)
+                    sparkle.style.opacity = '0';
+                    sparkle.style.transform = `translate(-50%, -50%) translate3d(${dx}, ${dy}, 0px) scale(0) rotate(${targetRotation + 90}deg)`;
+
+                    // Repeat loop after fade out has settled
+                    setTimeout(runCycle, 800);
+                }, visibleDuration);
+
+            }, hiddenDuration);
+        };
+
+        // Start cycle with an initial random delay to distribute them naturally
+        const initialDelay = Math.random() * 6000;
+        setTimeout(runCycle, initialDelay);
+    }
+
+    function initCatSparkles() {
+        if (!sparklesContainer) return;
+        sparklesContainer.innerHTML = ''; // Clean up
+
+        const directions = [
+            { name: 'right', angle: 0 },
+            { name: 'top-right', angle: -Math.PI / 4 },
+            { name: 'top-left', angle: -3 * Math.PI / 4 },
+            { name: 'left', angle: Math.PI },
+            { name: 'bottom-left', angle: 3 * Math.PI / 4 },
+            { name: 'bottom-right', angle: Math.PI / 4 }
+        ];
+
+        // Shuffle directions
+        const shuffled = directions.sort(() => 0.5 - Math.random());
+        const count = 4 + Math.floor(Math.random() * 3); // 4 to 6 sparkles total in pool
+        const selectedDirs = shuffled.slice(0, count);
+
+        const sizes = [20, 34, 50]; // Sized 20% larger
+
+        selectedDirs.forEach((dir) => {
+            const sparkle = document.createElement("img");
+            sparkle.src = "/images/ui/icon_sparkle.png";
+            sparkle.className = "cat-sparkle";
+
+            const size = sizes[Math.floor(Math.random() * sizes.length)];
+            sparkle.style.width = `${size}px`;
+            sparkle.style.height = `${size}px`;
+
+            // Random position inside sector radius 20px - 50px
+            const angle = dir.angle + (Math.random() * 0.3 - 0.15);
+            const radius = 20 + Math.random() * 30;
+            const dx = Math.cos(angle) * radius;
+            const dy = Math.sin(angle) * radius;
+
+            sparkle.dataset.dx = `${dx.toFixed(2)}px`;
+            sparkle.dataset.dy = `${dy.toFixed(2)}px`;
+
+            // Start off fully hidden and scale 0
+            sparkle.style.transform = `translate(-50%, -50%) translate3d(${sparkle.dataset.dx}, ${sparkle.dataset.dy}, 0px) scale(0)`;
+            sparkle.style.opacity = '0';
+
+            sparklesContainer.appendChild(sparkle);
+
+            // Bind the lifecycle
+            startSparkleCycle(sparkle);
+        });
+    }
+
+    // Initialize sparkles once
+    initCatSparkles();
+
+    // 3. SECONDARY IDLE ANIMATIONS (Sway and Bounce)
+    function triggerSway() {
+        if (catSprite.classList.contains('sway-active') || catSprite.classList.contains('bounce-active')) {
+            scheduleNextSway();
+            return;
+        }
+
+        // Sway duration: 1.5s to 2.5s
+        const duration = 1500 + Math.random() * 1000;
+        catSprite.style.setProperty('--sway-duration', `${duration}ms`);
+        catSprite.classList.add('sway-active');
+
+        setTimeout(() => {
+            catSprite.classList.remove('sway-active');
+            scheduleNextSway();
+        }, duration);
+    }
+
+    function scheduleNextSway() {
+        // Interval: 8s to 15s
+        const nextTime = 8000 + Math.random() * 7000;
+        setTimeout(triggerSway, nextTime);
+    }
+
+    function triggerBounce() {
+        if (catSprite.classList.contains('sway-active') || catSprite.classList.contains('bounce-active')) {
+            scheduleNextBounce();
+            return;
+        }
+
+        // 30% probability of bounce
+        if (Math.random() < 0.3) {
+            catSprite.classList.add('bounce-active');
+            setTimeout(() => {
+                catSprite.classList.remove('bounce-active');
+                scheduleNextBounce();
+            }, 1200); // Animation duration: 1.2s
+        } else {
+            scheduleNextBounce();
+        }
+    }
+
+    function scheduleNextBounce() {
+        // Interval: 20s to 30s
+        const nextTime = 20000 + Math.random() * 10000;
+        setTimeout(triggerBounce, nextTime);
+    }
+
+    // Start scheduling secondary sways and bounces
+    scheduleNextSway();
+    scheduleNextBounce();
+
+    // 4. CHAT BUBBLE SYSTEM
+    let bubbleTimeout = null;
+    let nextBubbleTimeout = null;
+    let isHovered = false;
+
+    function showChatBubble() {
+        if (!chatBubble) return;
+
+        chatBubble.classList.add("visible");
+
+        if (bubbleTimeout) clearTimeout(bubbleTimeout);
+
+        const duration = 6000 + Math.random() * 2000; // 6s to 8s
+        bubbleTimeout = setTimeout(() => {
+            if (!isHovered) {
+                hideChatBubble();
+            }
+        }, duration);
+    }
+
+    function hideChatBubble() {
+        if (chatBubble) {
+            chatBubble.classList.remove("visible");
+        }
+    }
+
+    function scheduleNextBubble() {
+        const delay = 15000 + Math.random() * 10000; // 15s to 25s
+        if (nextBubbleTimeout) clearTimeout(nextBubbleTimeout);
+        nextBubbleTimeout = setTimeout(() => {
+            if (!isHovered) {
+                showChatBubble();
+            }
+            scheduleNextBubble();
+        }, delay);
+    }
+
+    // 5. HOVER INTERACTION
+    const handleMouseEnter = () => {
+        isHovered = true;
+        showChatBubble();
+    };
+
+    const handleMouseLeave = () => {
+        isHovered = false;
+        if (bubbleTimeout) clearTimeout(bubbleTimeout);
+        bubbleTimeout = setTimeout(() => {
+            if (!isHovered) {
+                hideChatBubble();
+            }
+        }, 1500); // Smooth 1.5s delay before hiding
+    };
+
+    if (catSprite) {
+        catSprite.addEventListener("mouseenter", handleMouseEnter);
+        catSprite.addEventListener("mouseleave", handleMouseLeave);
+    }
+    if (chatBubble) {
+        chatBubble.addEventListener("mouseenter", handleMouseEnter);
+        chatBubble.addEventListener("mouseleave", handleMouseLeave);
+    }
+
+    // 6. CLICK BEHAVIOR (WhatsApp Redirect)
+    const handleCompanionClick = (e) => {
+        e.preventDefault();
+        const url = catContainer.getAttribute("data-url") || "https://wa.me/628991899977";
+        window.open(url, "_blank", "noopener,noreferrer");
+    };
+
+    if (catSprite) {
+        catSprite.addEventListener("click", handleCompanionClick);
+    }
+    if (chatBubble) {
+        chatBubble.addEventListener("click", handleCompanionClick);
+    }
+
+    // Start periodic background bubbles
+    scheduleNextBubble();
+});

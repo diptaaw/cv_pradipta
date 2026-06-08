@@ -214,6 +214,7 @@
 
     </div>
 
+    @include('partials.cat-companion')
     <div class="particles"></div>
 
 </body>
