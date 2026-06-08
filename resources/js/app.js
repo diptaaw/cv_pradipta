@@ -1,8 +1,12 @@
 const spotlight =
     document.querySelector(".spotlight");
 
-let mouseX = 0;
-let mouseY = 0;
+let mouseX = window.innerWidth / 2;
+let mouseY = window.innerHeight / 2;
+let rawMouseX = window.innerWidth / 2;
+let rawMouseY = window.innerHeight / 2;
+let normMouseX = 0;
+let normMouseY = 0;
 
 let currentX = 0;
 let currentY = 0;
@@ -601,17 +605,28 @@ pollInterval = setInterval(pollNotifications, 30000);
 
 /* MOUSE MOVE */
 
+// Throttled mouse move listener
 document.addEventListener("mousemove", (e) => {
+    rawMouseX = e.clientX;
+    rawMouseY = e.clientY;
+}, { passive: true });
 
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-
+// Shared animation loop for custom cursor and normalized coordinates
+function runSharedMouseLoop() {
     if (cursor) {
-        cursor.style.left = `${e.clientX}px`;
-        cursor.style.top = `${e.clientY}px`;
+        cursor.style.left = `${rawMouseX}px`;
+        cursor.style.top = `${rawMouseY}px`;
     }
 
-});
+    mouseX = rawMouseX;
+    mouseY = rawMouseY;
+
+    normMouseX = (rawMouseX / window.innerWidth - 0.5) * 2;
+    normMouseY = (rawMouseY / window.innerHeight - 0.5) * 2;
+
+    requestAnimationFrame(runSharedMouseLoop);
+}
+requestAnimationFrame(runSharedMouseLoop);
 
 /* REVEAL ON SCROLL */
 function initScrollReveal() {
@@ -767,43 +782,81 @@ if (document.readyState === "complete") {
 
 /* ACTIVE NAVIGATION */
 
-const sections =
-    document.querySelectorAll("section");
+const sections = document.querySelectorAll("section");
+const navLinks = document.querySelectorAll(".navigation a");
 
-const navLinks =
-    document.querySelectorAll(".navigation a");
+const sectionRatios = {};
 
-window.addEventListener("scroll", () => {
+const scrollspyObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+        const id = entry.target.id;
+        const visibleHeight = entry.intersectionRect.height;
+        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+        const occupancy = viewportHeight > 0 ? (visibleHeight / viewportHeight) : 0;
 
-    let current = "";
-    const threshold = 140; // Viewport trigger line (pixels from top)
-
-    sections.forEach((section) => {
-        const rect = section.getBoundingClientRect();
-        if (rect.top <= threshold && rect.bottom >= threshold) {
-            current = section.getAttribute("id");
-        }
+        sectionRatios[id] = {
+            occupancy: occupancy,
+            ratio: entry.intersectionRatio
+        };
     });
 
-    // Fallback for reaching the absolute bottom of the page
-    if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 50) {
-        if (sections.length > 0) {
-            current = sections[sections.length - 1].getAttribute("id");
+    updateActiveNav();
+}, {
+    threshold: [0.15, 0.25, 0.5, 0.75]
+});
+
+function updateActiveNav() {
+    let activeId = "";
+
+    const projects = sectionRatios["projects"];
+
+    // Rule 5: When Projects enters more than 35% of viewport, activate Projects immediately.
+    if (projects && projects.occupancy > 0.35) {
+        activeId = "projects";
+    } else {
+        let maxOccupancy = 0;
+
+        for (const [id, data] of Object.entries(sectionRatios)) {
+            let occupancy = data.occupancy;
+
+            // Rule 6: When Experience falls below 30% visibility, remove its active state.
+            if (id === "experience") {
+                if (data.ratio < 0.30 || data.occupancy < 0.30) {
+                    occupancy = 0;
+                }
+            }
+
+            if (occupancy > maxOccupancy) {
+                maxOccupancy = occupancy;
+                activeId = id;
+            }
         }
     }
 
-    if (current) {
+    // Default fallback to raw max occupancy if nothing crossed the overrides/filters
+    if (!activeId) {
+        let maxRawOccupancy = 0;
+        for (const [id, data] of Object.entries(sectionRatios)) {
+            if (data.occupancy > maxRawOccupancy) {
+                maxRawOccupancy = data.occupancy;
+                activeId = id;
+            }
+        }
+    }
+
+    if (activeId) {
         navLinks.forEach((link) => {
             link.classList.remove("active");
-            if (
-                link.getAttribute("href")
-                === `#${current}`
-            ) {
+            if (link.getAttribute("href") === `#${activeId}`) {
                 link.classList.add("active");
             }
         });
     }
+}
 
+// Observe all sections
+sections.forEach((section) => {
+    scrollspyObserver.observe(section);
 });
 
 /* CURSOR HOVER EFFECT */
@@ -915,10 +968,10 @@ if (particlesContainer) {
     resizeCanvases();
 
     // Counts based on device performance
-    const smallStarCount = isMobileDevice ? 30 : (isTabletDevice ? 50 : 80);
-    const medStarCount = isMobileDevice ? 15 : (isTabletDevice ? 25 : 35);
-    const fireflyCount = isMobileDevice ? 10 : (isTabletDevice ? 16 : 24);
-    const foregroundCount = isMobileDevice ? 3 : (isTabletDevice ? 5 : 8);
+        const smallStarCount = isMobileDevice ? 18 : (isTabletDevice ? 30 : 45);
+    const medStarCount = isMobileDevice ? 8 : (isTabletDevice ? 15 : 20);
+    const fireflyCount = isMobileDevice ? 6 : (isTabletDevice ? 10 : 15);
+    const foregroundCount = isMobileDevice ? 2 : (isTabletDevice ? 3 : 5);
 
     let smoothMouseOffsetX = 0;
     let smoothMouseOffsetY = 0;
@@ -1809,33 +1862,21 @@ if (particlesContainer) {
         const totalOpacity = opacity * (1.0 + linePulseFactor * 0.4);
 
         if (depth === 'far') {
-            // Far stars: almost no bloom, less saturated (use soft desaturated white-blue), no spikes
-            const farGlowRGB = { r: 200, g: 215, b: 255 };
-
-            // Faint, tiny organic halo
-            drawOrganicHalo(ctx, cx, cy, size * 1.6, farGlowRGB, totalOpacity * 0.3, phase, seed);
-
-            // Sharp tiny core
+            // Far stars: simple circles with opacity (highly optimized, no halos or spikes)
             ctx.beginPath();
-            ctx.fillStyle = 'rgba(235, 240, 255, 1.0)';
+            ctx.fillStyle = `rgba(235, 240, 255, ${totalOpacity.toFixed(4)})`;
             ctx.arc(cx, cy, size, 0, Math.PI * 2);
             ctx.fill();
         } else if (depth === 'middle') {
-            // Mid stars: moderate bloom, desaturated glow, short spikes
-            // 1. Moderate local haze reaction
-            drawHazeReaction(ctx, cx, cy, 35, glowRGB, totalOpacity * 0.7);
+            // Mid stars: simple glow, no spikes, core star (optimized helper)
+            ctx.beginPath();
+            const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, size * 3);
+            grad.addColorStop(0, `rgba(${glowRGB.r}, ${glowRGB.g}, ${glowRGB.b}, ${(totalOpacity * 0.45).toFixed(4)})`);
+            grad.addColorStop(1, 'transparent');
+            ctx.fillStyle = grad;
+            ctx.arc(cx, cy, size * 3, 0, Math.PI * 2);
+            ctx.fill();
 
-            // 2. Volumetric organic bloom
-            drawOrganicHalo(ctx, cx, cy, size * 3.5, glowRGB, totalOpacity * 0.35, phase, seed);
-            drawOrganicHalo(ctx, cx, cy, size * 1.5, glowRGB, totalOpacity * 0.65, phase, seed + 2);
-
-            // 3. Subtle spikes
-            const spikeLength = size * 10;
-            const spikeWidth = size * 0.5;
-            const rotationAngle = (phase * 0.05) + seed;
-            drawDiffractionSpikes(ctx, cx, cy, spikeLength, spikeWidth, glowRGB, totalOpacity * 0.25, rotationAngle);
-
-            // 4. Star Core
             ctx.beginPath();
             ctx.fillStyle = core;
             ctx.arc(cx, cy, size, 0, Math.PI * 2);
@@ -2256,6 +2297,11 @@ if (particlesContainer) {
         const dt = Math.min((now - lastTime) / 1000, 0.1); // clamp dt to max 100ms
         lastTime = now;
 
+        if (document.hidden) {
+            requestAnimationFrame(animateConstellations);
+            return;
+        }
+
         // Easing mouse offsets (time-delta normalizer)
         const targetOffsetX = mouseX - width / 2;
         const targetOffsetY = mouseY - height / 2;
@@ -2584,99 +2630,42 @@ window.addEventListener("resize", () => {
 
 }, { passive: true });
 
-// Integrate scroll behavior with existing scroll listeners
-const originalScrollHandler = window.onscroll;
-
+// Integrate scroll behavior and collision detection into a single passive scroll listener
 window.addEventListener("scroll", () => {
-
     handleCompactModeScrollBehavior();
 
+    if (topNavbar && rightPanel && !isInCompactMode) {
+        const navbarRect = topNavbar.getBoundingClientRect();
+        const rightPanelRect = rightPanel.getBoundingClientRect();
+
+        if (rightPanelRect.top <= navbarRect.bottom) {
+            topNavbar.classList.add("compact");
+        } else {
+            topNavbar.classList.remove("compact");
+        }
+    }
 }, { passive: true });
 
 // Use ResizeObserver for robust zoom/container detection
 if (window.ResizeObserver) {
-
-    const resizeObserver =
-        new ResizeObserver(() => {
-
-            updateCompactModeState();
-
-        });
-
-    resizeObserver.observe(
-        document.documentElement
-    );
-
+    const resizeObserver = new ResizeObserver(() => {
+        updateCompactModeState();
+    });
+    resizeObserver.observe(document.documentElement);
 }
 
 // Fallback: Periodic zoom detection
 let previousZoom = window.devicePixelRatio;
-
 setInterval(() => {
-
-    const currentZoom =
-        window.devicePixelRatio;
-
+    const currentZoom = window.devicePixelRatio;
     if (currentZoom !== previousZoom) {
-
         previousZoom = currentZoom;
-
         updateCompactModeState();
-
     }
-
 }, 400);
 
 // Initialize compact mode on page load
 updateCompactModeState();
-
-/* NAVBAR COMPACT ON COLLISION */
-
-window.addEventListener("scroll", () => {
-
-    if (!topNavbar || !rightPanel) {
-        return;
-    }
-
-    const navbarRect =
-        topNavbar.getBoundingClientRect();
-
-    const rightPanelRect =
-        rightPanel.getBoundingClientRect();
-
-    /*
-        cek apakah top right panel
-        sudah menyentuh bawah navbar
-        
-        Skip collision compact if already
-        in responsive compact mode
-    */
-
-    if (!isInCompactMode) {
-
-        if (
-            rightPanelRect.top
-            <=
-            navbarRect.bottom
-        ) {
-
-            topNavbar.classList.add(
-                "compact"
-            );
-
-        }
-
-        else {
-
-            topNavbar.classList.remove(
-                "compact"
-            );
-
-        }
-
-    }
-
-});
 
 /* ==========================================
    PREMIUM INTERACTIVE TYPOGRAPHY EXPERIENCE
@@ -3348,35 +3337,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let mouseX = 0;
     let mouseY = 0;
-    let targetX = 0;
-    let targetY = 0;
     let scrollY = 0;
-
-    document.addEventListener("mousemove", (e) => {
-        const x = (e.clientX / window.innerWidth - 0.5) * 2;
-        const y = (e.clientY / window.innerHeight - 0.5) * 2;
-        targetX = x * 20;
-        targetY = y * 20;
-    });
 
     window.addEventListener("scroll", () => {
         scrollY = window.scrollY;
     }, { passive: true });
 
     function animateParallax() {
+        const targetX = normMouseX * 20;
+        const targetY = normMouseY * 20;
+
         mouseX += (targetX - mouseX) * 0.05;
         mouseY += (targetY - mouseY) * 0.05;
 
         const rect = introSection.getBoundingClientRect();
         const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
 
-        document.body.style.setProperty('--mouse-x', `${mouseX}px`);
-        document.body.style.setProperty('--mouse-y', `${mouseY}px`);
-
         if (isVisible) {
-            const scrollOffset = Math.max(0, scrollY - (introSection.offsetTop - window.innerHeight / 2)) * 0.1;
+            document.body.style.setProperty('--mouse-x', `${mouseX.toFixed(2)}px`);
+            document.body.style.setProperty('--mouse-y', `${mouseY.toFixed(2)}px`);
 
-            introSection.style.setProperty('--scroll-y', `${scrollOffset}px`);
+            const scrollOffset = Math.max(0, scrollY - (introSection.offsetTop - window.innerHeight / 2)) * 0.1;
+            introSection.style.setProperty('--scroll-y', `${scrollOffset.toFixed(2)}px`);
 
             if (introSection.classList.contains("visible") || introSection.classList.contains("revealing")) {
                 window.introShowcaseActive = true;
@@ -3406,18 +3388,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // 1. LERPED MOUSE PARALLAX
     let catMouseX = 0;
     let catMouseY = 0;
-    let catTargetX = 0;
-    let catTargetY = 0;
-
-    document.addEventListener("mousemove", (e) => {
-        const x = (e.clientX / window.innerWidth - 0.5) * 2;
-        const y = (e.clientY / window.innerHeight - 0.5) * 2;
-        // Max translation of 8px
-        catTargetX = x * 8;
-        catTargetY = y * 8;
-    });
 
     function updateCatParallax() {
+        const catTargetX = normMouseX * 8;
+        const catTargetY = normMouseY * 8;
+
         catMouseX += (catTargetX - catMouseX) * 0.08;
         catMouseY += (catTargetY - catMouseY) * 0.08;
 
