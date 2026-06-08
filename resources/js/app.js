@@ -19,9 +19,9 @@ window.portfolioLoader = {
     haze: false,
     reveals: false,
     notifications: false,
-    
+
     listeners: [],
-    
+
     update(system) {
         if (this[system] === false) {
             this[system] = true;
@@ -29,18 +29,18 @@ window.portfolioLoader = {
             this.notify();
         }
     },
-    
+
     notify() {
         this.listeners.forEach(fn => fn(this.getProgress(), this.getLoadedSystemName()));
     },
-    
+
     getLoadedSystemName() {
         const keys = ['fonts', 'images', 'constellations', 'starfield', 'fireflies', 'haze', 'reveals', 'notifications'];
         const loaded = keys.filter(k => this[k]);
         if (loaded.length === 0) return 'INITIALIZING MATRIX';
         return loaded[loaded.length - 1].toUpperCase();
     },
-    
+
     getProgress() {
         const keys = ['fonts', 'images', 'constellations', 'starfield', 'fireflies', 'haze', 'reveals', 'notifications'];
         const count = keys.filter(k => this[k]).length;
@@ -49,12 +49,12 @@ window.portfolioLoader = {
 };
 
 // Check if the loader should be skipped
-(function() {
+(function () {
     const isReload = (window.performance && ((window.performance.getEntriesByType && window.performance.getEntriesByType("navigation")[0] && window.performance.getEntriesByType("navigation")[0].type === "reload") || (window.performance.navigation && window.performance.navigation.type === 1)));
     const isSkipped = sessionStorage.getItem('portfolioLoaded') && !isReload;
-    
+
     window.portfolioLoader.isSkipped = !!isSkipped;
-    
+
     if (isSkipped) {
         document.body.classList.remove("loading-active");
         const loaderOverlay = document.getElementById("retro-loader");
@@ -77,7 +77,7 @@ window.portfolioLoader.listeners.push((progress, lastSystem) => {
                 node.classList.remove("active");
             }
         }
-        
+
         const line = document.querySelector(`.constellation-line[data-index="${i}"]`);
         if (line) {
             if (i < activeNodesCount) {
@@ -87,30 +87,30 @@ window.portfolioLoader.listeners.push((progress, lastSystem) => {
             }
         }
     }
-    
+
     if (progress === 100) {
         // Set sessionStorage
         sessionStorage.setItem('portfolioLoaded', 'true');
-        
+
         if (window.portfolioLoader.isSkipped) {
             return;
         }
-        
+
         // Pause for 500ms (within 400-600ms range)
         setTimeout(() => {
             const loaderOverlay = document.getElementById("retro-loader");
             if (loaderOverlay) {
                 // 1. Move downward slightly (12px)
                 loaderOverlay.classList.add("exit-prep");
-                
+
                 setTimeout(() => {
                     // 2. Smoothly accelerate upward off-screen + scale down + motion blur
                     loaderOverlay.classList.remove("exit-prep");
                     loaderOverlay.classList.add("exit-animate");
-                    
+
                     // Crossfade: start fading in the homepage content
                     document.body.classList.remove("loading-active");
-                    
+
                     // Cleanup loader element after transition (transition takes 800ms)
                     setTimeout(() => {
                         loaderOverlay.remove();
@@ -122,7 +122,7 @@ window.portfolioLoader.listeners.push((progress, lastSystem) => {
 });
 
 // Setup image and font loading promises
-(function() {
+(function () {
     // Fonts
     if (document.fonts) {
         document.fonts.ready.then(() => {
@@ -157,7 +157,7 @@ window.portfolioLoader.listeners.push((progress, lastSystem) => {
             });
         }
     };
-    
+
     if (document.readyState === "complete" || document.readyState === "interactive") {
         handleImages();
     } else {
@@ -177,13 +177,13 @@ window.portfolioLoader.listeners.push((progress, lastSystem) => {
                 starsBg.appendChild(star);
             }
         }
-        
+
         // Loader text dots animation
         let dotCount = 1;
         const textInterval = setInterval(() => {
             const statusText = document.getElementById("loader-status-text");
             if (!statusText) return;
-            
+
             const progress = window.portfolioLoader.getProgress();
             if (progress < 100) {
                 let baseText = "Loading";
@@ -253,7 +253,7 @@ function timeAgo(dateStr) {
     if (diffDay < 7) return `${diffDay}d ago`;
 
     // Format as short date
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return `${months[date.getMonth()]} ${date.getDate()}`;
 }
 
@@ -366,7 +366,7 @@ async function fetchNotifications() {
         const response = await fetch('/api/notifications');
         if (!response.ok) throw new Error('Failed to fetch notifications');
         const json = await response.json();
-        
+
         // Handle paginated response
         const notifications = json.data || json;
         nextPageUrl = json.next_page_url || null;
@@ -395,19 +395,19 @@ async function fetchNotifications() {
 async function loadMoreNotifications() {
     if (!nextPageUrl || isLoadingMore) return;
     isLoadingMore = true;
-    
+
     if (loadMoreBtn) {
         loadMoreBtn.innerHTML = `Loading older updates...`;
     }
-    
+
     try {
         const response = await fetch(nextPageUrl);
         if (!response.ok) throw new Error('Failed to fetch more notifications');
         const json = await response.json();
-        
+
         const notifications = json.data || json;
         nextPageUrl = json.next_page_url || null;
-        
+
         cachedNotifications = [...cachedNotifications, ...notifications];
         renderNotifications(cachedNotifications);
         updateBadgeCount();
@@ -472,7 +472,7 @@ function closeUpdatesDropdown() {
     updatesDropdown.classList.remove("active");
     updatesButton.setAttribute("aria-expanded", "false");
     updatesButton.classList.remove("active");
-    
+
     // Add hidden back after transition ends
     const onTransitionEnd = (e) => {
         if (e.propertyName === "opacity" && !updatesDropdown.classList.contains("active")) {
@@ -485,16 +485,16 @@ function closeUpdatesDropdown() {
 
 async function markAllRead() {
     try {
-        await fetch('/api/notifications/mark-read', { 
-            method: 'POST', 
-            headers: { 
+        await fetch('/api/notifications/mark-read', {
+            method: 'POST',
+            headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '' 
-            } 
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+            }
         });
-        
+
         cachedNotifications.forEach(n => n.is_read = true);
-        
+
         if (latestNotifId !== null) {
             localStorage.setItem("portfolio-last-viewed-notif-id", latestNotifId.toString());
         }
@@ -681,7 +681,7 @@ function initScrollReveal() {
 
                 console.log(`[Reveal Debug] Element leaving viewport, state visible -> hiding:`, el);
                 el.dataset.state = "hiding";
-                
+
                 el.classList.remove("active");
                 el.style.transitionDelay = "0s";
 
@@ -754,7 +754,7 @@ function initScrollReveal() {
             }
         });
     }, 3000);
-    
+
     if (window.portfolioLoader) window.portfolioLoader.update('reveals');
 }
 
@@ -1241,27 +1241,27 @@ if (particlesContainer) {
     const constellationTemplates = [
         {
             name: "Ursa Major",
-            stars: [{x: 0, y: 35}, {x: 35, y: 30}, {x: 65, y: 45}, {x: 90, y: 55}, {x: 95, y: 85}, {x: 140, y: 95}, {x: 145, y: 55}, {x: 95, y: 85}],
+            stars: [{ x: 0, y: 35 }, { x: 35, y: 30 }, { x: 65, y: 45 }, { x: 90, y: 55 }, { x: 95, y: 85 }, { x: 140, y: 95 }, { x: 145, y: 55 }, { x: 95, y: 85 }],
             lines: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 4]]
         },
         {
             name: "Cassiopeia",
-            stars: [{x: 0, y: 10}, {x: 25, y: 35}, {x: 50, y: 15}, {x: 75, y: 40}, {x: 100, y: 20}],
+            stars: [{ x: 0, y: 10 }, { x: 25, y: 35 }, { x: 50, y: 15 }, { x: 75, y: 40 }, { x: 100, y: 20 }],
             lines: [[0, 1], [1, 2], [2, 3], [3, 4]]
         },
         {
             name: "Cygnus",
-            stars: [{x: 50, y: 0}, {x: 50, y: 40}, {x: 50, y: 80}, {x: 50, y: 120}, {x: 10, y: 40}, {x: 90, y: 40}],
+            stars: [{ x: 50, y: 0 }, { x: 50, y: 40 }, { x: 50, y: 80 }, { x: 50, y: 120 }, { x: 10, y: 40 }, { x: 90, y: 40 }],
             lines: [[0, 1], [1, 2], [2, 3], [1, 4], [1, 5]]
         },
         {
             name: "Orion",
-            stars: [{x: 10, y: 0}, {x: 60, y: 5}, {x: 100, y: 10}, {x: 35, y: 45}, {x: 50, y: 46}, {x: 65, y: 47}, {x: 20, y: 90}, {x: 85, y: 95}, {x: 30, y: 15}],
+            stars: [{ x: 10, y: 0 }, { x: 60, y: 5 }, { x: 100, y: 10 }, { x: 35, y: 45 }, { x: 50, y: 46 }, { x: 65, y: 47 }, { x: 20, y: 90 }, { x: 85, y: 95 }, { x: 30, y: 15 }],
             lines: [[0, 1], [1, 2], [2, 5], [5, 4], [4, 3], [3, 0], [3, 6], [6, 7], [7, 5], [0, 8]]
         },
         {
             name: "Pegasus",
-            stars: [{x: 0, y: 0}, {x: 80, y: 0}, {x: 80, y: 80}, {x: 0, y: 80}, {x: -30, y: 110}, {x: 110, y: -30}],
+            stars: [{ x: 0, y: 0 }, { x: 80, y: 0 }, { x: 80, y: 80 }, { x: 0, y: 80 }, { x: -30, y: 110 }, { x: 110, y: -30 }],
             lines: [[0, 1], [1, 2], [2, 3], [3, 0], [3, 4], [1, 5]]
         }
     ];
@@ -1658,7 +1658,7 @@ if (particlesContainer) {
         const size = 5 + Math.random() * 9;
         const opacity = 0.3 + Math.random() * 0.4;
         const speedMult = 0.35 + Math.random() * 0.45;
-        
+
         // Depth distribution
         const randDepth = Math.random();
         let parallaxFactor = 0.16;
@@ -1746,7 +1746,7 @@ if (particlesContainer) {
         const { r, g, b } = colorRGB;
         ctx.beginPath();
         const points = 10;
-        
+
         const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, baseRadius * 1.4);
         grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${opacity})`);
         grad.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${opacity * 0.35})`);
@@ -1811,10 +1811,10 @@ if (particlesContainer) {
         if (depth === 'far') {
             // Far stars: almost no bloom, less saturated (use soft desaturated white-blue), no spikes
             const farGlowRGB = { r: 200, g: 215, b: 255 };
-            
+
             // Faint, tiny organic halo
             drawOrganicHalo(ctx, cx, cy, size * 1.6, farGlowRGB, totalOpacity * 0.3, phase, seed);
-            
+
             // Sharp tiny core
             ctx.beginPath();
             ctx.fillStyle = 'rgba(235, 240, 255, 1.0)';
@@ -1908,7 +1908,7 @@ if (particlesContainer) {
                 s.twinklePhase = (s.twinklePhase + s.twinkleSpeed * 0.5 * dt) % (Math.PI * 2);
             });
             c.spawnTimer += dt;
-            
+
             let allInitialStarsStabilized = true;
             c.initialStars.forEach(idx => {
                 const s = c.stars[idx];
@@ -1958,7 +1958,7 @@ if (particlesContainer) {
                 if (c.taskTimer >= c.delayDuration) {
                     c.taskState = 'animating';
                     c.taskTimer = 0;
-                    
+
                     // Initialize current task values
                     const currentTask = c.constructionTasks[c.taskIdx];
                     if (currentTask.type === 'star') {
@@ -1984,7 +1984,7 @@ if (particlesContainer) {
                     star.birthTimer += dt;
                     const progress = Math.min(star.birthTimer / star.birthDuration, 1.0);
                     const t = progress * progress * (3 - 2 * progress); // smoothstep
-                    
+
                     star.scaleFactor = star.birthStartScale + (1.0 - star.birthStartScale) * t;
                     star.fadeVal = t;
                     star.brightnessFactor = t;
@@ -1994,7 +1994,7 @@ if (particlesContainer) {
                         star.scaleFactor = 1.0;
                         star.fadeVal = 1.0;
                         star.brightnessFactor = 1.0;
-                        
+
                         c.taskIdx++;
                         c.taskState = 'delay';
                         c.delayDuration = 0.3 + Math.random() * 0.9;
@@ -2008,7 +2008,7 @@ if (particlesContainer) {
 
                     if (line.drawTimer >= line.drawDuration) {
                         line.drawVal = 1.0;
-                        
+
                         c.taskIdx++;
                         c.taskState = 'delay';
                         c.delayDuration = 0.3 + Math.random() * 0.9;
@@ -2176,11 +2176,18 @@ if (particlesContainer) {
 
             // Twinkle only when fully stabilized
             if (s.fadeVal >= 1.0 && s.scaleFactor >= 1.0 && (state === 'constructing' || state === 'shimmering' || state === 'idle' || state === 'fading_out')) {
-                const rawVal = 0.5 + 0.35 * Math.sin(s.twinklePhase) + 0.15 * Math.cos(s.twinklePhase * 2.2 + s.seed);
+                let rawVal = 0.5 + 0.35 * Math.sin(s.twinklePhase) + 0.15 * Math.cos(s.twinklePhase * 2.2 + s.seed);
+                let shimmerScale = 1.0;
+
+                if (window.introShowcaseActive) {
+                    rawVal = 0.8 + 0.2 * Math.sin(s.twinklePhase * 1.5) + 0.1 * Math.cos(s.twinklePhase * 3.0 + s.seed);
+                    shimmerScale = 1.05 + 0.05 * Math.sin(s.twinklePhase * 2.0);
+                }
+
                 // Apply smoothstep easing: rawVal^2 * (3 - 2*rawVal)
                 const tVal = rawVal * rawVal * (3 - 2 * rawVal);
                 twinkleOp = tVal;
-                starSize = (1.2 + 0.8 * tVal) * scale * (s.scaleFactor || 1.0) * (s.blurFactor || 1.0);
+                starSize = (1.2 + 0.8 * tVal) * scale * (s.scaleFactor || 1.0) * shimmerScale * (s.blurFactor || 1.0);
             }
 
             const starOpacity = maxOpacity * s.fadeVal * twinkleOp;
@@ -2212,7 +2219,7 @@ if (particlesContainer) {
         star.twinklePhase = (star.twinklePhase + star.twinkleSpeed * 60 * dt) % (Math.PI * 2);
         const rawVal = 0.625 + 0.275 * Math.sin(star.twinklePhase) + 0.1 * Math.cos(star.twinklePhase * 1.7 + star.seed);
         const twinkleVal = rawVal * rawVal * (3 - 2 * rawVal);
-        
+
         updateStarLifecycle(star, dt);
         const currentOp = star.baseOpacity * twinkleVal * star.brightnessFactor;
         const currentSize = star.size * star.scaleFactor * star.blurFactor;
@@ -2233,7 +2240,7 @@ if (particlesContainer) {
         star.twinklePhase = (star.twinklePhase + star.twinkleSpeed * 60 * dt) % (Math.PI * 2);
         const rawVal = 0.625 + 0.275 * Math.sin(star.twinklePhase) + 0.1 * Math.cos(star.twinklePhase * 1.7 + star.seed);
         const twinkleVal = rawVal * rawVal * (3 - 2 * rawVal);
-        
+
         updateStarLifecycle(star, dt);
         const currentOp = star.baseOpacity * twinkleVal * star.brightnessFactor;
         const currentSize = star.size * star.scaleFactor * star.blurFactor;
@@ -2372,7 +2379,7 @@ if (particlesContainer) {
             const dx = fx - mouseX;
             const dy = fy - mouseY;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            
+
             let hoverFactor = 1.0;
             // Guard against division by zero and NaN states
             if (dist < 150 && dist > 0.1 && !isNaN(dist)) {
@@ -2380,7 +2387,7 @@ if (particlesContainer) {
                 const forceMagnitude = repelForce * 120 * ff.speedMult;
                 ff.targetVx += (dx / dist) * forceMagnitude;
                 ff.targetVy += (dy / dist) * forceMagnitude;
-                
+
                 hoverFactor = 0.35 + 0.65 * (dist / 150);
             }
 
@@ -2647,11 +2654,11 @@ window.addEventListener("scroll", () => {
 
     if (!isInCompactMode) {
 
-        if(
+        if (
             rightPanelRect.top
             <=
             navbarRect.bottom
-        ){
+        ) {
 
             topNavbar.classList.add(
                 "compact"
@@ -2659,7 +2666,7 @@ window.addEventListener("scroll", () => {
 
         }
 
-        else{
+        else {
 
             topNavbar.classList.remove(
                 "compact"
@@ -2682,7 +2689,7 @@ const initInteractiveTypography = () => {
     // 1. Accessibility & Letter Splitting
     const rawText = titleEl.textContent.trim();
     titleEl.setAttribute("aria-label", rawText);
-    
+
     // Split text into words and then characters
     const words = rawText.split(/\s+/);
     titleEl.innerHTML = ""; // Clear original text
@@ -2695,7 +2702,7 @@ const initInteractiveTypography = () => {
     // Pointer move / drag handlers
     const onDragMove = (e) => {
         if (!activeDragChar) return;
-        
+
         let clientX = 0;
         let clientY = 0;
 
@@ -2713,7 +2720,7 @@ const initInteractiveTypography = () => {
         // Set pointer coordinates target so spring physics handles the lag follow
         activeDragChar.dragTargetX = clientX - activeDragChar.origX - grabOffsetX;
         activeDragChar.dragTargetY = clientY - activeDragChar.origY - grabOffsetY;
-        
+
         startLoop();
     };
 
@@ -2724,7 +2731,7 @@ const initInteractiveTypography = () => {
         char.state = "released";
         char.releaseTime = performance.now();
         char.el.classList.remove("is-dragging");
-        
+
         if (!char.isHovered) {
             char.el.classList.remove("is-hovered");
         }
@@ -2754,19 +2761,19 @@ const initInteractiveTypography = () => {
 
             const charObj = {
                 el: charSpan,
-                x: 0, 
+                x: 0,
                 y: 0,
                 rx: 0,
                 ry: 0,
                 rz: 0,
                 scale: 1.0,
-                vx: 0, 
+                vx: 0,
                 vy: 0,
                 vrx: 0,
                 vry: 0,
                 vrz: 0,
                 vs: 0,
-                tx: 0, 
+                tx: 0,
                 ty: 0,
                 trx: 0,
                 try: 0,
@@ -2816,7 +2823,7 @@ const initInteractiveTypography = () => {
                 charObj.state = "dragging";
                 charObj.vx = 0;
                 charObj.vy = 0;
-                
+
                 charSpan.classList.add("is-dragging");
                 charSpan.classList.add("is-hovered");
 
@@ -2945,7 +2952,7 @@ const initInteractiveTypography = () => {
             } else if (char.state === "returning") {
                 anyActive = true;
                 char.ts = char.isHovered ? 1.05 : 1.0;
-                
+
                 // Spring return parameters (premium underdamped overshoot)
                 const returnK = 0.024; // soft spring pull
                 const returnDamping = 0.90; // underdamped decay to allow overshoot
@@ -3298,7 +3305,7 @@ if (document.readyState === "complete") {
 function logNavbarLayoutDebug(stage) {
     const navbar = document.querySelector(".top-navbar");
     const layoutShell = document.querySelector(".layout-shell");
-    
+
     console.log(`[Layout Debug - ${stage}]`);
     if (navbar) {
         const style = window.getComputedStyle(navbar);
@@ -3306,15 +3313,15 @@ function logNavbarLayoutDebug(stage) {
     } else {
         console.log("  Navbar not found");
     }
-    
+
     if (layoutShell) {
         const style = window.getComputedStyle(layoutShell);
         console.log(`  Layout Shell: position=${style.position}, left=${style.left}, transform=${style.transform}, width=${style.width}`);
     }
-    
+
     const bodyStyle = window.getComputedStyle(document.body);
     console.log(`  Body: overflow=${bodyStyle.overflow}, position=${bodyStyle.position}, width=${bodyStyle.width}`);
-    
+
     const docStyle = window.getComputedStyle(document.documentElement);
     console.log(`  Doc: overflow=${docStyle.overflow}, position=${docStyle.position}`);
 }
@@ -3332,4 +3339,55 @@ window.addEventListener("beforeunload", () => {
     logNavbarLayoutDebug("Before Navigation/Unload");
 });
 
+/* ────────────────────────────
+   INTRO SHOWCASE PARALLAX
+   ──────────────────────────── */
+document.addEventListener("DOMContentLoaded", () => {
+    const introSection = document.querySelector(".intro-showcase");
+    if (!introSection) return;
 
+    let mouseX = 0;
+    let mouseY = 0;
+    let targetX = 0;
+    let targetY = 0;
+    let scrollY = 0;
+
+    document.addEventListener("mousemove", (e) => {
+        const x = (e.clientX / window.innerWidth - 0.5) * 2;
+        const y = (e.clientY / window.innerHeight - 0.5) * 2;
+        targetX = x * 20;
+        targetY = y * 20;
+    });
+
+    window.addEventListener("scroll", () => {
+        scrollY = window.scrollY;
+    }, { passive: true });
+
+    function animateParallax() {
+        mouseX += (targetX - mouseX) * 0.05;
+        mouseY += (targetY - mouseY) * 0.05;
+
+        const rect = introSection.getBoundingClientRect();
+        const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+
+        document.body.style.setProperty('--mouse-x', `${mouseX}px`);
+        document.body.style.setProperty('--mouse-y', `${mouseY}px`);
+
+        if (isVisible) {
+            const scrollOffset = Math.max(0, scrollY - (introSection.offsetTop - window.innerHeight / 2)) * 0.1;
+
+            introSection.style.setProperty('--scroll-y', `${scrollOffset}px`);
+
+            if (introSection.classList.contains("visible") || introSection.classList.contains("revealing")) {
+                window.introShowcaseActive = true;
+            } else {
+                window.introShowcaseActive = false;
+            }
+        } else {
+            window.introShowcaseActive = false;
+        }
+
+        requestAnimationFrame(animateParallax);
+    }
+    animateParallax();
+});

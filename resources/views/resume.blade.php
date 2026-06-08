@@ -29,6 +29,18 @@
 </div>
 
 <main class="inner-shell resume-shell">
+    <!-- Decorative Frame Sparkles -->
+    @include('partials.section-sparkles', ['positions' => [
+        // LEFT SIDE
+        ['top' => '75%', 'left' => '-16%', 'size' => '95px', 'blur' => '1.5px', 'dur' => '7s', 'del' => '0.5s', 'opacity_min' => '0.25', 'opacity_max' => '0.85'], // Large lower-left
+        ['top' => '30%', 'left' => '-12%', 'size' => '28px', 'blur' => '0px', 'dur' => '5s', 'del' => '1s', 'opacity_min' => '0.35', 'opacity_max' => '0.9'],     // Small top-left
+
+        // RIGHT SIDE
+        ['top' => '12%', 'left' => '110%', 'size' => '68px', 'blur' => '0.5px', 'dur' => '6s', 'del' => '0.2s', 'opacity_min' => '0.3', 'opacity_max' => '0.9'], // Medium upper-right
+        ['top' => '45%', 'left' => '105%', 'size' => '32px', 'blur' => '0px', 'dur' => '4.5s', 'del' => '1.5s', 'opacity_min' => '0.2', 'opacity_max' => '0.8'], // Small content edge
+        ['top' => '80%', 'left' => '108%', 'size' => '24px', 'blur' => '1px', 'dur' => '5.5s', 'del' => '0.8s', 'opacity_min' => '0.3', 'opacity_max' => '0.85']
+    ]])
+
     <section class="resume-hero reveal">
         <div>
             <p class="inner-kicker">Resume</p>
@@ -74,6 +86,8 @@
             </div>
         @endif
     </section>
+
+    @include('partials.footer')
 </main>
 
 <div class="particles"></div>

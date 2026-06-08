@@ -777,17 +777,20 @@ body::after {
 .main-container {
     width: 100%;
     max-width: 1100px;
-
     margin: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+    padding: 100px 60px 80px;
+}
 
+.two-column-layout {
+    position: relative;
     display: grid;
     grid-template-columns: 320px 1fr;
     align-items: start;
-
     gap: 72px;
-
-    padding:
-        100px 60px 80px;
+    width: 100%;
 }
 
 .layout-container {
@@ -990,6 +993,7 @@ body::after {
 }
 
 .section {
+    position: relative;
     margin-bottom: 80px;
     scroll-margin-top: 120px;
 }
@@ -1221,16 +1225,14 @@ body::after {
     width: 70%;
     height: 200%;
 
-    background: linear-gradient(
-        115deg,
-        transparent 0%,
-        rgba(180, 150, 255, 0.04) 20%,
-        rgba(220, 190, 255, 0.12) 40%,
-        rgba(255, 255, 255, 0.10) 50%,
-        rgba(220, 190, 255, 0.12) 60%,
-        rgba(180, 150, 255, 0.04) 80%,
-        transparent 100%
-    );
+    background: linear-gradient(115deg,
+            transparent 0%,
+            rgba(180, 150, 255, 0.04) 20%,
+            rgba(220, 190, 255, 0.12) 40%,
+            rgba(255, 255, 255, 0.10) 50%,
+            rgba(220, 190, 255, 0.12) 60%,
+            rgba(180, 150, 255, 0.04) 80%,
+            transparent 100%);
 
     /* Shine reacts dynamically to tilt position */
     transform: rotate(var(--shine-angle, 15deg)) translate3d(calc(var(--tilt-x, 0) * 12px), calc(var(--tilt-y, 0) * 12px), 0);
@@ -1260,22 +1262,28 @@ body::after {
         left: -150%;
         opacity: 0;
     }
+
     10% {
         opacity: 0;
     }
+
     25% {
         opacity: var(--shine-opacity, 0.8);
     }
+
     50% {
         opacity: calc(var(--shine-opacity, 0.8) * 0.65);
     }
+
     75% {
         opacity: var(--shine-opacity, 0.8);
     }
+
     90% {
         opacity: 0;
         left: 150%;
     }
+
     100% {
         left: 150%;
         opacity: 0;
@@ -1394,11 +1402,12 @@ body .noise {
 
 @media(max-width:1100px) {
 
-    .main-container {
+    .two-column-layout {
         grid-template-columns: 1fr;
-
         gap: 48px;
+    }
 
+    .main-container {
         padding:
             140px 32px 60px;
     }
@@ -2300,7 +2309,7 @@ body {
         0 0 24px rgba(169, 150, 255, 0.5);
 }
 
-/* ─── Updates System ─── */
+/* â”€â”€â”€ Updates System â”€â”€â”€ */
 .updates-wrapper {
     position: relative;
     display: inline-block;
@@ -2362,6 +2371,7 @@ body {
         transform: scale(0.95);
         box-shadow: 0 0 8px rgba(123, 97, 255, 0.6);
     }
+
     100% {
         transform: scale(1.15);
         box-shadow: 0 0 16px rgba(169, 150, 255, 1);
@@ -2369,31 +2379,43 @@ body {
 }
 
 @keyframes bellIdleAlert {
-    0%, 80%, 100% {
+
+    0%,
+    80%,
+    100% {
         transform: scale(1) rotate(0deg);
     }
+
     82% {
         transform: scale(1.15) rotate(0deg);
     }
+
     84% {
         transform: scale(1.15) rotate(-18deg);
     }
+
     86% {
         transform: scale(1.15) rotate(15deg);
     }
+
     88% {
         transform: scale(1.15) rotate(-12deg);
     }
+
     90% {
         transform: scale(1.15) rotate(10deg);
     }
+
     92% {
         transform: scale(1.15) rotate(-6deg);
     }
+
     94% {
         transform: scale(1.15) rotate(4deg);
     }
-    96%, 98% {
+
+    96%,
+    98% {
         transform: scale(1) rotate(0deg);
     }
 }
@@ -2428,6 +2450,7 @@ body {
         opacity: 0;
         transform: scale(0.96) translateY(-8px);
     }
+
     to {
         opacity: 1;
         transform: scale(1) translateY(0);
@@ -2720,7 +2743,7 @@ body {
 
 @media(max-width:1100px) {
 
-    .main-container {
+    .two-column-layout {
         grid-template-columns: minmax(0, 1fr);
         gap: 44px;
     }
@@ -2881,7 +2904,7 @@ body {
    PREMIUM CUSTOM PORTFOLIO CMS THEME (REDESIGNED CONTROL CENTER v2)
    ========================================================================== */
 
-/* ─── Admin Ambient Glow Orbs ─── */
+/* â”€â”€â”€ Admin Ambient Glow Orbs â”€â”€â”€ */
 .admin-page .bg-orb {
     position: fixed;
     border-radius: 50%;
@@ -2889,6 +2912,7 @@ body {
     pointer-events: none;
     z-index: 0;
 }
+
 .admin-page .bg-orb.orb-1 {
     width: 600px;
     height: 600px;
@@ -2896,6 +2920,7 @@ body {
     top: -120px;
     left: -80px;
 }
+
 .admin-page .bg-orb.orb-2 {
     width: 500px;
     height: 500px;
@@ -2903,6 +2928,7 @@ body {
     bottom: -100px;
     right: -60px;
 }
+
 .admin-page .bg-orb.orb-3 {
     width: 400px;
     height: 400px;
@@ -2912,7 +2938,7 @@ body {
     transform: translate(-50%, -50%);
 }
 
-/* ─── Layout Shell ─── */
+/* â”€â”€â”€ Layout Shell â”€â”€â”€ */
 .admin-page {
     background: #05050a;
     color: white;
@@ -2942,7 +2968,7 @@ body {
     z-index: 1;
 }
 
-/* ─── 1. Left Sidebar ─── */
+/* â”€â”€â”€ 1. Left Sidebar â”€â”€â”€ */
 .admin-sidebar {
     width: 260px;
     background: rgba(10, 10, 25, 0.65);
@@ -3095,7 +3121,7 @@ body {
     transform: translateY(-1px);
 }
 
-/* ─── 2. Main Content ─── */
+/* â”€â”€â”€ 2. Main Content â”€â”€â”€ */
 .admin-main {
     flex-grow: 1;
     margin-left: 308px;
@@ -3107,7 +3133,7 @@ body {
     position: relative;
 }
 
-/* ─── 3. Top Bar ─── */
+/* â”€â”€â”€ 3. Top Bar â”€â”€â”€ */
 .admin-topbar {
     display: flex;
     align-items: center;
@@ -3269,7 +3295,7 @@ body {
     font-weight: 600;
 }
 
-/* ─── 4. Unified Card System ─── */
+/* â”€â”€â”€ 4. Unified Card System â”€â”€â”€ */
 .admin-card {
     background: rgba(10, 10, 25, 0.65);
     backdrop-filter: blur(20px);
@@ -3310,13 +3336,13 @@ body {
     overflow: hidden;
 }
 
-/* ─── 5. Admin Grid System ─── */
+/* â”€â”€â”€ 5. Admin Grid System â”€â”€â”€ */
 .admin-grid {
     display: grid;
     gap: 20px;
 }
 
-/* ─── 6. Stats Cards ─── */
+/* â”€â”€â”€ 6. Stats Cards â”€â”€â”€ */
 .stats-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -3394,31 +3420,46 @@ body {
     background: rgba(123, 97, 255, 0.12);
     border: 1px solid rgba(123, 97, 255, 0.15);
 }
-.stat-card-icon.purple svg { stroke: #a996ff; }
+
+.stat-card-icon.purple svg {
+    stroke: #a996ff;
+}
 
 .stat-card-icon.blue {
     background: rgba(59, 130, 246, 0.12);
     border: 1px solid rgba(59, 130, 246, 0.15);
 }
-.stat-card-icon.blue svg { stroke: #60a5fa; }
+
+.stat-card-icon.blue svg {
+    stroke: #60a5fa;
+}
 
 .stat-card-icon.green {
     background: rgba(46, 204, 113, 0.12);
     border: 1px solid rgba(46, 204, 113, 0.15);
 }
-.stat-card-icon.green svg { stroke: #2ecc71; }
+
+.stat-card-icon.green svg {
+    stroke: #2ecc71;
+}
 
 .stat-card-icon.amber {
     background: rgba(245, 158, 11, 0.12);
     border: 1px solid rgba(245, 158, 11, 0.15);
 }
-.stat-card-icon.amber svg { stroke: #f59e0b; }
+
+.stat-card-icon.amber svg {
+    stroke: #f59e0b;
+}
 
 .stat-card-icon.rose {
     background: rgba(244, 63, 94, 0.12);
     border: 1px solid rgba(244, 63, 94, 0.15);
 }
-.stat-card-icon.rose svg { stroke: #fb7185; }
+
+.stat-card-icon.rose svg {
+    stroke: #fb7185;
+}
 
 .stat-card-value {
     font-size: 2rem;
@@ -3444,7 +3485,7 @@ body {
     color: white;
 }
 
-/* ─── 7. Timeline ─── */
+/* â”€â”€â”€ 7. Timeline â”€â”€â”€ */
 .timeline {
     position: relative;
     padding-left: 24px;
@@ -3494,7 +3535,7 @@ body {
     color: rgba(255, 255, 255, 0.5);
 }
 
-/* ─── 8. Quick Actions ─── */
+/* â”€â”€â”€ 8. Quick Actions â”€â”€â”€ */
 .quick-actions-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -3533,7 +3574,7 @@ body {
     stroke: #a996ff;
 }
 
-/* ─── 9. Modern Forms ─── */
+/* â”€â”€â”€ 9. Modern Forms â”€â”€â”€ */
 .cms-form-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -3595,7 +3636,7 @@ body {
     resize: vertical;
 }
 
-/* ─── Dynamic Paragraph List ─── */
+/* â”€â”€â”€ Dynamic Paragraph List â”€â”€â”€ */
 .paragraph-box {
     display: flex;
     gap: 12px;
@@ -3655,7 +3696,7 @@ body {
     background: rgba(255, 59, 48, 0.25);
 }
 
-/* ─── File Upload Controls ─── */
+/* â”€â”€â”€ File Upload Controls â”€â”€â”€ */
 .media-preview-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
@@ -3667,8 +3708,8 @@ body {
     position: relative;
     border-radius: 10px;
     overflow: hidden;
-    background: rgba(0,0,0,0.2);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     aspect-ratio: 1;
     display: flex;
     align-items: center;
@@ -3696,7 +3737,7 @@ body {
     font-weight: 700;
 }
 
-/* ─── 10. Elegant Tables ─── */
+/* â”€â”€â”€ 10. Elegant Tables â”€â”€â”€ */
 .cms-table-wrapper {
     overflow-x: auto;
 }
@@ -3749,11 +3790,11 @@ body {
     height: 34px;
     border-radius: 8px;
     object-fit: cover;
-    background: rgba(255,255,255,0.05);
+    background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* ─── Action Buttons ─── */
+/* â”€â”€â”€ Action Buttons â”€â”€â”€ */
 .action-buttons {
     display: flex;
     gap: 6px;
@@ -3792,7 +3833,7 @@ body {
     color: white;
 }
 
-/* ─── Premium Buttons ─── */
+/* â”€â”€â”€ Premium Buttons â”€â”€â”€ */
 .btn-primary-cms {
     background: linear-gradient(135deg, #7b61ff, #9b51e0);
     color: white !important;
@@ -3818,7 +3859,7 @@ body {
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
     opacity: 0;
     transition: opacity 0.3s ease;
 }
@@ -3856,7 +3897,7 @@ body {
     transform: translateY(-1px) !important;
 }
 
-/* ─── Admin Badge ─── */
+/* â”€â”€â”€ Admin Badge â”€â”€â”€ */
 .admin-badge {
     display: inline-flex;
     align-items: center;
@@ -3867,14 +3908,14 @@ body {
     white-space: nowrap;
 }
 
-/* ─── Admin Content spacing ─── */
+/* â”€â”€â”€ Admin Content spacing â”€â”€â”€ */
 .admin-content {
     display: flex;
     flex-direction: column;
     gap: 0;
 }
 
-/* ─── Flash Messages ─── */
+/* â”€â”€â”€ Flash Messages â”€â”€â”€ */
 .flash-message {
     padding: 12px 16px;
     border-radius: 12px;
@@ -3882,7 +3923,7 @@ body {
     font-size: 0.86rem;
 }
 
-/* ─── Section Header ─── */
+/* â”€â”€â”€ Section Header â”€â”€â”€ */
 .section-header {
     display: flex;
     align-items: center;
@@ -3898,7 +3939,7 @@ body {
     margin: 0;
 }
 
-/* ─── Responsive ─── */
+/* â”€â”€â”€ Responsive â”€â”€â”€ */
 @media (max-width: 1200px) {
     .stats-row {
         grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -3913,20 +3954,24 @@ body {
         height: calc(100vh - 48px);
         padding: 20px 10px;
     }
+
     .sidebar-brand span,
     .sidebar-menu-item a span:not(.nav-icon-wrap),
     .sidebar-menu-item a .nav-label,
     .sidebar-footer span {
         display: none;
     }
+
     .sidebar-menu-item a {
         justify-content: center;
         padding: 12px;
     }
+
     .admin-main {
         margin-left: 120px;
         padding: 24px 20px;
     }
+
     .sidebar-brand {
         justify-content: center;
         padding: 8px 0 20px;
@@ -3937,6 +3982,7 @@ body {
     .admin-wrapper {
         flex-direction: column;
     }
+
     .admin-sidebar {
         width: calc(100% - 32px);
         height: auto;
@@ -3949,41 +3995,51 @@ body {
         flex-direction: row;
         padding: 12px 16px;
     }
+
     .sidebar-menu {
         flex-direction: row;
         overflow-x: auto;
         padding: 0;
         gap: 4px;
     }
+
     .sidebar-brand span,
     .sidebar-menu-item a .nav-label {
         display: none;
     }
+
     .sidebar-menu-item a {
         padding: 10px;
         justify-content: center;
     }
+
     .sidebar-footer {
         flex-direction: row;
         border-top: none;
         padding-top: 0;
     }
+
     .admin-main {
         margin-left: 0;
         padding: 20px 16px;
     }
+
     .cms-form-grid {
         grid-template-columns: 1fr;
     }
+
     .stats-row {
         grid-template-columns: repeat(2, 1fr);
     }
+
     .topbar-search input {
         width: 140px;
     }
+
     .topbar-search input:focus {
         width: 180px;
     }
+
     .admin-topbar {
         flex-wrap: wrap;
     }
@@ -4097,10 +4153,12 @@ body {
         transform: scale(0.95);
         box-shadow: 0 0 0 0 rgba(155, 81, 224, 0.7);
     }
+
     70% {
         transform: scale(1.2);
         box-shadow: 0 0 0 6px rgba(155, 81, 224, 0);
     }
+
     100% {
         transform: scale(0.95);
         box-shadow: 0 0 0 0 rgba(155, 81, 224, 0);
@@ -4279,9 +4337,9 @@ body {
     filter: blur(0px);
     will-change: transform, opacity, filter;
     transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                opacity 0.5s ease-in-out,
-                filter 0.5s ease-in-out,
-                visibility 0.5s ease-in-out;
+        opacity 0.5s ease-in-out,
+        filter 0.5s ease-in-out,
+        visibility 0.5s ease-in-out;
 }
 
 .retro-loader-overlay.exit-prep {
@@ -4295,9 +4353,9 @@ body {
     visibility: hidden;
     filter: blur(10px);
     transition: transform 0.8s cubic-bezier(0.32, 0, 0.67, 0),
-                opacity 0.8s cubic-bezier(0.32, 0, 0.67, 0),
-                filter 0.8s cubic-bezier(0.32, 0, 0.67, 0),
-                visibility 0.8s;
+        opacity 0.8s cubic-bezier(0.32, 0, 0.67, 0),
+        filter 0.8s cubic-bezier(0.32, 0, 0.67, 0),
+        visibility 0.8s;
 }
 
 .retro-loader-overlay.fade-out {
@@ -4367,14 +4425,16 @@ html.loader-skipped.page-transition-ready .inner-shell {
 .loader-box {
     position: relative;
     background: #09081a;
-    border: 4px solid #eae6ff; /* White/lavender inner border */
+    border: 4px solid #eae6ff;
+    /* White/lavender inner border */
     padding: 30px 40px;
     width: 90%;
     max-width: 500px;
-    box-shadow: 
+    box-shadow:
         0 0 0 4px #09081a,
-        0 0 0 8px #8b6dff, /* Purple outer accent border */
-        0 15px 30px rgba(0,0,0,0.8);
+        0 0 0 8px #8b6dff,
+        /* Purple outer accent border */
+        0 15px 30px rgba(0, 0, 0, 0.8);
     image-rendering: pixelated;
     text-align: center;
     animation: pixelFlicker 0.15s infinite alternate;
@@ -4430,7 +4490,8 @@ html.loader-skipped.page-transition-ready .inner-shell {
     font-family: monospace;
     font-size: 14px;
     line-height: 1;
-    color: rgba(255, 255, 255, 0.1); /* Inactive color */
+    color: rgba(255, 255, 255, 0.1);
+    /* Inactive color */
     letter-spacing: 0px;
     user-select: none;
     margin: 8px 0;
@@ -4463,6 +4524,7 @@ html.loader-skipped.page-transition-ready .inner-shell {
     0% {
         opacity: 0.98;
     }
+
     100% {
         opacity: 1;
     }
@@ -4483,8 +4545,262 @@ body.loading-active .inner-shell {
 }
 
 /* Fade in for the site elements */
-.layout-shell, .main-container, .inner-shell {
+.layout-shell,
+.main-container,
+.inner-shell {
     opacity: 1;
     visibility: visible;
     transition: opacity 0.8s ease-in-out;
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   Layout Restructuring & Future-proofing (Page Header, Bottom Footer)
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+
+.page-header-container {
+    width: 100%;
+    min-height: 0;
+    transition: all 0.3s ease;
+}
+
+.page-header-container:not(:empty) {
+    margin-bottom: 24px;
+    padding: 24px clamp(24px, 4vw, 40px);
+    background: rgba(255, 255, 255, 0.015);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    border-radius: 18px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.bottom-container {
+    position: relative;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: clamp(24px, 4vw, 48px);
+    padding: clamp(24px, 3.5vw, 36px) clamp(24px, 4vw, 40px);
+    background: rgba(255, 255, 255, 0.015);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    border-radius: 18px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    margin-top: 56px;
+    position: relative;
+    z-index: 5;
+}
+
+/* â”€â”€â”€ Unified Icon Row â”€â”€â”€ */
+.footer-icons {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    gap: clamp(14px, 2.5vw, 24px);
+    width: max-content;
+}
+
+.footer-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: clamp(36px, 4vw, 42px);
+    height: clamp(36px, 4vw, 42px);
+    border-radius: 10px;
+    background: none;
+    border: none;
+    padding: 0;
+    opacity: 0.45;
+    cursor: pointer;
+    text-decoration: none;
+    transition:
+        opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        filter 0.3s ease;
+}
+
+.footer-icon img {
+    width: clamp(20px, 2.2vw, 24px);
+    height: clamp(20px, 2.2vw, 24px);
+    object-fit: contain;
+    display: block;
+}
+
+.footer-icon:hover {
+    opacity: 1;
+    transform: scale(1.15) translateY(-2px);
+    filter: drop-shadow(0 0 8px rgba(123, 97, 255, 0.35));
+}
+
+/* â”€â”€â”€ Footer Text â”€â”€â”€ */
+.footer-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    gap: 6px;
+    max-width: 600px;
+}
+
+.footer-info {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.5);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.footer-copyright {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.35);
+    margin: 0;
+}
+
+@media(max-width: 900px) {
+    .bottom-container {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 24px clamp(16px, 3vw, 24px);
+        gap: 32px;
+    }
+
+    .footer-icons {
+        max-width: 100%;
+        gap: clamp(14px, 3vw, 20px);
+    }
+}
+
+/* ────────────────────────────
+   INTRO SHOWCASE SECTION
+   ──────────────────────────── */
+.intro-showcase {
+    position: relative;
+    width: 100%;
+    height: 480px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    /* Reveal base state */
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.intro-showcase.visible,
+.intro-showcase.revealing {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.intro-prism {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    mix-blend-mode: lighten;
+    mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+    opacity: 1;
+    will-change: transform;
+    animation: prismFloat 22s infinite alternate ease-in-out;
+}
+
+.intro-showcase.visible .intro-prism,
+.intro-showcase.revealing .intro-prism {
+    opacity: 1;
+}
+
+.intro-title {
+    position: relative;
+    max-width: 900px;
+    width: 90%;
+    object-fit: contain;
+    z-index: 2;
+    opacity: 1;
+    transform: translate(calc(var(--mouse-x, 0px) * 0.4), calc(var(--mouse-y, 0px) * 0.4)) scale(1);
+    will-change: transform;
+}
+
+.intro-showcase.visible .intro-title,
+.intro-showcase.revealing .intro-title {
+    opacity: 1;
+    transform: translate(calc(var(--mouse-x, 0px) * 0.4), calc(var(--mouse-y, 0px) * 0.4)) scale(1);
+}
+
+.section-sparkles {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: visible;
+    z-index: 1;
+}
+
+.section-sparkle {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    mix-blend-mode: screen;
+    will-change: transform, opacity;
+    animation: sparklePulse var(--blink-dur, 5s) infinite alternate ease-in-out var(--blink-del, 0s);
+}
+
+@keyframes prismFloat {
+    0% {
+        transform: translate(calc(-12px + var(--mouse-x, 0px) * 1), calc(-8px + var(--mouse-y, 0px) * 1 - var(--scroll-y, 0px) * 0.5)) rotate(-1deg);
+    }
+
+    100% {
+        transform: translate(calc(12px + var(--mouse-x, 0px) * 1), calc(8px + var(--mouse-y, 0px) * 1 - var(--scroll-y, 0px) * 0.5)) rotate(1deg);
+    }
+}
+
+@keyframes sparklePulse {
+    0% {
+        transform: translate(calc(var(--mouse-x, 0px) * 0.05 - 8px), calc(var(--mouse-y, 0px) * 0.05 - 5px)) scale(0.85);
+        opacity: var(--opacity-min, 0.15);
+        filter: blur(var(--blur-amt, 0px)) drop-shadow(0 0 4px rgba(180, 160, 255, 0.15)) drop-shadow(0 0 8px rgba(180, 160, 255, 0.08));
+    }
+
+    50% {
+        transform: translate(calc(var(--mouse-x, 0px) * 0.05), calc(var(--mouse-y, 0px) * 0.05)) scale(1.15);
+        opacity: var(--opacity-max, 0.95);
+        filter: blur(var(--blur-amt, 0px)) drop-shadow(0 0 8px rgba(180, 160, 255, 0.45)) drop-shadow(0 0 18px rgba(180, 160, 255, 0.25));
+    }
+
+    100% {
+        transform: translate(calc(var(--mouse-x, 0px) * 0.05 + 8px), calc(var(--mouse-y, 0px) * 0.05 + 5px)) scale(0.85);
+        opacity: var(--opacity-min, 0.15);
+        filter: blur(var(--blur-amt, 0px)) drop-shadow(0 0 4px rgba(180, 160, 255, 0.15)) drop-shadow(0 0 8px rgba(180, 160, 255, 0.08));
+    }
+}
+
+@media (max-width: 900px) {
+    .intro-showcase {
+        height: 380px;
+    }
+
+    .intro-prism {
+        transform: scale(0.9);
+    }
+}
+
+@media (max-width: 600px) {
+    .intro-showcase {
+        height: 280px;
+    }
+
+    .intro-showcase.visible .intro-prism,
+    .intro-showcase.revealing .intro-prism {
+        opacity: 0.35;
+    }
+
+
 }

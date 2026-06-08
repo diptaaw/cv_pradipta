@@ -29,6 +29,18 @@
 </div>
 
 <main class="inner-shell archive-shell">
+    <!-- Decorative Frame Sparkles -->
+    @include('partials.section-sparkles', ['positions' => [
+        // LEFT SIDE
+        ['top' => '58%', 'left' => '-16%', 'size' => '100px', 'blur' => '1px', 'dur' => '6.5s', 'del' => '0.5s', 'opacity_min' => '0.3', 'opacity_max' => '0.85'],  // Large left of project table
+        ['top' => '28%', 'left' => '-12%', 'size' => '24px', 'blur' => '0px', 'dur' => '5s', 'del' => '1.2s', 'opacity_min' => '0.35', 'opacity_max' => '0.9'],
+
+        // RIGHT SIDE
+        ['top' => '14%', 'left' => '108%', 'size' => '36px', 'blur' => '0px', 'dur' => '4.8s', 'del' => '0.2s', 'opacity_min' => '0.35', 'opacity_max' => '0.9'],  // Small top-right region
+        ['top' => '45%', 'left' => '105%', 'size' => '30px', 'blur' => '0.5px', 'dur' => '6s', 'del' => '1.5s', 'opacity_min' => '0.2', 'opacity_max' => '0.8'],
+        ['top' => '72%', 'left' => '110%', 'size' => '72px', 'blur' => '1.5px', 'dur' => '5.5s', 'del' => '0.8s', 'opacity_min' => '0.25', 'opacity_max' => '0.8']  // Medium right of project table
+    ]])
+
     <section class="inner-hero reveal">
         <p class="inner-kicker">Project Archive</p>
         <div class="inner-hero-grid">
@@ -125,6 +137,8 @@
             </div>
         @endforelse
     </section>
+
+    @include('partials.footer')
 </main>
 
 <div class="particles"></div>
