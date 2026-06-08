@@ -343,6 +343,8 @@ body::after {
     box-shadow:
         0 10px 40px rgba(0, 0, 0, 0.28);
 
+    will-change: transform, opacity;
+
     transition:
         width .55s cubic-bezier(.22, 1, .36, 1),
         max-width .55s cubic-bezier(.22, 1, .36, 1),
@@ -350,7 +352,8 @@ body::after {
         backdrop-filter .45s ease,
         border-color .45s ease,
         box-shadow .45s ease,
-        transform .35s ease;
+        transform 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+        opacity 0.3s cubic-bezier(0.25, 1, 0.5, 1);
 
 }
 
@@ -515,6 +518,12 @@ body::after {
 }
 
 /* SCROLL REVEAL / HIDE ANIMATIONS */
+
+.top-navbar.navbar-auto-hidden {
+    transform: translateY(-120%) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
 
 .top-navbar.navbar-compact-mode.navbar-hidden {
 

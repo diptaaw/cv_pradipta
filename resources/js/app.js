@@ -2523,7 +2523,48 @@ const rightPanel =
     document.querySelector(".right-panel");
 
 let isInCompactMode = false;
-let lastScrollY = 0;
+let lastScrollY = Math.max(0, window.scrollY);
+let downScrollAccumulated = 0;
+let isTicking = false;
+let isNavbarHovered = false;
+let compactThreshold = null;
+
+// Cache the threshold calculation to avoid layout thrashing on scroll
+function updateCompactThreshold() {
+    if (topNavbar && rightPanel && !isInCompactMode) {
+        const navbarRect = topNavbar.getBoundingClientRect();
+        const rightPanelRect = rightPanel.getBoundingClientRect();
+        const rightPanelDocTop = rightPanelRect.top + window.scrollY;
+        const navbarViewportBottom = navbarRect.bottom;
+        compactThreshold = rightPanelDocTop - navbarViewportBottom;
+    } else {
+        compactThreshold = null;
+    }
+}
+
+function updateCompactThresholdState() {
+    updateCompactThreshold();
+    const currentScrollY = Math.max(0, window.scrollY);
+    if (compactThreshold !== null && topNavbar) {
+        if (currentScrollY >= compactThreshold) {
+            topNavbar.classList.add("compact");
+        } else {
+            topNavbar.classList.remove("compact");
+        }
+    }
+}
+
+// Hover event listeners on the navbar for hover safety
+if (topNavbar) {
+    topNavbar.addEventListener("mouseenter", () => {
+        isNavbarHovered = true;
+    });
+    topNavbar.addEventListener("mouseleave", () => {
+        isNavbarHovered = false;
+        // Reset down-scroll accumulator on mouse leave so they must scroll down again to hide
+        downScrollAccumulated = 0;
+    });
+}
 
 // Detect if navbar should enter compact/adaptive mode
 function shouldEnterCompactMode() {
@@ -2581,68 +2622,63 @@ function updateCompactModeState() {
 
 }
 
-// Handle scroll reveal/hide for compact mode
-function handleCompactModeScrollBehavior() {
-
-    if (!isInCompactMode) {
-        lastScrollY = window.scrollY;
+// Handles the actual DOM manipulations throttled inside requestAnimationFrame
+function updateNavbarScroll() {
+    if (!topNavbar) {
+        isTicking = false;
         return;
     }
 
-    const currentScrollY = window.scrollY;
+    const currentScrollY = Math.max(0, window.scrollY);
     const scrollDelta = currentScrollY - lastScrollY;
 
-    // Only trigger hide/reveal after scrolling past threshold
-    if (Math.abs(scrollDelta) > 2) {
-
+    // 1. Top of page safety check (first 100px)
+    if (currentScrollY < 100) {
+        topNavbar.classList.remove("navbar-auto-hidden");
+        downScrollAccumulated = 0;
+    } else {
+        // 2. Scrolling Down: Hide navbar
         if (scrollDelta > 0) {
-            // Scrolling down - hide navbar
-            topNavbar.classList.remove(
-                "navbar-reveal"
-            );
-
-            topNavbar.classList.add(
-                "navbar-hidden"
-            );
-
-        } else {
-            // Scrolling up - reveal navbar
-            topNavbar.classList.remove(
-                "navbar-hidden"
-            );
-
-            topNavbar.classList.add(
-                "navbar-reveal"
-            );
-
+            downScrollAccumulated += scrollDelta;
+            if (downScrollAccumulated >= 100 && !isNavbarHovered) {
+                topNavbar.classList.add("navbar-auto-hidden");
+            }
         }
-
+        // 3. Scrolling Up: Immediately reveal navbar
+        else if (scrollDelta < 0) {
+            topNavbar.classList.remove("navbar-auto-hidden");
+            downScrollAccumulated = 0;
+        }
     }
 
     lastScrollY = currentScrollY;
 
-}
-
-// Monitor resize events for compact mode detection
-window.addEventListener("resize", () => {
-
-    updateCompactModeState();
-
-}, { passive: true });
-
-// Integrate scroll behavior and collision detection into a single passive scroll listener
-window.addEventListener("scroll", () => {
-    handleCompactModeScrollBehavior();
-
-    if (topNavbar && rightPanel && !isInCompactMode) {
-        const navbarRect = topNavbar.getBoundingClientRect();
-        const rightPanelRect = rightPanel.getBoundingClientRect();
-
-        if (rightPanelRect.top <= navbarRect.bottom) {
+    // 4. Update compact mode without layout thrashing
+    if (compactThreshold === null) {
+        updateCompactThreshold();
+    }
+    if (compactThreshold !== null) {
+        if (currentScrollY >= compactThreshold) {
             topNavbar.classList.add("compact");
         } else {
             topNavbar.classList.remove("compact");
         }
+    }
+
+    isTicking = false;
+}
+
+// Monitor resize events for compact mode detection and threshold caching
+window.addEventListener("resize", () => {
+    updateCompactModeState();
+    updateCompactThresholdState();
+}, { passive: true });
+
+// High-performance scroll listener throttled with requestAnimationFrame
+window.addEventListener("scroll", () => {
+    if (!isTicking) {
+        requestAnimationFrame(updateNavbarScroll);
+        isTicking = true;
     }
 }, { passive: true });
 
@@ -2650,6 +2686,7 @@ window.addEventListener("scroll", () => {
 if (window.ResizeObserver) {
     const resizeObserver = new ResizeObserver(() => {
         updateCompactModeState();
+        updateCompactThresholdState();
     });
     resizeObserver.observe(document.documentElement);
 }
@@ -2661,11 +2698,13 @@ setInterval(() => {
     if (currentZoom !== previousZoom) {
         previousZoom = currentZoom;
         updateCompactModeState();
+        updateCompactThresholdState();
     }
 }, 400);
 
-// Initialize compact mode on page load
+// Initialize states on page load
 updateCompactModeState();
+updateCompactThresholdState();
 
 /* ==========================================
    PREMIUM INTERACTIVE TYPOGRAPHY EXPERIENCE
