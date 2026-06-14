@@ -1,0 +1,11 @@
+# Ignore local dependencies and generated files
+node_modules
+vendor
+storage
+.env*
+composer.phar
+npm-debug.log*
+yarn-error.log*
+/public/build
+/public/hot
+/public/storage
