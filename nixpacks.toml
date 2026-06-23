@@ -4,7 +4,6 @@
 
 [phases.postbuild]
     cmds = [
-        "php artisan route:cache",
         "php artisan view:cache"
     ]
     dependsOn = ["build"]
