@@ -79,7 +79,9 @@ Route::get('/resume', function () {
 
         $resumeUrl = Str::startsWith($path, ['http://', 'https://', '/'])
             ? $path
-            : Storage::url($path);
+            : Storage::disk(config('filesystems.default'))->url(
+                Str::startsWith($path, 'storage/') ? substr($path, 8) : $path
+            );
     }
 
     return view('resume', compact('resume', 'resumeUrl'));

@@ -50,8 +50,8 @@ class ProjectController extends BaseAdminController
         if ($request->hasFile('thumbnail_file')) {
             $file = $request->file('thumbnail_file');
             $filename = time() . '_thumb_' . $file->getClientOriginalName();
-            $path = $file->storeAs('uploads/projects', $filename, 'public');
-            $thumbnailPath = 'storage/' . $path;
+            $path = $file->storeAs('uploads/projects', $filename, config('filesystems.default'));
+            $thumbnailPath = $path;
         }
 
         $galleryPaths = [];
@@ -59,8 +59,8 @@ class ProjectController extends BaseAdminController
             foreach ($request->file('gallery_files') as $file) {
                 if ($file->isValid()) {
                     $filename = time() . '_gal_' . $file->getClientOriginalName();
-                    $path = $file->storeAs('uploads/projects', $filename, 'public');
-                    $galleryPaths[] = 'storage/' . $path;
+                    $path = $file->storeAs('uploads/projects', $filename, config('filesystems.default'));
+                    $galleryPaths[] = $path;
                 }
             }
         }
@@ -135,14 +135,14 @@ class ProjectController extends BaseAdminController
             // Delete old thumbnail if exists
             if ($project->thumbnail) {
                 $oldPath = str_replace('storage/', '', $project->thumbnail);
-                if (Storage::disk('public')->exists($oldPath)) {
-                    Storage::disk('public')->delete($oldPath);
+                if (Storage::disk(config('filesystems.default'))->exists($oldPath)) {
+                    Storage::disk(config('filesystems.default'))->delete($oldPath);
                 }
             }
             $file = $request->file('thumbnail_file');
             $filename = time() . '_thumb_' . $file->getClientOriginalName();
-            $path = $file->storeAs('uploads/projects', $filename, 'public');
-            $project->thumbnail = 'storage/' . $path;
+            $path = $file->storeAs('uploads/projects', $filename, config('filesystems.default'));
+            $project->thumbnail = $path;
         }
 
         // Handle gallery images removal:
@@ -153,8 +153,8 @@ class ProjectController extends BaseAdminController
                 unset($currentGallery[$key]);
                 // Delete physical file
                 $oldPath = str_replace('storage/', '', $pathToRemove);
-                if (Storage::disk('public')->exists($oldPath)) {
-                    Storage::disk('public')->delete($oldPath);
+                if (Storage::disk(config('filesystems.default'))->exists($oldPath)) {
+                    Storage::disk(config('filesystems.default'))->delete($oldPath);
                 }
             }
         }
@@ -164,8 +164,8 @@ class ProjectController extends BaseAdminController
             foreach ($request->file('gallery_files') as $file) {
                 if ($file->isValid()) {
                     $filename = time() . '_gal_' . $file->getClientOriginalName();
-                    $path = $file->storeAs('uploads/projects', $filename, 'public');
-                    $currentGallery[] = 'storage/' . $path;
+                    $path = $file->storeAs('uploads/projects', $filename, config('filesystems.default'));
+                    $currentGallery[] = $path;
                 }
             }
         }
@@ -213,8 +213,8 @@ class ProjectController extends BaseAdminController
         // Delete thumbnail from storage
         if ($project->thumbnail) {
             $oldPath = str_replace('storage/', '', $project->thumbnail);
-            if (Storage::disk('public')->exists($oldPath)) {
-                Storage::disk('public')->delete($oldPath);
+            if (Storage::disk(config('filesystems.default'))->exists($oldPath)) {
+                Storage::disk(config('filesystems.default'))->delete($oldPath);
             }
         }
 
@@ -222,8 +222,8 @@ class ProjectController extends BaseAdminController
         if (is_array($project->gallery_images)) {
             foreach ($project->gallery_images as $pathToRemove) {
                 $oldPath = str_replace('storage/', '', $pathToRemove);
-                if (Storage::disk('public')->exists($oldPath)) {
-                    Storage::disk('public')->delete($oldPath);
+                if (Storage::disk(config('filesystems.default'))->exists($oldPath)) {
+                    Storage::disk(config('filesystems.default'))->delete($oldPath);
                 }
             }
         }

@@ -18,8 +18,8 @@ class ResumeFileController extends Controller
         // Calculate file sizes dynamically
         foreach ($resumes as $resume) {
             try {
-                if (Storage::disk('public')->exists($resume->file_path)) {
-                    $bytes = Storage::disk('public')->size($resume->file_path);
+                if (Storage::disk(config('filesystems.default'))->exists($resume->file_path)) {
+                    $bytes = Storage::disk(config('filesystems.default'))->size($resume->file_path);
                     $resume->file_size = number_format($bytes / 1024, 1) . ' KB';
                 } else {
                     $resume->file_size = 'N/A';
@@ -44,10 +44,7 @@ class ResumeFileController extends Controller
         if ($request->file('file')->isValid()) {
             $file = $request->file('file');
             $filename = time() . '_' . $file->getClientOriginalName();
-            $path = $file->storeAs('uploads/resumes', $filename, 'public');
-
-            $publishImmediately = $request->boolean('is_published');
-
+                $path = $file->storeAs('uploads/resumes', $filename, config('filesystems.default'));
             if ($publishImmediately) {
                 // Unpublish all others
                 ResumeFile::query()->update(['is_published' => false]);
@@ -98,8 +95,8 @@ class ResumeFileController extends Controller
     {
         $title = $resume->title;
 
-        if (Storage::disk('public')->exists($resume->file_path)) {
-            Storage::disk('public')->delete($resume->file_path);
+        if (Storage::disk(config('filesystems.default'))->exists($resume->file_path)) {
+            Storage::disk(config('filesystems.default'))->delete($resume->file_path);
         }
 
         $resume->delete();

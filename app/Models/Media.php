@@ -21,6 +21,6 @@ class Media extends Model
 
     public function getUrlAttribute()
     {
-        return Storage::url($this->file_path);
+        return Storage::disk(config('filesystems.default'))->url($this->file_path);
     }
 }

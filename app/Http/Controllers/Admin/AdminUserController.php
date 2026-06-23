@@ -56,7 +56,7 @@ class AdminUserController extends Controller
         if ($request->hasFile('avatar')) {
             $file = $request->file('avatar');
             $filename = time() . '_' . $file->getClientOriginalName();
-            $avatarPath = $file->storeAs('uploads/avatars', $filename, 'public');
+            $avatarPath = $file->storeAs('uploads/avatars', $filename, config('filesystems.default'));
         }
 
         $admin = User::create([
@@ -116,13 +116,13 @@ class AdminUserController extends Controller
         if ($request->hasFile('avatar')) {
             // Delete old avatar if exists
             if ($admin->avatar) {
-                if (Storage::disk('public')->exists($admin->avatar)) {
-                    Storage::disk('public')->delete($admin->avatar);
+                if (Storage::disk(config('filesystems.default'))->exists($admin->avatar)) {
+                    Storage::disk(config('filesystems.default'))->delete($admin->avatar);
                 }
             }
             $file = $request->file('avatar');
             $filename = time() . '_' . $file->getClientOriginalName();
-            $data['avatar'] = $file->storeAs('uploads/avatars', $filename, 'public');
+            $data['avatar'] = $file->storeAs('uploads/avatars', $filename, config('filesystems.default'));
         }
 
         $admin->update($data);
@@ -143,8 +143,8 @@ class AdminUserController extends Controller
 
         // Delete avatar if exists
         if ($admin->avatar) {
-            if (Storage::disk('public')->exists($admin->avatar)) {
-                Storage::disk('public')->delete($admin->avatar);
+            if (Storage::disk(config('filesystems.default'))->exists($admin->avatar)) {
+                Storage::disk(config('filesystems.default'))->delete($admin->avatar);
             }
         }
 
