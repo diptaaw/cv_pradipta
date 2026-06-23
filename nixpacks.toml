@@ -1,0 +1,10 @@
+[variables]
+    NIXPACKS_PHP_ROOT_DIR = "/app/public"
+    NIXPACKS_PHP_FALLBACK_PATH = "/index.php"
+
+[phases.postbuild]
+    cmds = [
+        "php artisan route:cache",
+        "php artisan view:cache"
+    ]
+    dependsOn = ["build"]

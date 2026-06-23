@@ -87,7 +87,7 @@ return [
         
         'pgsql' => [
             'driver' => 'pgsql',
-            // Removed 'url' so Vercel's automatic DATABASE_URL doesn't override the IPv4 pooler settings
+            'url' => env('DB_URL', env('DATABASE_URL')),
             'host' => env('DB_HOST', 'aws-0-eu-central-1.pooler.supabase.com'), // Replace region if different
             'port' => env('DB_PORT', '6543'),
             'database' => env('DB_DATABASE', 'postgres'),
