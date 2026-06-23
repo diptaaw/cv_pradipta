@@ -2,12 +2,12 @@
   "version": 2,
   "builds": [
     {
-      "src": "public/index.php",
-      "use": "vercel-php@0.6.0"
-    },
-    {
       "src": "public/**",
       "use": "@vercel/static"
+    },
+    {
+      "src": "public/index.php",
+      "use": "vercel-php@1.0.0"
     }
   ],
   "routes": [
