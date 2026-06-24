@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -209,4 +210,20 @@ Route::middleware([EnsureAdmin::class])->prefix('admin')->name('admin.')->group(
         Notification::send('settings_updated', 'Settings updated', 'Updated SEO Title and Meta Description.');
         return redirect()->route('admin.settings.index')->with('success', 'Settings updated successfully.');
     })->name('settings.update');
+});
+
+Route::get('/db-test', function () {
+    try {
+        DB::connection()->getPdo();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Connected to Supabase'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
 });
