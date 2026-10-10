@@ -47,9 +47,7 @@ Route::get('/', function () {
 
 
 Route::get('/projects', function () {
-
-    return view('projects');
-
+    return redirect('/archive');
 });
 
 Route::get('/archive', function () {
