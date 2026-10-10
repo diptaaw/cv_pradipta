@@ -1,4 +1,41 @@
 <?php
 
+// Ensure serverless temporary storage directories exist in /tmp
+$storagePaths = [
+    '/tmp/storage/framework/views',
+    '/tmp/storage/framework/cache/data',
+    '/tmp/storage/framework/sessions',
+    '/tmp/storage/logs',
+    '/tmp/storage/app/public',
+];
+
+foreach ($storagePaths as $path) {
+    if (!is_dir($path)) {
+        mkdir($path, 0755, true);
+    }
+}
+
+// Redirect application storage and compiled views to writable /tmp
+putenv('APP_STORAGE_PATH=/tmp/storage');
+$_ENV['APP_STORAGE_PATH'] = '/tmp/storage';
+$_SERVER['APP_STORAGE_PATH'] = '/tmp/storage';
+
+putenv('VIEW_COMPILED_PATH=/tmp/storage/framework/views');
+$_ENV['VIEW_COMPILED_PATH'] = '/tmp/storage/framework/views';
+$_SERVER['VIEW_COMPILED_PATH'] = '/tmp/storage/framework/views';
+
+// Prevent writes to read-only bootstrap/cache
+putenv('APP_SERVICES_CACHE=/tmp/storage/services.php');
+putenv('APP_PACKAGES_CACHE=/tmp/storage/packages.php');
+putenv('APP_CONFIG_CACHE=/tmp/storage/config.php');
+putenv('APP_ROUTES_CACHE=/tmp/storage/routes.php');
+putenv('APP_EVENTS_CACHE=/tmp/storage/events.php');
+
+if (!getenv('LOG_CHANNEL')) {
+    putenv('LOG_CHANNEL=stderr');
+    $_ENV['LOG_CHANNEL'] = 'stderr';
+    $_SERVER['LOG_CHANNEL'] = 'stderr';
+}
+
 // Forward Vercel requests to Laravel's public/index.php
 require __DIR__ . '/../public/index.php';

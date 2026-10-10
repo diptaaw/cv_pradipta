@@ -87,18 +87,18 @@ return [
         
         'pgsql' => [
             'driver' => 'pgsql',
-            'url' => env('DB_URL', env('DATABASE_URL')),
-            'host' => env('DB_HOST', 'aws-0-eu-central-1.pooler.supabase.com'), // Replace region if different
+            'url' => env('DB_URL'),
+            'host' => env('DB_HOST', 'aws-0-ap-northeast-1.pooler.supabase.com'),
             'port' => env('DB_PORT', '6543'),
             'database' => env('DB_DATABASE', 'postgres'),
-            'username' => env('DB_USERNAME', 'postgres.tnqprkmbsukqlzuodlbl'),
+            'username' => env('DB_USERNAME', 'postgres.aorlodkovculrwwirgiv'),
             'password' => env('DB_PASSWORD', ''),
             'charset' => env('DB_CHARSET', 'utf8'),
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'require'),
-            'options' => env('DB_EMULATE_PREPARES', false) ? [
+            'options' => env('DB_EMULATE_PREPARES', true) ? [
                 \PDO::ATTR_EMULATE_PREPARES => true,
             ] : [],
         ],

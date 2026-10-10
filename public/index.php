@@ -24,6 +24,11 @@ try {
     $response->send();
     $kernel->terminate($request, $response);
 } catch (Throwable $e) {
+    error_log((string) $e);
     http_response_code(500);
-    echo "Application error";
+    if (env('APP_DEBUG', false)) {
+        echo '<pre>' . htmlspecialchars((string) $e) . '</pre>';
+    } else {
+        echo "Application error";
+    }
 }
