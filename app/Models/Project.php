@@ -65,4 +65,27 @@ class Project extends Model
 
         return \Illuminate\Support\Facades\Storage::disk(config('filesystems.default'))->url($path);
     }
+
+    public function getGalleryUrlsAttribute(): array
+    {
+        if (!is_array($this->gallery_images) || empty($this->gallery_images)) {
+            return [];
+        }
+
+        return array_map(function ($path) {
+            if (\Illuminate\Support\Str::startsWith($path, ['http://', 'https://'])) {
+                return $path;
+            }
+
+            if (\Illuminate\Support\Str::startsWith($path, 'images/')) {
+                return asset($path);
+            }
+
+            $cleanPath = \Illuminate\Support\Str::startsWith($path, 'storage/')
+                ? substr($path, 8)
+                : $path;
+
+            return \Illuminate\Support\Facades\Storage::disk(config('filesystems.default'))->url($cleanPath);
+        }, $this->gallery_images);
+    }
 }

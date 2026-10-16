@@ -18,8 +18,16 @@ class SiteSetting extends Model
 
     public static function get(string $key, $default = null)
     {
-        $setting = static::where('key', $key)->first();
+        try {
+            if (!\Illuminate\Support\Facades\Schema::hasTable('site_settings')) {
+                return $default;
+            }
 
-        return $setting ? $setting->value : $default;
+            $setting = static::where('key', $key)->first();
+
+            return $setting ? $setting->value : $default;
+        } catch (\Throwable $e) {
+            return $default;
+        }
     }
 }

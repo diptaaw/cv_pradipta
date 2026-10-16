@@ -100,7 +100,16 @@
                             @if(is_array($project->gallery_images) && count($project->gallery_images) > 0)
                                 @foreach($project->gallery_images as $img)
                                     <div class="media-preview-item">
-                                        <img src="{{ asset($img) }}" alt="Gallery Image">
+                                        @php
+                                            $galleryImgUrl = \Illuminate\Support\Str::startsWith($img, ['http://', 'https://'])
+                                                ? $img
+                                                : (\Illuminate\Support\Str::startsWith($img, 'images/')
+                                                    ? asset($img)
+                                                    : \Illuminate\Support\Facades\Storage::disk(config('filesystems.default'))->url(
+                                                        \Illuminate\Support\Str::startsWith($img, 'storage/') ? substr($img, 8) : $img
+                                                    ));
+                                        @endphp
+                                        <img src="{{ $galleryImgUrl }}" alt="Gallery Image">
                                         <label class="remove-check">
                                             <input type="checkbox" name="remove_gallery[]" value="{{ $img }}" style="cursor: pointer;">
                                             Delete

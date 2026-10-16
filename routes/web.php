@@ -103,8 +103,8 @@ Route::get('/api/archive/projects', function (\Illuminate\Http\Request $request)
     if ($request->filled('q')) {
         $search = $request->input('q');
         $query->where(function ($q) use ($search) {
-            $q->where('title', 'like', "%{$search}%")
-              ->orWhere('description', 'like', "%{$search}%");
+            $q->whereLike('title', "%{$search}%")
+              ->orWhereLike('description', "%{$search}%");
         });
     }
 

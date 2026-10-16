@@ -2,3 +2,8 @@
 /vendor
 .git
 .env
+.venv
+/tests
+database/database.sqlite
+phpunit.xml
+*.py

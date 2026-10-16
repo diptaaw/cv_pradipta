@@ -25,11 +25,19 @@ $_ENV['VIEW_COMPILED_PATH'] = '/tmp/storage/framework/views';
 $_SERVER['VIEW_COMPILED_PATH'] = '/tmp/storage/framework/views';
 
 // Prevent writes to read-only bootstrap/cache
-putenv('APP_SERVICES_CACHE=/tmp/storage/services.php');
-putenv('APP_PACKAGES_CACHE=/tmp/storage/packages.php');
-putenv('APP_CONFIG_CACHE=/tmp/storage/config.php');
-putenv('APP_ROUTES_CACHE=/tmp/storage/routes.php');
-putenv('APP_EVENTS_CACHE=/tmp/storage/events.php');
+$cacheVars = [
+    'APP_SERVICES_CACHE' => '/tmp/storage/services.php',
+    'APP_PACKAGES_CACHE' => '/tmp/storage/packages.php',
+    'APP_CONFIG_CACHE' => '/tmp/storage/config.php',
+    'APP_ROUTES_CACHE' => '/tmp/storage/routes.php',
+    'APP_EVENTS_CACHE' => '/tmp/storage/events.php',
+];
+
+foreach ($cacheVars as $key => $val) {
+    putenv("{$key}={$val}");
+    $_ENV[$key] = $val;
+    $_SERVER[$key] = $val;
+}
 
 if (!getenv('LOG_CHANNEL')) {
     putenv('LOG_CHANNEL=stderr');
