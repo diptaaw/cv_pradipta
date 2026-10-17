@@ -44,7 +44,8 @@ class ResumeFileController extends Controller
         if ($request->file('file')->isValid()) {
             $file = $request->file('file');
             $filename = time() . '_' . $file->getClientOriginalName();
-                $path = $file->storeAs('uploads/resumes', $filename, config('filesystems.default'));
+            $path = $file->storeAs('uploads/resumes', $filename, config('filesystems.default'));
+            $publishImmediately = $request->boolean('is_published');
             if ($publishImmediately) {
                 // Unpublish all others
                 ResumeFile::query()->update(['is_published' => false]);

@@ -45,10 +45,12 @@ if (!getenv('LOG_CHANNEL')) {
     $_SERVER['LOG_CHANNEL'] = 'stderr';
 }
 
-// Temporarily force debug on to surface errors in production
-putenv('APP_DEBUG=true');
-$_ENV['APP_DEBUG'] = 'true';
-$_SERVER['APP_DEBUG'] = 'true';
+// Respect APP_DEBUG from environment, default to false if unset
+if (getenv('APP_DEBUG') === false) {
+    putenv('APP_DEBUG=false');
+    $_ENV['APP_DEBUG'] = 'false';
+    $_SERVER['APP_DEBUG'] = 'false';
+}
 
 // Forward Vercel requests to Laravel's public/index.php
 require __DIR__ . '/../public/index.php';
