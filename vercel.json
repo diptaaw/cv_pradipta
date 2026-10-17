@@ -1,6 +1,7 @@
 {
   "version": 2,
   "framework": null,
+  "regions": ["sin1"],
   "buildCommand": "npm run build",
   "outputDirectory": "public",
   "functions": {

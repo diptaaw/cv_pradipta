@@ -19,57 +19,52 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 Route::get('/', function () {
-
-    $about = Schema::hasTable('about_sections')
-        ? AboutSection::where('is_published', true)->first()
-        : null;
-
-    $experiences = Schema::hasTable('experiences')
-        ? Experience::where('is_published', true)
+    try {
+        $about = AboutSection::where('is_published', true)->first();
+        $experiences = Experience::where('is_published', true)
             ->where('featured', true)
             ->orderBy('position')
             ->take(5)
-            ->get()
-        : collect([]);
-
-    $projects = Schema::hasTable('projects')
-        ? Project::where('is_published', true)
+            ->get();
+        $projects = Project::where('is_published', true)
             ->where('featured', true)
             ->orderBy('position')
             ->take(5)
-            ->get()
-        : collect([]);
+            ->get();
+    } catch (\Throwable $e) {
+        $about = null;
+        $experiences = collect([]);
+        $projects = collect([]);
+    }
 
     return view('home', compact('about', 'experiences', 'projects'));
-
 });
-
-
 
 Route::get('/projects', function () {
     return redirect('/archive');
 });
 
 Route::get('/archive', function () {
-
-    $projects = Schema::hasTable('projects')
-        ? Project::where('is_published', true)
+    try {
+        $projects = Project::where('is_published', true)
             ->orderBy('position')
             ->latest('updated_at')
-            ->get()
-        : collect([]);
+            ->get();
+    } catch (\Throwable $e) {
+        $projects = collect([]);
+    }
 
     return view('archive', compact('projects'));
-
 });
 
 Route::get('/resume', function () {
-
-    $resume = Schema::hasTable('resume_files')
-        ? \App\Models\ResumeFile::where('is_published', true)
+    try {
+        $resume = \App\Models\ResumeFile::where('is_published', true)
             ->latest('updated_at')
-            ->first()
-        : null;
+            ->first();
+    } catch (\Throwable $e) {
+        $resume = null;
+    }
 
     $resumeUrl = null;
 
@@ -84,7 +79,6 @@ Route::get('/resume', function () {
     }
 
     return view('resume', compact('resume', 'resumeUrl'));
-
 });
 
 
@@ -234,4 +228,8 @@ Route::get('/db-test', function () {
             'has_DATABASE_URL' => !empty(env('DATABASE_URL')),
         ], 200);
     }
-})->withoutMiddleware([\Illuminate\Session\Middleware\StartSession::class, \Illuminate\Cookie\Middleware\EncryptCookies::class]);
+})->withoutMiddleware([
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    \Illuminate\Cookie\Middleware\EncryptCookies::class,
+]);
