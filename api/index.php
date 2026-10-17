@@ -52,5 +52,10 @@ if (getenv('APP_DEBUG') === false) {
     $_SERVER['APP_DEBUG'] = 'false';
 }
 
+// Normalize SCRIPT_NAME and SCRIPT_FILENAME so Laravel does not strip /api prefix from routes
+$_SERVER['SCRIPT_FILENAME'] = __DIR__ . '/../public/index.php';
+$_SERVER['SCRIPT_NAME'] = '/index.php';
+$_SERVER['PHP_SELF'] = '/index.php';
+
 // Forward Vercel requests to Laravel's public/index.php
 require __DIR__ . '/../public/index.php';

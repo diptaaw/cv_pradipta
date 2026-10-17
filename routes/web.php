@@ -228,8 +228,4 @@ Route::get('/db-test', function () {
             'has_DATABASE_URL' => !empty(env('DATABASE_URL')),
         ], 200);
     }
-})->withoutMiddleware([
-    \Illuminate\Session\Middleware\StartSession::class,
-    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-    \Illuminate\Cookie\Middleware\EncryptCookies::class,
-]);
+});
