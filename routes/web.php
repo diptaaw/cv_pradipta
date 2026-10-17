@@ -216,12 +216,22 @@ Route::get('/db-test', function () {
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Connected to Supabase'
+            'message' => 'Connected to Supabase',
+            'host' => config('database.connections.pgsql.host'),
+            'port' => config('database.connections.pgsql.port'),
+            'database' => config('database.connections.pgsql.database'),
         ]);
-    } catch (\Exception $e) {
+    } catch (\Throwable $e) {
         return response()->json([
             'status' => 'error',
-            'message' => $e->getMessage()
-        ]);
+            'message' => $e->getMessage(),
+            'configured_host' => config('database.connections.pgsql.host'),
+            'configured_port' => config('database.connections.pgsql.port'),
+            'env_DB_HOST' => env('DB_HOST'),
+            'env_DB_PORT' => env('DB_PORT'),
+            'env_DB_USERNAME' => env('DB_USERNAME'),
+            'has_DB_URL' => !empty(env('DB_URL')),
+            'has_DATABASE_URL' => !empty(env('DATABASE_URL')),
+        ], 200);
     }
-});
+})->withoutMiddleware([\Illuminate\Session\Middleware\StartSession::class, \Illuminate\Cookie\Middleware\EncryptCookies::class]);
