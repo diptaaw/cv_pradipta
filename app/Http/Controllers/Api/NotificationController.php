@@ -3,11 +3,22 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\EnsureAdmin;
 use App\Models\Notification;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 
-class NotificationController extends Controller
+class NotificationController extends Controller implements HasMiddleware
 {
+    /**
+     * Get the middleware that should be assigned to the controller.
+     */
+    public static function middleware(): array
+    {
+        return [
+            EnsureAdmin::class,
+        ];
+    }
     /**
      * GET /api/notifications
      *

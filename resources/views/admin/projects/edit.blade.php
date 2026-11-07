@@ -177,7 +177,7 @@
                         <label>Live Preview (Homepage Style)</label>
                         <div style="background: #05050a; padding: 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.06); position: relative; overflow: hidden; isolation: isolate; margin-top: 6px;">
                             <div class="card" style="padding: 0; background: transparent; display: flex; gap: 16px; align-items: flex-start;">
-                                <img id="preview-thumb-img" src="{{ $project->thumbnail ? asset($project->thumbnail) : asset('images/projects/wildlife.png') }}" alt="Project Image" class="project-image" style="width: 100px; height: 65px; border-radius: 8px; object-fit: cover;">
+                                <img id="preview-thumb-img" src="{{ $project->thumbnail_url ?: asset('images/projects/wildlife.png') }}" alt="Project Image" class="project-image" style="width: 100px; height: 65px; border-radius: 8px; object-fit: cover;">
                                 <div class="card-content" style="flex: 1;">
                                     <h3 id="preview-title" class="project-title" style="font-size: 0.95rem; font-weight: 700; color: white; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;"></h3>
                                     <div class="description-wrapper">

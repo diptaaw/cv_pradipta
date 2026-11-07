@@ -82,95 +82,165 @@ Route::get('/resume', function () {
 });
 
 
+$keepaliveHandler = function (\Illuminate\Http\Request $request) {
+    $cronSecret = config('services.cron_secret', env('CRON_SECRET'));
+    if (!empty($cronSecret)) {
+        $authHeader = (string) $request->header('Authorization');
+        $queryKey = (string) $request->query('key');
+        $expectedBearer = 'Bearer ' . $cronSecret;
+
+        if (!hash_equals($expectedBearer, $authHeader) && !hash_equals($cronSecret, $queryKey)) {
+            return response()->json(['status' => 'unauthorized'], 401, [
+                'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            ]);
+        }
+    }
+
+    try {
+        $result = DB::select('SELECT CURRENT_TIMESTAMP as now');
+        $timestamp = is_object($result[0] ?? null) ? ($result[0]->now ?? null) : ($result[0]['now'] ?? null);
+
+        return response()->json([
+            'status' => 'healthy',
+            'database' => 'connected',
+            'timestamp' => $timestamp,
+        ], 200, [
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'status' => 'degraded',
+            'database' => 'unreachable',
+            'error' => config('app.debug') ? $e->getMessage() : 'Database connection timeout',
+        ], 503, [
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ]);
+    }
+};
+
+$keepaliveWithoutMiddleware = [
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\Cookie\Middleware\EncryptCookies::class,
+    \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+];
+
+Route::get('/api/keepalive', $keepaliveHandler)->withoutMiddleware($keepaliveWithoutMiddleware);
+Route::get('/keepalive', $keepaliveHandler)->withoutMiddleware($keepaliveWithoutMiddleware);
+
 Route::get('/api/updates', function () {
-    return response()->json(
-        \App\Models\PortfolioUpdate::where('is_published', true)
-            ->orderBy('is_pinned', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->get()
-    );
+    try {
+        return response()->json(
+            \App\Models\PortfolioUpdate::where('is_published', true)
+                ->orderBy('is_pinned', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->get()
+        );
+    } catch (\Throwable $e) {
+        return response()->json([]);
+    }
 });
 
 Route::get('/api/archive/projects', function (\Illuminate\Http\Request $request) {
-    $query = \App\Models\Project::where('is_published', true)->orderBy('position');
+    try {
+        $query = \App\Models\Project::where('is_published', true)->orderBy('position');
 
-    if ($request->filled('q')) {
-        $search = $request->input('q');
-        $query->where(function ($q) use ($search) {
-            $q->whereLike('title', "%{$search}%")
-              ->orWhereLike('description', "%{$search}%");
+        if ($request->filled('q')) {
+            $search = $request->input('q');
+            $query->where(function ($q) use ($search) {
+                $q->whereLike('title', "%{$search}%")
+                  ->orWhereLike('description', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('category')) {
+            $query->where('category', $request->input('category'));
+        }
+
+        if ($request->filled('year')) {
+            $query->where('year', $request->input('year'));
+        }
+
+        if ($request->filled('tag')) {
+            $tagValue = $request->input('tag');
+            $query->whereHas('tags', function ($q) use ($tagValue) {
+                $q->where('slug', \App\Models\Tag::normalize($tagValue))
+                  ->orWhere('name', $tagValue);
+            });
+        }
+
+        $projects = $query->with('tags')->get();
+
+        // Trigger technologies accessor
+        $projects->each(function ($p) {
+            $p->technologies = $p->technologies;
         });
+
+        $categories = \App\Models\Project::where('is_published', true)
+            ->whereNotNull('category')
+            ->where('category', '!=', '')
+            ->distinct()
+            ->orderBy('category')
+            ->pluck('category');
+
+        $years = \App\Models\Project::where('is_published', true)
+            ->whereNotNull('year')
+            ->where('year', '!=', '')
+            ->distinct()
+            ->orderBy('year', 'desc')
+            ->pluck('year');
+
+        $tags = \App\Models\Tag::whereHas('projects', function ($q) {
+                $q->where('is_published', true);
+            })
+            ->distinct()
+            ->orderBy('name')
+            ->pluck('name');
+
+        return response()->json([
+            'success' => true,
+            'projects' => $projects,
+            'filters' => [
+                'categories' => $categories,
+                'years' => $years,
+                'tags' => $tags,
+            ]
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'projects' => [],
+            'filters' => [
+                'categories' => [],
+                'years' => [],
+                'tags' => [],
+            ],
+            'error' => config('app.debug') ? $e->getMessage() : 'Database connection error',
+        ], 503);
     }
-
-    if ($request->filled('category')) {
-        $query->where('category', $request->input('category'));
-    }
-
-    if ($request->filled('year')) {
-        $query->where('year', $request->input('year'));
-    }
-
-    if ($request->filled('tag')) {
-        $tagValue = $request->input('tag');
-        $query->whereHas('tags', function ($q) use ($tagValue) {
-            $q->where('slug', \App\Models\Tag::normalize($tagValue))
-              ->orWhere('name', $tagValue);
-        });
-    }
-
-    $projects = $query->with('tags')->get();
-
-    // Trigger technologies accessor
-    $projects->each(function ($p) {
-        $p->technologies = $p->technologies;
-    });
-
-    $categories = \App\Models\Project::where('is_published', true)
-        ->whereNotNull('category')
-        ->where('category', '!=', '')
-        ->distinct()
-        ->orderBy('category')
-        ->pluck('category');
-
-    $years = \App\Models\Project::where('is_published', true)
-        ->whereNotNull('year')
-        ->where('year', '!=', '')
-        ->distinct()
-        ->orderBy('year', 'desc')
-        ->pluck('year');
-
-    $tags = \App\Models\Tag::whereHas('projects', function ($q) {
-            $q->where('is_published', true);
-        })
-        ->distinct()
-        ->orderBy('name')
-        ->pluck('name');
-
-    return response()->json([
-        'success' => true,
-        'projects' => $projects,
-        'filters' => [
-            'categories' => $categories,
-            'years' => $years,
-            'tags' => $tags,
-        ]
-    ]);
 });
 
 
 /* -----------------------------
-   Notification API routes
+   Notification API routes (Admin only)
    ----------------------------- */
-Route::get('/api/notifications', [NotificationController::class, 'index']);
-Route::get('/api/notifications/unread-count', [NotificationController::class, 'unreadCount']);
-Route::post('/api/notifications/mark-read', [NotificationController::class, 'markAllRead']);
-Route::post('/api/notifications/{notification}/mark-read', [NotificationController::class, 'markRead']);
+Route::middleware([EnsureAdmin::class])->group(function () {
+    Route::get('/api/notifications', [NotificationController::class, 'index']);
+    Route::get('/api/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::post('/api/notifications/mark-read', [NotificationController::class, 'markAllRead']);
+    Route::post('/api/notifications/{notification}/mark-read', [NotificationController::class, 'markRead']);
+});
 
 /* -----------------------------
    Admin routes
    ----------------------------- */
 Route::get('/admin/login', [AuthController::class, 'login'])->name('admin.login');
-Route::post('/admin/login', [AuthController::class, 'authenticate'])->name('admin.login.attempt');
+Route::post('/admin/login', [AuthController::class, 'authenticate'])->name('admin.login.attempt')->middleware('throttle:5,1');
 Route::post('/admin/logout', [AuthController::class, 'logout'])->name('admin.logout');
 
 Route::middleware([EnsureAdmin::class])->prefix('admin')->name('admin.')->group(function () {
@@ -205,6 +275,10 @@ Route::middleware([EnsureAdmin::class])->prefix('admin')->name('admin.')->group(
 });
 
 Route::get('/db-test', function () {
+    if (!config('app.debug')) {
+        abort(404);
+    }
+
     try {
         DB::connection()->getPdo();
 

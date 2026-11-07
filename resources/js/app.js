@@ -214,7 +214,7 @@ window.portfolioLoader.listeners.push((progress, lastSystem) => {
     }
 })();
 
-/* ACTIVITY FEED / NOTIFICATION DROPDOWN CONTROLLER */
+/* ACTIVITY FEED / UPDATES DROPDOWN CONTROLLER */
 const updatesButton = document.querySelector("[data-updates-toggle]");
 const updatesDropdown = document.querySelector("[data-updates-dropdown]");
 const notificationBadge = document.querySelector("[data-notification-badge]");
@@ -222,11 +222,8 @@ const updatesContent = document.querySelector("[data-updates-content]");
 const markAllReadBtn = document.querySelector("[data-mark-all-read]");
 const loadMoreBtn = document.querySelector("[data-load-more-btn]");
 
-let cachedNotifications = [];
-let latestNotifId = null;
-let pollInterval = null;
-let nextPageUrl = null;
-let isLoadingMore = false;
+let cachedUpdates = [];
+let latestUpdateId = null;
 
 function escapeHtml(str) {
     if (!str) return '';
@@ -286,36 +283,37 @@ function getNotifLink(notif) {
 }
 
 /**
- * Renders the notification list into the dropdown.
+ * Renders the updates list into the dropdown.
  */
-function renderNotifications(notifications) {
+function renderUpdates(updates) {
     if (!updatesContent) return;
-    if (notifications.length === 0) {
-        updatesContent.innerHTML = `<div class="updates-loader">No activity yet.</div>`;
+    if (updates.length === 0) {
+        updatesContent.innerHTML = `<div class="updates-loader">No updates yet.</div>`;
         return;
     }
 
-    const lastViewedId = parseInt(localStorage.getItem("portfolio-last-viewed-notif-id") || "0");
+    const lastViewedId = parseInt(localStorage.getItem("portfolio-last-viewed-update-id") || "0");
 
-    updatesContent.innerHTML = notifications.map(notif => {
-        const link = getNotifLink(notif);
-        const isUnread = notif.id > lastViewedId && !notif.is_read;
-        const typeClass = getTypeColor(notif.type);
+    updatesContent.innerHTML = updates.map(update => {
+        const link = getNotifLink(update);
+        const isUnread = update.id > lastViewedId;
+        const typeClass = getTypeColor(update.type);
         const tag = link ? 'a' : 'div';
         const href = link ? ` href="${link}"` : '';
+        const dateDisplay = update.date ? escapeHtml(update.date) : (update.created_at ? timeAgo(update.created_at) : '');
 
         return `
-            <${tag}${href} class="update-item${isUnread ? ' is-unread' : ''}" data-notif-id="${notif.id}">
+            <${tag}${href} class="update-item${isUnread ? ' is-unread' : ''}" data-update-id="${update.id}">
                 <div class="notif-type-dot ${typeClass}"></div>
                 <div class="notif-body">
                     <div class="update-item-header">
                         <h4 class="update-item-title">
-                            ${notif.is_pinned ? '<span class="update-pin-badge">Pinned</span>' : ''}
-                            ${escapeHtml(notif.title)}
+                            ${update.is_pinned ? '<span class="update-pin-badge">Pinned</span>' : ''}
+                            ${escapeHtml(update.title)}
                         </h4>
-                        <span class="update-item-date">${timeAgo(notif.created_at)}</span>
+                        ${dateDisplay ? `<span class="update-item-date">${dateDisplay}</span>` : ''}
                     </div>
-                    ${notif.description ? `<p class="update-item-desc">${escapeHtml(notif.description)}</p>` : ''}
+                    ${update.description ? `<p class="update-item-desc">${escapeHtml(update.description)}</p>` : ''}
                 </div>
             </${tag}>
         `;
@@ -327,8 +325,8 @@ function renderNotifications(notifications) {
  */
 function updateBadgeCount() {
     if (!notificationBadge) return;
-    const lastViewedId = parseInt(localStorage.getItem("portfolio-last-viewed-notif-id") || "0");
-    const unreadCount = cachedNotifications.filter(n => n.id > lastViewedId && !n.is_read).length;
+    const lastViewedId = parseInt(localStorage.getItem("portfolio-last-viewed-update-id") || "0");
+    const unreadCount = cachedUpdates.filter(u => u.id > lastViewedId).length;
 
     if (unreadCount > 0) {
         notificationBadge.textContent = unreadCount > 99 ? '99+' : unreadCount;
@@ -347,109 +345,32 @@ function updateBadgeCount() {
 }
 
 /**
- * Toggles visibility of the Load More button.
+ * Fetches public updates from the API.
  */
-function updateLoadMoreButton() {
-    if (!loadMoreBtn) return;
-    if (nextPageUrl) {
-        loadMoreBtn.classList.remove("hidden");
-        loadMoreBtn.innerHTML = `
-            View older updates
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-        `;
-    } else {
-        loadMoreBtn.classList.add("hidden");
-    }
-}
-
-/**
- * Fetches notifications from the API.
- */
-async function fetchNotifications() {
+async function fetchUpdates() {
     try {
-        const response = await fetch('/api/notifications');
-        if (!response.ok) throw new Error('Failed to fetch notifications');
+        const response = await fetch('/api/updates');
+        if (!response.ok) throw new Error('Failed to fetch updates');
         const json = await response.json();
 
-        // Handle paginated response
-        const notifications = json.data || json;
-        nextPageUrl = json.next_page_url || null;
-        cachedNotifications = notifications;
+        // Handle array or paginated response
+        const updates = Array.isArray(json) ? json : (json.data || []);
+        cachedUpdates = updates;
 
-        if (notifications.length > 0) {
-            latestNotifId = notifications[0].id;
+        if (updates.length > 0) {
+            latestUpdateId = updates[0].id;
         }
 
-        renderNotifications(notifications);
+        renderUpdates(updates);
         updateBadgeCount();
-        updateLoadMoreButton();
+        if (loadMoreBtn) loadMoreBtn.classList.add("hidden");
         if (window.portfolioLoader) window.portfolioLoader.update('notifications');
     } catch (err) {
-        console.error('Error loading notifications:', err);
+        console.error('Error loading portfolio updates:', err);
         if (updatesContent) {
-            updatesContent.innerHTML = `<div class="updates-loader" style="color: #ff6b6b;">Failed to load activity.</div>`;
+            updatesContent.innerHTML = `<div class="updates-loader" style="color: #ff6b6b;">Failed to load updates.</div>`;
         }
         if (window.portfolioLoader) window.portfolioLoader.update('notifications');
-    }
-}
-
-/**
- * Loads the next page of older notifications.
- */
-async function loadMoreNotifications() {
-    if (!nextPageUrl || isLoadingMore) return;
-    isLoadingMore = true;
-
-    if (loadMoreBtn) {
-        loadMoreBtn.innerHTML = `Loading older updates...`;
-    }
-
-    try {
-        const response = await fetch(nextPageUrl);
-        if (!response.ok) throw new Error('Failed to fetch more notifications');
-        const json = await response.json();
-
-        const notifications = json.data || json;
-        nextPageUrl = json.next_page_url || null;
-
-        cachedNotifications = [...cachedNotifications, ...notifications];
-        renderNotifications(cachedNotifications);
-        updateBadgeCount();
-        updateLoadMoreButton();
-    } catch (err) {
-        console.error('Error loading more notifications:', err);
-    } finally {
-        isLoadingMore = false;
-    }
-}
-
-/**
- * Polls for new notifications and updates badge count.
- */
-async function pollNotifications() {
-    try {
-        // Quick unread count check
-        const countRes = await fetch('/api/notifications/unread-count');
-        if (!countRes.ok) return;
-        const { count } = await countRes.json();
-
-        // If there are new server-side unread items, re-fetch the new ones
-        if (latestNotifId) {
-            const newRes = await fetch(`/api/notifications?after_id=${latestNotifId}`);
-            if (newRes.ok) {
-                const newNotifs = await newRes.json();
-                if (newNotifs.length > 0) {
-                    // Prepend new notifications
-                    cachedNotifications = [...newNotifs, ...cachedNotifications];
-                    latestNotifId = cachedNotifications[0].id;
-                    renderNotifications(cachedNotifications);
-                }
-            }
-        }
-
-        updateBadgeCount();
-    } catch (err) {
-        // Silently fail polling
     }
 }
 
@@ -463,11 +384,10 @@ function openUpdatesDropdown() {
     updatesDropdown.classList.add("active");
 
     // Mark as viewed in localStorage to clear public visual badge
-    if (latestNotifId !== null) {
-        localStorage.setItem("portfolio-last-viewed-notif-id", latestNotifId.toString());
+    if (latestUpdateId !== null) {
+        localStorage.setItem("portfolio-last-viewed-update-id", latestUpdateId.toString());
         updateBadgeCount();
-        // Re-render to clear unread highlights
-        renderNotifications(cachedNotifications);
+        renderUpdates(cachedUpdates);
     }
 }
 
@@ -487,26 +407,12 @@ function closeUpdatesDropdown() {
     updatesDropdown.addEventListener("transitionend", onTransitionEnd);
 }
 
-async function markAllRead() {
-    try {
-        await fetch('/api/notifications/mark-read', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
-            }
-        });
-
-        cachedNotifications.forEach(n => n.is_read = true);
-
-        if (latestNotifId !== null) {
-            localStorage.setItem("portfolio-last-viewed-notif-id", latestNotifId.toString());
-        }
-        updateBadgeCount();
-        renderNotifications(cachedNotifications);
-    } catch (err) {
-        console.error('Error marking all as read:', err);
+function markAllRead() {
+    if (latestUpdateId !== null) {
+        localStorage.setItem("portfolio-last-viewed-update-id", latestUpdateId.toString());
     }
+    updateBadgeCount();
+    renderUpdates(cachedUpdates);
 }
 
 if (updatesButton && updatesDropdown) {
@@ -535,55 +441,25 @@ if (updatesButton && updatesDropdown) {
     });
 }
 
-// Load more button listener
-if (loadMoreBtn) {
-    loadMoreBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        loadMoreNotifications();
-    });
-}
-
-// Mark single notification on click
+// Mark single update on click
 if (updatesContent) {
-    updatesContent.addEventListener("click", async (e) => {
+    updatesContent.addEventListener("click", (e) => {
         const item = e.target.closest(".update-item");
         if (!item) return;
 
-        const notifId = item.getAttribute("data-notif-id");
-        if (!notifId) return;
-
+        const updateId = item.getAttribute("data-update-id");
         const link = item.getAttribute("href");
-        if (link) {
-            e.preventDefault();
+
+        const lastViewedId = parseInt(localStorage.getItem("portfolio-last-viewed-update-id") || "0");
+        if (updateId && parseInt(updateId) > lastViewedId) {
+            localStorage.setItem("portfolio-last-viewed-update-id", updateId);
         }
 
-        try {
-            await fetch(`/api/notifications/${notifId}/mark-read`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
-                }
-            });
+        updateBadgeCount();
+        renderUpdates(cachedUpdates);
 
-            const notif = cachedNotifications.find(n => n.id == notifId);
-            if (notif) {
-                notif.is_read = true;
-            }
-
-            const lastViewedId = parseInt(localStorage.getItem("portfolio-last-viewed-notif-id") || "0");
-            if (parseInt(notifId) > lastViewedId) {
-                localStorage.setItem("portfolio-last-viewed-notif-id", notifId);
-            }
-
-            updateBadgeCount();
-            renderNotifications(cachedNotifications);
-        } catch (err) {
-            console.error('Error marking notification read:', err);
-        } finally {
-            if (link) {
-                window.location.href = link;
-            }
+        if (link) {
+            window.location.href = link;
         }
     });
 }
@@ -596,11 +472,8 @@ if (markAllReadBtn) {
     });
 }
 
-// Fetch notifications on page load
-fetchNotifications();
-
-// Start polling every 30 seconds
-pollInterval = setInterval(pollNotifications, 30000);
+// Fetch updates on page load
+fetchUpdates();
 
 
 /* MOUSE MOVE */

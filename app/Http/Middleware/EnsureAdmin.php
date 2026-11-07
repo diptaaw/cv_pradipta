@@ -10,7 +10,19 @@ class EnsureAdmin
 {
     public function handle(Request $request, Closure $next)
     {
-        if (!Auth::check() || !Auth::user()->isAdmin()) {
+        if (!Auth::check()) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json(['message' => 'Unauthorized'], 401);
+            }
+
+            return redirect()->route('admin.login');
+        }
+
+        if (!Auth::user()->isAdmin()) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json(['message' => 'Forbidden'], 403);
+            }
+
             return redirect()->route('admin.login');
         }
 

@@ -4,6 +4,12 @@
   "regions": ["sin1"],
   "buildCommand": "npm run build",
   "outputDirectory": "public",
+  "crons": [
+    {
+      "path": "/api/keepalive",
+      "schedule": "0 0 * * *"
+    }
+  ],
   "functions": {
     "api/index.php": {
       "runtime": "vercel-php@0.9.0",
